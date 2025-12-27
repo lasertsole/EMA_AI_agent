@@ -1,4 +1,3 @@
-import gradio as gr
 from langchain_deepseek import ChatDeepSeek
 from langchain.messages import HumanMessage, AIMessage, SystemMessage
 from dotenv import load_dotenv
@@ -20,28 +19,26 @@ model = ChatDeepSeek(
 )
 
 systemMessage = SystemMessage(content=personality)
-messages = [systemMessage]
-
 
 config={"configurable":{"session_id": "test-session"}}
+messages = [systemMessage]
 
-humanMessage1 = HumanMessage(content="希罗和艾玛掉水里，你先救哪个？")
-messages.append(humanMessage1)
-for chunk in model.stream(messages, config = config):
-    if chunk.content:
-        print(chunk.content, end="", flush=True)
-print("\n"+"-"*40)
+print("汉娜桑，有什么要找我说的吗？")
+while True:
+    user_input = input("汉娜:")
+    if user_input.lower() in {"exit","e","quit","q"}:
+        print("对话结束")
+        break
 
-humanMessage2 = HumanMessage(content="你怎么救")
-messages.append(humanMessage2)
-for chunk in model.stream(messages,config=config):
-    if chunk.content:
-        print(chunk.content, end="", flush=True)
-print("\n"+"-"*40)
+    messages.append(HumanMessage(content=user_input))
 
-humanMessage3 = HumanMessage(content="汉娜也掉进水里了")
-messages.append(humanMessage3)
-for chunk in model.stream(messages,config=config):
-    if chunk.content:
-        print(chunk.content, end="", flush=True)
-print("\n"+"-"*40)
+    print("橘雪莉：",end="",flush=True)
+    full_reply = ""
+    for chunk in model.stream(messages,config=config):
+        if chunk.content:
+            print(chunk.content, end="", flush=True)
+            full_reply+=chunk.content
+    print("\n" + "-" * 40)
+
+    messages.append(AIMessage(content=user_input))
+    messages = messages[-50:]
