@@ -1,47 +1,68 @@
 import os
-import warnings
 from langchain.agents import create_agent
+from langchain.agents.middleware import SummarizationMiddleware
 from langgraph.checkpoint.memory import InMemorySaver
 from langchain_deepseek import ChatDeepSeek
-from langchain.messages import HumanMessage, AIMessage
+from langchain.messages import HumanMessage
 from dotenv import load_dotenv
 from langchain_tavily import TavilySearch
-
-warnings.filterwarnings(
-    "ignore",
-    category=UserWarning,
-    message="Field name.*shadows an attribute in parent"
-)
-
+from middleWare import dynamic_model_routing
 
 with open("personality.txt", "r", encoding="utf-8") as f:
     personality = f.read()
 
 # 加载环境变量
-load_dotenv()
+load_dotenv(override = True)
 
 deepseek_api_key = os.getenv("DEEPSEEK_API_KEY")
 
 #生成模型对象
-model = ChatDeepSeek(
+basic_model = ChatDeepSeek(#对话模型
     model='deepseek-chat',
     api_key= deepseek_api_key,
     temperature=0.7,
     max_retries = 2
 )
 
+#消息汇总模型
+summary_model = ChatDeepSeek(#对话模型
+    model='deepseek-chat',
+    api_key= deepseek_api_key,
+    temperature=0.4,
+    max_retries = 2
+)
+
+#推理模型
+# reasoner_model = ChatDeepSeek(
+#     model='deepseek-reasoner',
+#     api_key= deepseek_api_key,
+#     temperature=0.3,
+#     max_retries = 2
+# )
+
 # 线程记忆功能
 checkpoint = InMemorySaver()
+
 # 联网搜索功能
 tavily_api_key = os.getenv("TAVILY_API_KEY")
 web_search = TavilySearch(tavily_api_key=tavily_api_key, max_results = 7)
 
+# 上下文摘要压缩，用于无限对话
+summarizationMiddleware = SummarizationMiddleware(
+    model=summary_model,
+    max_tokens_before_summary= 50,#超过3000token触发摘要
+    messages_to_keep=1,            #摘要后保留最近10条消息
+)
+
+dynamicModelRouting = dynamic_model_routing()
+
 #生成agent对象
 agent = create_agent(
-    model=model,
+    model=basic_model,
     tools=[web_search],
     system_prompt=personality,
     checkpointer=checkpoint,
+    middleware=[summarizationMiddleware],
 )
 
 config={"configurable":{"thread_id": 1}}
@@ -64,30 +85,10 @@ while True:
     message_history.append(user_msg)
 
     print("橘雪莉：", end="", flush=True)
-    full_reply = ""  # 存储完整回复，用于更新上下文
-    current_ai_reply = ""  # 临时存储当前AI回复片段
-
-    for chunk in agent.stream(
-            {"messages": message_history},  # 传入完整上下文
-            config=config,
-            stream_mode="values"  # 指定流式模式为「值」（更易解析）
-    ):
-        # 解析 chunk 中的 messages 字段（Agent 流式返回的核心内容）
-        if "messages" in chunk and len(chunk["messages"]) > 0:
-            # 获取最新的消息片段
-            latest_msg = chunk["messages"][-1]
-            # 仅处理 AI 回复（过滤工具调用/系统消息等）
-            if isinstance(latest_msg, AIMessage) and latest_msg.content:
-                # 提取新增的回复内容（避免重复打印）
-                new_content = latest_msg.content[len(current_ai_reply):]
-                if new_content:
-                    print(new_content, end="", flush=True)
-                    current_ai_reply = latest_msg.content
-                    full_reply = current_ai_reply
-
-    # 将完整的 AI 回复添加到上下文（保证多轮对话连贯）
-    if full_reply:
-        message_history.append(AIMessage(content=full_reply))
+    result = agent.invoke({"messages":message_history}, config=config )
+    print(result["messages"][-1].content)
+    message_history=result["messages"]
+    print(message_history)
 
     # 分隔线（美化输出）
     print("\n" + "-" * 40)
