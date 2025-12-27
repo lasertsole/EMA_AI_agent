@@ -49,9 +49,9 @@ web_search = TavilySearch(tavily_api_key=tavily_api_key, max_results = 7)
 
 # 上下文摘要压缩，用于无限对话
 summarizationMiddleware = SummarizationMiddleware(
-    model=summary_model,
-    max_tokens_before_summary= 50,#超过3000token触发摘要
-    messages_to_keep=1,            #摘要后保留最近10条消息
+    model = summary_model,
+    trigger = ('tokens', 3000),#超过3000token触发摘要
+    keep = ('messages', 10),#摘要后保留最近10条消息
 )
 
 def _get_last_user_text(messages) -> str:
@@ -85,7 +85,7 @@ def dynamic_model_routing(request: ModelRequest, handler) -> ModelResponse:
     )
 
     # 选择模型
-    request.model = reasoner_model if is_hard else basic_model
+    request.override(model=reasoner_model) if is_hard else basic_model
 
     return handler(request)
 
@@ -121,7 +121,6 @@ while True:
     result = agent.invoke({"messages":message_history}, config=config )
     print(result["messages"][-1].content)
     message_history=result["messages"]
-    print(message_history)
 
     # 分隔线（美化输出）
     print("\n" + "-" * 40)
