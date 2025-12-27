@@ -24,19 +24,19 @@ basic_model = ChatDeepSeek(#对话模型
     max_retries = 2
 )
 
-#消息汇总模型
-summary_model = ChatDeepSeek(#对话模型
-    model='deepseek-chat',
-    api_key= deepseek_api_key,
-    temperature=0.4,
-    max_retries = 2
-)
-
 #推理模型
 reasoner_model = ChatDeepSeek(
     model='deepseek-reasoner',
     api_key= deepseek_api_key,
     temperature=0.3,
+    max_retries = 2
+)
+
+#消息汇总模型
+summary_model = ChatDeepSeek(#对话模型
+    model='deepseek-chat',
+    api_key= deepseek_api_key,
+    temperature=0.4,
     max_retries = 2
 )
 
@@ -101,7 +101,7 @@ agent = create_agent(
 config={"configurable":{"thread_id": 1}}
 message_history=[]
 
-print("汉娜桑，有什么要找我说的吗？（输入 exit/e/quit/q 退出）")
+print("汉娜さん，有什么要找我说的吗？（输入 exit/e/quit/q 退出）")
 
 while True:
     # 获取用户输入
