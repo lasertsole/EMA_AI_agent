@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 from llama_index.core import Settings
-from llama_index.embeddings.huggingface import HuggingFaceInferenceAPIEmbedding
+from llama_index.embeddings.huggingface_api import HuggingFaceInferenceAPIEmbedding
 
 # 加载环境变量
 env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../.env')
