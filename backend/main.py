@@ -1,10 +1,9 @@
 from langchain.agents import create_agent
-from middlewares.model_route import dynamic_model_routing
-from middlewares.summarization import summarizationMiddleware
 from langgraph.checkpoint.memory import InMemorySaver
 from langchain.messages import HumanMessage
 from models import basic_model
-from tools.web_search import web_search
+from middlewares import dynamic_model_routing, summarization
+from tools import web_search
 
 with open("personality.txt", "r", encoding="utf-8") as f:
     personality = f.read()
@@ -18,7 +17,7 @@ agent = create_agent(
     tools=[web_search],
     system_prompt=personality,
     checkpointer=checkpoint,
-    middleware=[dynamic_model_routing, summarizationMiddleware],
+    middleware=[dynamic_model_routing, summarization],
 )
 
 config={"configurable":{"thread_id": 1}}

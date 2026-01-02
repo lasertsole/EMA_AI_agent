@@ -2,7 +2,7 @@ from langchain.agents.middleware import SummarizationMiddleware
 from models import summary_model
 
 # 上下文摘要压缩，用于无限对话
-summarizationMiddleware = SummarizationMiddleware(
+summarization = SummarizationMiddleware(
     model = summary_model,
     trigger = ('tokens', 3000),#超过3000token触发摘要
     keep = ('messages', 10),#摘要后保留最近10条消息
