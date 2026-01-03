@@ -18,44 +18,44 @@ headers = {
     'Content-Type': 'application/json',
     'Authorization': f'Bearer {api_key}'
 }
-
-# 使用示例
-documents = [
-    Document(page_content="咖啡豆的产地主要分布在赤道附近，被称为‘咖啡带’。"),
-    Document(page_content="法压壶的步骤：1. 研磨咖啡豆。2. 加入热水。3. 压下压杆。4. 倒入杯中。"),
-    Document(page_content="意式浓缩咖啡需要一台高压机器，在9个大气压下快速萃取。"),
-    Document(page_content="挑选咖啡豆时，要注意其烘焙日期，新鲜的豆子风味更佳。"),
-    Document(page_content="手冲咖啡的技巧：控制水流速度、均匀注水和合适的水温（90-96°C）是关键。"),
-]
+model = "bge-reranker-v2-m3"
 
 # 创建自定义召回model
 class CustomRetriever(BaseRetriever):
-    """一个简单的字符串匹配检索器。"""
-    documents: List[Document]  # 要搜索的文档列表
-    k: int = 3  # 返回的最大文档数
+    def _get_relevant_documents(self, query: str, *, run_manager: CallbackManagerForRetrieverRun = None, **kwargs) -> list[Document] | None:
+        k = kwargs.get("k", None)
+        documents = kwargs.get("documents", None)
 
-    def _get_relevant_documents(self, query: str, *, run_manager: CallbackManagerForRetrieverRun = None) -> List[Document]:
-        query_lower = query.lower()
+        if(k is None):
+            raise ValueError("k is required")
+        elif(isinstance(k, int) == False):
+            raise TypeError("k must be an integer")
+        elif(k < 1):
+            raise ValueError("k is invalid")
+        elif(documents is None):
+            raise ValueError("documents is None")
+        elif(isinstance(documents, List) == False or any(isinstance(d, Document) == False for d in documents)):
+            raise TypeError("documents has is type error")
+        elif(len(documents) == 0):
+            raise ValueError("documents is empty")
+
         data = {
-            "model": "bge-reranker-v2-m3",
-            "query": "牛是一种动物如何冲泡一杯好喝的咖啡？",  # input类型可为string或string[]。
+            "model": model,
+            "query": query,  # input类型可为string或string[]。
             "documents": [
-                "咖啡豆的产地主要分布在赤道附近，被称为‘咖啡带’。",
-                "法压壶的步骤：1. 研磨咖啡豆。2. 加入热水。3. 压下压杆。4. 倒入杯中。",
-                "意式浓缩咖啡需要一台高压机器，在9个大气压下快速萃取。",
-                "挑选咖啡豆时，要注意其烘焙日期，新鲜的豆子风味更佳。",
-                "手冲咖啡的技巧：控制水流速度、均匀注水和合适的水温（90-96°C）是关键。"
+                doc.page_content for doc in documents
             ]
         }
-        response = requests.post(url, headers=headers, data=json.dumps(data), verify=False)
-        relevant_docs = [
-            doc for doc in self.documents
-            if query_lower in doc.page_content.lower()
-        ]
-        return relevant_docs[:self.k]  # 返回前k个结果
+
+        try:
+            response = requests.post(url, headers=headers, data=json.dumps(data), verify=True)
+            res = json.loads(response.text)
+            relevant_docs = [
+                Document(page_content=doc["document"]["text"]) for doc in res["results"]
+            ]
+            return relevant_docs[:k]  # 返回前k个结果
+        except Exception as e:
+            print(e)
 
 
-rerank_model = CustomRetriever(documents=documents, k=2)
-results = rerank_model.invoke("动物")
-print(results)
-# 输出: [Document(page_content='狗是忠诚的动物'), Document(page_content='猫是独立的动物')]
+rerank_model = CustomRetriever()
