@@ -54,9 +54,48 @@ class TTS_Request(BaseModel):
     overlap_length: int = 2
     min_chunk_length: int = 16
 
-url = "http://127.0.0.1:9880/"
-  
-def getTTSSound(request: TTS_Request):
-    response = requests.post(url, data=json.dumps(data), verify=True)
-    print(response)
-    return response
+base_url = "http://127.0.0.1:9880/"
+control_url = base_url + "/control"
+tts_url = base_url + "/tts"
+change_GPT_url = base_url + "/set_gpt_weights"
+change_sovits_url = base_url + "/set_sovits_weights"
+
+def fetchTTSSound(request: TTS_Request):
+    res = requests.post(tts_url, data=json.dumps(data), verify=True)
+    print(res)
+    return res
+
+def controlModel(command: str = None):
+    if(command is None || (command != "restart" && (command != "exit"))
+        return
+    payload={
+        command: weights_path
+    }
+    
+    res = requests.get(control_url, params=payload)
+    print(res)
+    return res
+
+def changeGPTModel(weights_path: str = None):
+    if(weights_path is None)
+        return
+
+    payload={
+        weights_path: weights_path
+    }
+    
+    res = requests.get(change_GPT_url, params=payload)
+    print(res)
+    return res
+
+def changeSovitsModel(weights_path: str = None):
+    if(weights_path is None)
+        return
+
+    payload={
+        weights_path: weights_path
+    }
+    
+    res = requests.get(change_sovits_url, params=payload)
+    print(res)
+    return res
