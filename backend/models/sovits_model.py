@@ -2,6 +2,7 @@ import requests
 from pydantic import BaseModel
 
 """
+### 推理请求参数
 {
     "text": "",                   # str.(required) text to be synthesized
     "text_lang: "",               # str.(required) language of the text to be synthesized
@@ -60,11 +61,19 @@ tts_url = base_url + "/tts"
 change_GPT_url = base_url + "/set_gpt_weights"
 change_sovits_url = base_url + "/set_sovits_weights"
 
+### 推理
 def fetchTTSSound(request: TTS_Request):
     res = requests.post(tts_url, data=json.dumps(data), verify=True)
     print(res)
     return res
+    
+```
+### 命令控制
 
+command:
+"restart": 重新运行
+"exit": 结束运行
+```
 def controlModel(command: str = None):
     if(command is None || (command != "restart" && (command != "exit"))
         return
@@ -76,6 +85,7 @@ def controlModel(command: str = None):
     print(res)
     return res
 
+### 切换GPT模型
 def changeGPTModel(weights_path: str = None):
     if(weights_path is None)
         return
@@ -88,6 +98,7 @@ def changeGPTModel(weights_path: str = None):
     print(res)
     return res
 
+### 切换Sovits模型
 def changeSovitsModel(weights_path: str = None):
     if(weights_path is None)
         return
