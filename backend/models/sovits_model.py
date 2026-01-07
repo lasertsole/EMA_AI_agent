@@ -60,6 +60,7 @@ control_url = base_url + "/control"
 tts_url = base_url + "/tts"
 change_GPT_url = base_url + "/set_gpt_weights"
 change_sovits_url = base_url + "/set_sovits_weights"
+change_refer_audio_url = base_url + "/set_refer_audio"
 
 ### 推理
 def fetchTTSSound(request: TTS_Request):
@@ -108,5 +109,18 @@ def changeSovitsModel(weights_path: str = None):
     }
     
     res = requests.get(change_sovits_url, params=payload)
+    print(res)
+    return res
+    
+### 切换参考音频
+def changeReferAudio(refer_audio_path: str = None):
+    if(weights_path is None)
+        return
+
+    payload={
+        refer_audio_path: refer_audio_path
+    }
+    
+    res = requests.get(change_refer_audio_url, params=payload)
     print(res)
     return res
