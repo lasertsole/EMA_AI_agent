@@ -1,3 +1,5 @@
+from typing import Union
+import json
 import requests
 from pydantic import BaseModel
 
@@ -64,22 +66,22 @@ change_refer_audio_url = base_url + "/set_refer_audio"
 
 ### 推理
 def fetchTTSSound(request: TTS_Request):
-    res = requests.post(tts_url, data=json.dumps(data), verify=True)
+    res = requests.post(tts_url, data=json.dumps(request), verify=True)
     print(res)
     return res
     
-```
+'''
 ### 命令控制
 
 command:
 "restart": 重新运行
 "exit": 结束运行
-```
+'''
 def controlModel(command: str = None):
-    if(command is None || (command != "restart" && (command != "exit"))
+    if(command is None or (command != "restart" and command != "exit")):
         return
     payload={
-        command: weights_path
+        command: command
     }
     
     res = requests.get(control_url, params=payload)
@@ -88,7 +90,7 @@ def controlModel(command: str = None):
 
 ### 切换GPT模型
 def changeGPTModel(weights_path: str = None):
-    if(weights_path is None)
+    if(weights_path is None):
         return
 
     payload={
@@ -101,7 +103,7 @@ def changeGPTModel(weights_path: str = None):
 
 ### 切换Sovits模型
 def changeSovitsModel(weights_path: str = None):
-    if(weights_path is None)
+    if(weights_path is None):
         return
 
     payload={
@@ -114,7 +116,7 @@ def changeSovitsModel(weights_path: str = None):
     
 ### 切换参考音频
 def changeReferAudio(refer_audio_path: str = None):
-    if(weights_path is None)
+    if(refer_audio_path is None):
         return
 
     payload={
