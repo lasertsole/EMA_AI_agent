@@ -6,8 +6,8 @@
   <component name="ChangeListManager">
     <list default="true" id="823222bf-bcd3-4fc1-9584-1cc7eda194dc" name="Changes" comment="update demo.py">
       <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/sovits_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/sovits_model.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/rag/demo.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/rag/backgroundInfo.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/rag/rag_source/otherCharacters.txt" beforeDir="false" afterPath="$PROJECT_DIR$/tools/rag/rag_source/allCharacters.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -66,8 +66,8 @@
       <recent name="C:\Users\Administrator\Desktop\EMA_AI_agent-main\tools\rag\core" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.demo">
-    <configuration name="demo" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+  <component name="RunManager" selected="Python.backgroundInfo">
+    <configuration name="backgroundInfo" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="EMA_AI_agent-main" />
       <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -81,7 +81,7 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <option name="RUN_TOOL" value="" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tools/rag/demo.py" />
+      <option name="SCRIPT_NAME" value="C:\Users\Administrator\Desktop\EMA_AI_agent-main\tools\rag\backgroundInfo.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -116,7 +116,7 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.demo" />
+        <item itemvalue="Python.backgroundInfo" />
         <item itemvalue="Python.main" />
       </list>
     </recent_temporary>
