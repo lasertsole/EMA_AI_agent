@@ -7,7 +7,7 @@ text_splitter = RecursiveCharacterTextSplitter(
     chunk_size= 1,
     chunk_overlap=0
 )
-loader = TextLoader("./rag_source/otherCharacters.txt", encoding="utf-8")
+loader = TextLoader("rag_source/allCharacters.txt", encoding="utf-8")
 documents = loader.load()
 
 chunks = text_splitter.split_documents(documents)
