@@ -1,6 +1,6 @@
-import os.path
+from pathlib import Path
 from typing import List
-
+from langchain_core.tools import Tool
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import TextLoader
@@ -21,27 +21,26 @@ text_splitter = RecursiveCharacterTextSplitter(
     chunk_size= 1,
     chunk_overlap=0
 )
-loader = TextLoader("rag_source/allCharacters.txt", encoding="utf-8")
+
+current_dir = Path(__file__).parent.resolve()
+info_path = current_dir / "rag_source/allCharacters.txt"
+
+loader = TextLoader(info_path, encoding="utf-8")
 documents = loader.load()
 
 chunks = text_splitter.split_documents(documents)
 
 chunks = [format_chunk(chunk, separators) for chunk in chunks]
 
-indexFolderPath = "./rag_indexDB/backgroundInfo"
-if not os.path.exists(indexFolderPath):
+indexFolderPath = current_dir / "rag_indexDB/backgroundInfo"
+if not indexFolderPath.exists():
     vector_store = FAISS.from_documents(chunks, embedding=embed_model)
-    vector_store.save_local(indexFolderPath)
+    vector_store.save_local(indexFolderPath.as_posix())
 
-def query_background_info(query:str, k:int) -> List[Document]:
+k:int = 3
+def _query_background_info(query:str) -> List[Document]:
     ### 检验参数 ###
-    if (k is None):
-        raise ValueError("k is required")
-    elif (isinstance(k, int) == False):
-        raise TypeError("k must be an integer")
-    elif (k < 1):
-        raise ValueError("k is invalid")
-    elif (query is None):
+    if (query is None):
         raise ValueError("query is None")
     elif (isinstance(query, str) == False):
         raise TypeError("query has is type error")
@@ -56,3 +55,6 @@ def query_background_info(query:str, k:int) -> List[Document]:
     ### 重排 ###
     rerankResults = rerank_model.invoke(query, k=k, documents=retrieveResults)
     return rerankResults
+
+query_background_info = Tool(name="query_background_info", func=_query_background_info, description="""当需要回答 魔法少女的魔女审批 有关知识时调用此工具，
+输入为具体问题，输出为知识库检索到的答案""")

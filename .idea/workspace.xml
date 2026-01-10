@@ -4,11 +4,15 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="823222bf-bcd3-4fc1-9584-1cc7eda194dc" name="Changes" comment="update demo.py">
+    <list default="true" id="823222bf-bcd3-4fc1-9584-1cc7eda194dc" name="Changes" comment="update backgroundInfo.py">
       <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/agent.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/personality.txt" beforeDir="false" afterPath="$PROJECT_DIR$/personality.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/rag/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/rag/__init__.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tools/rag/backgroundInfo.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/rag/backgroundInfo.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/rag/core/retriever.py" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -249,7 +253,15 @@
       <option name="project" value="LOCAL" />
       <updated>1767926978040</updated>
     </task>
-    <option name="localTasksCounter" value="15" />
+    <task id="LOCAL-00015" summary="update backgroundInfo.py">
+      <option name="closed" value="true" />
+      <created>1768029179593</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1768029179593</updated>
+    </task>
+    <option name="localTasksCounter" value="16" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -260,6 +272,7 @@
     <MESSAGE value="update personality" />
     <MESSAGE value="update otherCharacters.txt" />
     <MESSAGE value="update demo.py" />
-    <option name="LAST_COMMIT_MESSAGE" value="update demo.py" />
+    <MESSAGE value="update backgroundInfo.py" />
+    <option name="LAST_COMMIT_MESSAGE" value="update backgroundInfo.py" />
   </component>
 </project>
