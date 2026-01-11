@@ -1,7 +1,7 @@
 from pathlib import Path
 from langchain.agents import create_agent
 from langgraph.checkpoint.memory import InMemorySaver
-from models import basic_model
+from models import base_model
 from middlewares import dynamic_model_routing, summarization
 from tools import web_search, query_background_info
 
@@ -23,7 +23,7 @@ checkpoint = InMemorySaver()
 
 #生成agent对象
 agent = create_agent(
-    model=basic_model,
+    model=base_model,
     tools=[web_search, query_background_info],
     system_prompt = systemPrompt,
     checkpointer=checkpoint,

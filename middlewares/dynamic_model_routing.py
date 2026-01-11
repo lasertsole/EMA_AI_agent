@@ -1,5 +1,5 @@
 from langchain.messages import HumanMessage
-from models import basic_model, reasoner_model
+from models import base_model, reasoner_model
 from langchain.agents.middleware import wrap_model_call, ModelRequest, ModelResponse
 
 def _get_last_user_text(messages) -> str:

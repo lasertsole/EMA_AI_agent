@@ -6,13 +6,13 @@
 
 models:
   default_chat_model:
-    type: chat
-    model_provider: ${GRAPHRAG_API_PROVIDER}
+    type: openai_chat
+    model_provider: openai
     auth_type: api_key # or azure_managed_identity
     api_base: ${GRAPHRAG_API_BASE}
     api_key: ${GRAPHRAG_API_KEY} # set this in the generated .env file, or remove if managed identity
     model: ${GRAPHRAG_MODEL_NAME}
-    # api_version: 2024-05-01-preview
+    encoding_model: cl100k_base # required encoding format
     model_supports_json: true # recommended if this is available for your model.
     concurrent_requests: 25
     async_mode: threaded # or asyncio
@@ -21,13 +21,13 @@ models:
     tokens_per_minute: null
     requests_per_minute: null
   default_embedding_model:
-    type: embedding
-    model_provider: ${EMBEDDING_API_PROVIDER}
+    type: openai_embedding
+    model_provider: openai
     auth_type: api_key
     api_base: ${EMBEDDING_API_BASE}
     api_key: ${EMBEDDING_API_KEY}
     model: ${EMBEDDING_MODEL_NAME}
-    # api_version: 2024-05-01-preview
+    encoding_model: cl100k_base # required encoding format
     concurrent_requests: 25
     async_mode: threaded # or asyncio
     retry_strategy: exponential_backoff
