@@ -33,6 +33,6 @@ def dynamic_model_routing(request: ModelRequest, handler) -> ModelResponse:
     )
 
     # 选择模型
-    request.override(model=reasoner_model) if is_hard else basic_model
+    request.override(model=reasoner_model) if is_hard else base_model
 
     return handler(request)
