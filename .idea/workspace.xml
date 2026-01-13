@@ -4,16 +4,14 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="823222bf-bcd3-4fc1-9584-1cc7eda194dc" name="Changes" comment="change project structure temporarily">
-      <change afterPath="$PROJECT_DIR$/models/extract_model.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/models/rag_llm_model.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tools/rag/demo.py" afterDir="false" />
+    <list default="true" id="823222bf-bcd3-4fc1-9584-1cc7eda194dc" name="Changes" comment="prepare connect agentic rag to graph rag by langExtract">
+      <change afterPath="$PROJECT_DIR$/tools/rag/demo1.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/models/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/embed_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/embed_model.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/rerank_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/rerank_model.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/rag/core/graphrag.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/extract_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/extract_model.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/rag/backgroundInfo.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/rag/backgroundInfo.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/rag/demo.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/rag/demo.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -61,6 +59,7 @@
     "Python.backgroundInfo.executor": "Run",
     "Python.demo (1).executor": "Run",
     "Python.demo.executor": "Run",
+    "Python.demo1.executor": "Run",
     "Python.extract_model.executor": "Run",
     "Python.graphrag.executor": "Run",
     "Python.main.executor": "Run",
@@ -85,7 +84,7 @@
       <recent name="C:\Users\Administrator\Desktop\EMA_AI_agent-main\tools\rag\core" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.demo (1)">
+  <component name="RunManager" selected="Python.demo1">
     <configuration name="demo (1)" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="EMA_AI_agent-main" />
       <option name="ENV_FILES" value="" />
@@ -122,6 +121,28 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <option name="SCRIPT_NAME" value="D:\project\EMA_AI_agent\tools\rag\demo.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="demo1" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="EMA_AI_agent-main" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tools/rag" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tools/rag/demo1.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -198,6 +219,7 @@
       <method v="2" />
     </configuration>
     <list>
+      <item itemvalue="Python.demo1" />
       <item itemvalue="Python.demo" />
       <item itemvalue="Python.demo (1)" />
       <item itemvalue="Python.extract_model" />
@@ -205,11 +227,11 @@
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.demo1" />
         <item itemvalue="Python.demo (1)" />
         <item itemvalue="Python.extract_model" />
         <item itemvalue="Python.demo (1)" />
         <item itemvalue="Python.demo" />
-        <item itemvalue="Python.main" />
       </list>
     </recent_temporary>
   </component>
@@ -388,7 +410,15 @@
       <option name="project" value="LOCAL" />
       <updated>1768144069132</updated>
     </task>
-    <option name="localTasksCounter" value="21" />
+    <task id="LOCAL-00021" summary="prepare connect agentic rag to graph rag by langExtract">
+      <option name="closed" value="true" />
+      <created>1768233548933</created>
+      <option name="number" value="00021" />
+      <option name="presentableId" value="LOCAL-00021" />
+      <option name="project" value="LOCAL" />
+      <updated>1768233548933</updated>
+    </task>
+    <option name="localTasksCounter" value="22" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -403,6 +433,7 @@
     <MESSAGE value="rag basically successful" />
     <MESSAGE value="graphrag build successful" />
     <MESSAGE value="change project structure temporarily" />
-    <option name="LAST_COMMIT_MESSAGE" value="change project structure temporarily" />
+    <MESSAGE value="prepare connect agentic rag to graph rag by langExtract" />
+    <option name="LAST_COMMIT_MESSAGE" value="prepare connect agentic rag to graph rag by langExtract" />
   </component>
 </project>

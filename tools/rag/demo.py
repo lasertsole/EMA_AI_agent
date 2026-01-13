@@ -1,9 +1,11 @@
+import time
 import chromadb
 from langchain_chroma import Chroma
 from pathlib import Path
 from dataclasses import dataclass, field, asdict
 from collections import defaultdict, Counter
 from typing import Optional
+from models import extract_model
 
 CHROMA_PERSIST_DIR = './chroma_db_persist_dir'
 COLLECTION_NAME = 'knowledge_graph'
@@ -35,3 +37,17 @@ class KnowledgeExtraction:
             for k, v in self.attributes.items():
                 parts.append(f"{k}: {v}")
         return " | ".join(parts)
+
+current_dir = Path(__file__).parent.resolve()
+TXT_PATH = current_dir / "rag_source/allCharacters.txt"
+
+txt_file= Path(TXT_PATH)
+
+# 检查文件是否存在
+if txt_file.exists():
+    file_size = txt_file.stat().st_size
+    print(f"文件大小：({file_size/1024:.2f} KB)")
+
+parse_start_time = time.time()
+
+extract_model.invoke([txt_file])

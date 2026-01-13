@@ -34,8 +34,9 @@ chunks = [format_chunk(chunk, separators) for chunk in chunks]
 
 indexFolderPath = current_dir / "rag_indexDB/backgroundInfo"
 if not indexFolderPath.exists():
+    indexFolderPath=indexFolderPath.as_posix()
     vector_store = FAISS.from_documents(chunks, embedding=embed_model)
-    vector_store.save_local(indexFolderPath.as_posix())
+    vector_store.save_local(indexFolderPath)
 
 k:int = 3
 def _query_background_info(query:str) -> List[Document]:
@@ -48,7 +49,7 @@ def _query_background_info(query:str) -> List[Document]:
         raise ValueError("query is empty")
 
     ### 召回 ###
-    vector_store = FAISS.load_local(embeddings=embed_model, folder_path=indexFolderPath.as_posix(), allow_dangerous_deserialization=True)
+    vector_store = FAISS.load_local(embeddings=embed_model, folder_path=indexFolderPath, allow_dangerous_deserialization=True)
     retrieve = vector_store.as_retriever(search_kwargs={'k':k})
     retrieveResults = retrieve.invoke(query)
 
