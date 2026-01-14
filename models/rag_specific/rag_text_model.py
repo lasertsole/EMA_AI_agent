@@ -8,7 +8,7 @@ load_dotenv(env_path, override = True)
 api_key = os.getenv("DEEPSEEK_API_KEY")
 
 #生成模型对象
-rag_llm_model = ChatDeepSeek(#对话模型
+rag_text_model = ChatDeepSeek(#对话模型
     model='deepseek-chat',
     api_key= api_key,
     temperature=0.5,

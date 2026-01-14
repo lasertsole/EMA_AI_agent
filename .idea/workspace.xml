@@ -4,14 +4,16 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="823222bf-bcd3-4fc1-9584-1cc7eda194dc" name="Changes" comment="prepare connect agentic rag to graph rag by langExtract">
-      <change afterPath="$PROJECT_DIR$/tools/rag/demo1.py" afterDir="false" />
+    <list default="true" id="823222bf-bcd3-4fc1-9584-1cc7eda194dc" name="Changes" comment="check graphrag table">
+      <change afterPath="$PROJECT_DIR$/models/rag_specific/__init__.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/models/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/extract_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/extract_model.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/rag/backgroundInfo.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/rag/backgroundInfo.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/rag/demo.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/rag/demo.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/embed_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/rag_specific/embed_model.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/extract_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/rag_specific/extract_model.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/rag_llm_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/rag_specific/rag_text_model.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/rerank_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/rag_specific/rerank_model.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/rag/demo1.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/rag/demo1.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -62,6 +64,7 @@
     "Python.demo1.executor": "Run",
     "Python.extract_model.executor": "Run",
     "Python.graphrag.executor": "Run",
+    "Python.graphrag_model.executor": "Run",
     "Python.main.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
@@ -78,6 +81,7 @@
       <recent name="D:\project\EMA_AI_agent\tools\rag\rag_indexDB\openl\input" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\project\EMA_AI_agent\models\rag_specific" />
       <recent name="D:\project\EMA_AI_agent\tools\rag" />
       <recent name="D:\project\EMA_AI_agent\tools\rag\rag_indexDB" />
       <recent name="D:\project\EMA_AI_agent\tools\rag\rag_indexDB\backgroundInfo" />
@@ -99,28 +103,6 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tools/rag/demo.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-    <configuration name="demo" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="EMA_AI_agent-main" />
-      <option name="ENV_FILES" value="" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tools/rag/core" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="D:\project\EMA_AI_agent\tools\rag\demo.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -186,7 +168,29 @@
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/models/extract_model.py" />
+      <option name="SCRIPT_NAME" value="D:\project\EMA_AI_agent\models\rag_specific\extract_model.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="graphrag_model" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="EMA_AI_agent-main" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/models/rag_specific" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/models/rag_specific/graphrag_model.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -220,7 +224,7 @@
     </configuration>
     <list>
       <item itemvalue="Python.demo1" />
-      <item itemvalue="Python.demo" />
+      <item itemvalue="Python.graphrag_model" />
       <item itemvalue="Python.demo (1)" />
       <item itemvalue="Python.extract_model" />
       <item itemvalue="Python.main" />
@@ -228,10 +232,10 @@
     <recent_temporary>
       <list>
         <item itemvalue="Python.demo1" />
+        <item itemvalue="Python.graphrag_model" />
         <item itemvalue="Python.demo (1)" />
         <item itemvalue="Python.extract_model" />
         <item itemvalue="Python.demo (1)" />
-        <item itemvalue="Python.demo" />
       </list>
     </recent_temporary>
   </component>
@@ -418,7 +422,15 @@
       <option name="project" value="LOCAL" />
       <updated>1768233548933</updated>
     </task>
-    <option name="localTasksCounter" value="22" />
+    <task id="LOCAL-00022" summary="check graphrag table">
+      <option name="closed" value="true" />
+      <created>1768317084090</created>
+      <option name="number" value="00022" />
+      <option name="presentableId" value="LOCAL-00022" />
+      <option name="project" value="LOCAL" />
+      <updated>1768317084090</updated>
+    </task>
+    <option name="localTasksCounter" value="23" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -434,6 +446,7 @@
     <MESSAGE value="graphrag build successful" />
     <MESSAGE value="change project structure temporarily" />
     <MESSAGE value="prepare connect agentic rag to graph rag by langExtract" />
-    <option name="LAST_COMMIT_MESSAGE" value="prepare connect agentic rag to graph rag by langExtract" />
+    <MESSAGE value="check graphrag table" />
+    <option name="LAST_COMMIT_MESSAGE" value="check graphrag table" />
   </component>
 </project>
