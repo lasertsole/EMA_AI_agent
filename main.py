@@ -27,6 +27,5 @@ while True:
     result = agent.invoke({"messages":message_history}, config=config )
     print(result["messages"][-1].content)
     message_history=result["messages"]
-
     # 分隔线（美化输出）
     print("\n" + "-" * 40)

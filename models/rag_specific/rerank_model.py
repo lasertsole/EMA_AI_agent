@@ -10,7 +10,7 @@ from langchain_core.callbacks import CallbackManagerForRetrieverRun
 # 加载环境变量和模型初始化（同上）
 env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../.env')
 load_dotenv(env_path, override=True)
-api_key = os.getenv("BGE_M3_KEY")
+api_key = os.getenv("EMBEDDING_API_KEY")
 
 # 定义请求基本信息
 url = "https://api.modelarts-maas.com/v1/rerank"
