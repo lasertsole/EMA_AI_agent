@@ -25,8 +25,13 @@ from graphrag.tokenizer.get_tokenizer import get_tokenizer
 # 加载环境变量
 env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../.env')
 load_dotenv(env_path, override = True)
-text_api_key = os.getenv("DEEPSEEK_API_KEY")
-embedding_api_key = os.getenv("BGE_M3_KEY")
+text_api_key = os.getenv("CHAT_API_KEY")
+text_api_base = os.getenv("CHAT_API_BASE")
+text_api_name = os.getenv("CHAT_API_NAME")
+
+embedding_api_key = os.getenv("EMBEDDING_API_KEY")
+embedding_api_base = os.getenv("EMBEDDING_API_BASE")
+embedding_api_name = os.getenv("EMBEDDING_API_NAME")
 
 current_dir = Path(__file__).parent.resolve()
 INPUT_DIR = current_dir / "graphrag_source/output"
@@ -66,8 +71,8 @@ chat_config = LanguageModelConfig(
     api_key=text_api_key,
     type=ModelType.OpenAIChat,
     model_provider="openai",
-    api_base="https://api.deepseek.com/v1",
-    model="deepseek-chat",
+    api_base=text_api_base,
+    model=text_api_name,
     max_retries=20,
     encoding_model="cl100k_base"
 )
@@ -81,8 +86,8 @@ embedding_config = LanguageModelConfig(
     api_key=embedding_api_key,
     type=ModelType.OpenAIEmbedding,
     model_provider="openai",
-    api_base="https://api.modelarts-maas.com/v1",
-    model="bge-m3",
+    api_base=embedding_api_base,
+    model=embedding_api_name,
     max_retries=20,
     encoding_model="cl100k_base",
 )

@@ -4,21 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="823222bf-bcd3-4fc1-9584-1cc7eda194dc" name="Changes" comment="check graphrag table">
+    <list default="true" id="823222bf-bcd3-4fc1-9584-1cc7eda194dc" name="Changes" comment="simplify structure">
       <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/middlewares/summarization.py" beforeDir="false" afterPath="$PROJECT_DIR$/middlewares/summarization.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/base_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/base_model.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/rag_specific/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/rag_specific/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/rag_specific/embed_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/rag_specific/embed_model.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/rag_specific/rag_text_model.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/rag_specific/rerank_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/rag_specific/rerank_model.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/reasoner_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/reasoner_model.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/summary_model.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/rag/graphrag_source/.env" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/rag/graphrag_source/settings.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/tools/rag/graphrag_source/settings.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/rag/demo1.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/rag/demo1.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -94,7 +82,7 @@
       <recent name="C:\Users\Administrator\Desktop\EMA_AI_agent-main\tools\rag\core" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.main">
+  <component name="RunManager" selected="Python.demo1">
     <configuration name="backgroundInfo" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="EMA_AI_agent-main" />
       <option name="ENV_FILES" value="" />
@@ -214,9 +202,9 @@
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.demo1" />
         <item itemvalue="Python.main" />
         <item itemvalue="Python.backgroundInfo" />
-        <item itemvalue="Python.demo1" />
         <item itemvalue="Python.graphrag_model" />
         <item itemvalue="Python.demo (1)" />
       </list>
@@ -413,7 +401,15 @@
       <option name="project" value="LOCAL" />
       <updated>1768317084090</updated>
     </task>
-    <option name="localTasksCounter" value="23" />
+    <task id="LOCAL-00023" summary="simplify structure">
+      <option name="closed" value="true" />
+      <created>1768488634964</created>
+      <option name="number" value="00023" />
+      <option name="presentableId" value="LOCAL-00023" />
+      <option name="project" value="LOCAL" />
+      <updated>1768488634964</updated>
+    </task>
+    <option name="localTasksCounter" value="24" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -441,6 +437,7 @@
     <MESSAGE value="change project structure temporarily" />
     <MESSAGE value="prepare connect agentic rag to graph rag by langExtract" />
     <MESSAGE value="check graphrag table" />
-    <option name="LAST_COMMIT_MESSAGE" value="check graphrag table" />
+    <MESSAGE value="simplify structure" />
+    <option name="LAST_COMMIT_MESSAGE" value="simplify structure" />
   </component>
 </project>
