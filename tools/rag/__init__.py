@@ -1,1 +1,1 @@
-from .demo1 import query_background_info
+from .demo1 import query_background_info, query_candidate_questions

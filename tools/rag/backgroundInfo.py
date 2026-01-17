@@ -1,6 +1,5 @@
 from pathlib import Path
 from typing import List
-from langchain_core.tools import Tool
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import TextLoader
