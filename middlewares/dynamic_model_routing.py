@@ -10,7 +10,7 @@ def _get_last_user_text(messages) -> str:
     return ""
 
 @wrap_model_call
-def dynamic_model_routing(request: ModelRequest, handler) -> ModelResponse:
+async def dynamic_model_routing(request: ModelRequest, handler) -> ModelResponse:
     """
     根据对话复杂度动态选择 DeepSeek 模型:
     - 复杂：deepseek-reasoner
@@ -35,4 +35,10 @@ def dynamic_model_routing(request: ModelRequest, handler) -> ModelResponse:
     # 选择模型
     request.override(model=reasoner_model) if is_hard else base_model
 
-    return handler(request)
+    # 结果异步返回
+    for attempt in range(3):
+        try:
+            return await handler(request)
+        except Exception:
+            if attempt == 2:
+                raise

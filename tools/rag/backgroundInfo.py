@@ -57,5 +57,5 @@ def _query_background_info(query:str) -> List[Document]:
     rerankResults = rerank_model.invoke(query, k=k, documents=retrieveResults)
     return rerankResults
 
-query_background_info = Tool(name="query_background_info", func=_query_background_info, description="""当需要回答 魔法少女的魔女审批 有关知识时调用此工具，
-输入为具体问题，输出为知识库检索到的答案""")
+# query_background_info = Tool(name="query_background_info", func=_query_background_info, description="""当需要回答 魔法少女的魔女审批 有关知识时调用此工具，
+# 输入为具体问题，输出为知识库检索到的答案""")

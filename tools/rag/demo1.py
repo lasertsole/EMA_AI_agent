@@ -3,6 +3,8 @@ import asyncio
 import pandas as pd
 from pathlib import Path
 from dotenv import load_dotenv
+from pydantic import BaseModel, Field
+from langchain_core.tools import tool
 from graphrag.config.models.vector_store_schema_config import VectorStoreSchemaConfig
 from graphrag.query.context_builder.entity_extraction import EntityVectorStoreKey
 from graphrag.query.indexer_adapters import (
@@ -140,8 +142,8 @@ search_engine = LocalSearch(
     response_type="multiple paragraphs",  # free form text describing the response type and format, can be anything, e.g. prioritized list, single paragraph, multiple paragraphs, multiple-page report
 )
 
-async def text():
-    result = await search_engine.search("艾玛的生日是什么时候?")
-    print(result.response)
-
-asyncio.run(text())
+@tool
+async def query_background_info(query:str)->str:
+    """当需要回答 魔法少女的魔女审批 有关知识时调用此工具，输入为具体问题，输出为知识库检索到的答案"""
+    result = await search_engine.search(query)
+    return result.response
