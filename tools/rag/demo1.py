@@ -21,11 +21,16 @@ from graphrag.query.structured_search.local_search.mixed_context import (
 from graphrag.query.structured_search.global_search.community_context import (
     GlobalCommunityContext,
 )
+from graphrag.query.structured_search.drift_search.drift_context import (
+    DRIFTSearchContextBuilder,
+)
 from graphrag.query.structured_search.local_search.search import LocalSearch
 from graphrag.query.structured_search.global_search.search import GlobalSearch
+from graphrag.query.structured_search.drift_search.search import DRIFTSearch
 from graphrag.vector_stores.lancedb import LanceDBVectorStore
 from graphrag.config.enums import ModelType
 from graphrag.config.models.language_model_config import LanguageModelConfig
+from graphrag.config.models.drift_search_config import DRIFTSearchConfig
 from graphrag.language_model.manager import ModelManager
 from graphrag.tokenizer.get_tokenizer import get_tokenizer
 
@@ -171,6 +176,27 @@ reduce_llm_params = {
     "temperature": 0.0,
 }
 
+drift_params = DRIFTSearchConfig(
+    temperature=0,
+    max_tokens=12_000,
+    primer_folds=1,
+    drift_k_followups=3,
+    n_depth=3,
+    n=1,
+)
+
+drift_context_builder = DRIFTSearchContextBuilder(
+    model=chat_model,
+    text_embedder=text_embedder,
+    entities=entities,
+    relationships=relationships,
+    reports=reports,
+    entity_text_embeddings=description_embedding_store,
+    text_units=text_units,
+    tokenizer=tokenizer,
+    config=drift_params,
+)
+
 local_search_engine = LocalSearch(
     model=chat_model,
     context_builder=local_context_builder,
@@ -192,6 +218,10 @@ global_search_engine = GlobalSearch(
     context_builder_params=global_context_builder_params,
     concurrent_coroutines=32,
     response_type="multiple paragraphs",  # free form text describing the response type and format, can be anything, e.g. prioritized list, single paragraph, multiple paragraphs, multiple-page report
+)
+
+drift_search_engine = DRIFTSearch(
+    model=chat_model, context_builder=drift_context_builder, tokenizer=tokenizer
 )
 
 question_generator = LocalQuestionGen(
@@ -217,7 +247,7 @@ async def query_background_info(query:str)->str:
     return result.response
 
 async def test():
-    result = await global_search_engine.search("艾玛的情报")
+    result = await drift_search_engine.search("艾玛生日什么时候?")
     print(result.response)
 
 

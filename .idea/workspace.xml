@@ -4,11 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="823222bf-bcd3-4fc1-9584-1cc7eda194dc" name="Changes" comment="Convert the synchronous agent to an asynchronous one">
+    <list default="true" id="823222bf-bcd3-4fc1-9584-1cc7eda194dc" name="Changes" comment="create a global_search_engine">
       <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/rag/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/rag/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/rag/backgroundInfo.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/rag/backgroundInfo.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tools/rag/demo1.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/rag/demo1.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -429,7 +427,15 @@
       <option name="project" value="LOCAL" />
       <updated>1768660845327</updated>
     </task>
-    <option name="localTasksCounter" value="26" />
+    <task id="LOCAL-00026" summary="create a global_search_engine">
+      <option name="closed" value="true" />
+      <created>1768665182324</created>
+      <option name="number" value="00026" />
+      <option name="presentableId" value="LOCAL-00026" />
+      <option name="project" value="LOCAL" />
+      <updated>1768665182324</updated>
+    </task>
+    <option name="localTasksCounter" value="27" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -459,6 +465,7 @@
     <MESSAGE value="check graphrag table" />
     <MESSAGE value="simplify structure" />
     <MESSAGE value="Convert the synchronous agent to an asynchronous one" />
-    <option name="LAST_COMMIT_MESSAGE" value="Convert the synchronous agent to an asynchronous one" />
+    <MESSAGE value="create a global_search_engine" />
+    <option name="LAST_COMMIT_MESSAGE" value="create a global_search_engine" />
   </component>
 </project>
