@@ -1,7 +1,7 @@
 import os
 import asyncio
 from dotenv import load_dotenv
-from langchain.messages import HumanMessage, AIMessage
+from langchain.messages import HumanMessage, AIMessage, RemoveMessage, AIMessageChunk
 from agent import agent
 
 async def main():
@@ -31,20 +31,30 @@ async def main():
         print("橘雪莉：", end="", flush=True)
 
         if is_stream == 'True':
-            all_content = ''
-            usage_metadata = None
-            response_metadata = None
+            merge_AI_message_chunk = AIMessageChunk(content="")
             async for chunk in agent.astream({"messages":message_history}, config=config, stream_mode="messages" ):
-                ai_msg_chunk = chunk[0]
-                content = ai_msg_chunk.content
-                all_content+=content
-                print(content,flush=True, end="")
-                if hasattr(ai_msg_chunk, "usage_metadata") and ai_msg_chunk.usage_metadata is not None:
-                    usage_metadata = ai_msg_chunk.usage_metadata
-                if hasattr(ai_msg_chunk, "response_metadata") and ai_msg_chunk.response_metadata is not None:
-                    response_metadata = ai_msg_chunk.response_metadata
-            ai_msg = AIMessage(content = all_content, usage_metadata = usage_metadata,response_metadata=response_metadata)
-            message_history.append(ai_msg)
+                msg_chunk:AIMessageChunk = chunk[0]
+                if isinstance(msg_chunk, AIMessageChunk):
+                    merge_AI_message_chunk += msg_chunk
+                    content = msg_chunk.content
+                    print(content,flush=True, end="")
+                    if msg_chunk.chunk_position == "last":
+                        ai_msg = AIMessage(
+                            content = merge_AI_message_chunk.content,
+                            usage_metadata = merge_AI_message_chunk.usage_metadata,
+                            response_metadata = merge_AI_message_chunk.response_metadata,
+                            tool_calls = merge_AI_message_chunk.tool_calls
+                        )
+                        message_history.append(ai_msg)
+                elif isinstance(msg_chunk, RemoveMessage):
+                    remove_id = msg_chunk.id
+                    if remove_id == "__remove_all__":
+                        message_history = []
+                    else:
+                        message_history = [msg for msg in message_history if msg["id"] != remove_id]
+                else:
+                    message_history.append(msg_chunk)
+
         else:
             result = await agent.ainvoke({"messages":message_history}, config=config )
             print(result["messages"][-1].content)
