@@ -1,9 +1,6 @@
 import time
-import chromadb
-from langchain_chroma import Chroma
 from pathlib import Path
 from dataclasses import dataclass, field, asdict
-from collections import defaultdict, Counter
 from typing import Optional
 from models import extract_model
 

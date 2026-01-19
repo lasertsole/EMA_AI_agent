@@ -246,9 +246,9 @@ async def query_background_info(query:str)->str:
     result = await local_search_engine.search(query)
     return result.response
 
-async def test():
-    result = await drift_search_engine.search("艾玛生日什么时候?")
-    print(result.response)
+#async def test():
+#    result = await drift_search_engine.search("艾玛生日什么时候?")
+#    print(result.response)
 
 
-asyncio.run(test())
+#asyncio.run(test())

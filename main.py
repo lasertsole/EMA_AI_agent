@@ -1,7 +1,7 @@
 import os
 import asyncio
 from dotenv import load_dotenv
-from langchain.messages import HumanMessage
+from langchain.messages import HumanMessage, AIMessage
 from agent import agent
 
 async def main():
@@ -31,15 +31,27 @@ async def main():
         print("橘雪莉：", end="", flush=True)
 
         if is_stream == 'True':
-            result = await agent.astream({"messages":message_history}, config=config, stream_mode="messages" )
-            print(result)
-            return
+            all_content = ''
+            usage_metadata = None
+            response_metadata = None
+            async for chunk in agent.astream({"messages":message_history}, config=config, stream_mode="messages" ):
+                ai_msg_chunk = chunk[0]
+                content = ai_msg_chunk.content
+                all_content+=content
+                print(content,flush=True, end="")
+                if hasattr(ai_msg_chunk, "usage_metadata") and ai_msg_chunk.usage_metadata is not None:
+                    usage_metadata = ai_msg_chunk.usage_metadata
+                if hasattr(ai_msg_chunk, "response_metadata") and ai_msg_chunk.response_metadata is not None:
+                    response_metadata = ai_msg_chunk.response_metadata
+            ai_msg = AIMessage(content = all_content, usage_metadata = usage_metadata,response_metadata=response_metadata)
+            message_history.append(ai_msg)
         else:
             result = await agent.ainvoke({"messages":message_history}, config=config )
             print(result["messages"][-1].content)
             message_history=result["messages"]
-            # 分隔线（美化输出）
-            print("\n" + "-" * 40)
+        # 分隔线（美化输出）
+        print(message_history)
+        print("\n" + "-" * 40)
 
 # 运行异步主函数
 if __name__ == "__main__":
