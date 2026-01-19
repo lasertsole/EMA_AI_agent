@@ -4,10 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="823222bf-bcd3-4fc1-9584-1cc7eda194dc" name="Changes" comment="create a global_search_engine">
+    <list default="true" id="823222bf-bcd3-4fc1-9584-1cc7eda194dc" name="Changes" comment="TODO refine stream_mode">
       <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/agent.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/middlewares/summarization.py" beforeDir="false" afterPath="$PROJECT_DIR$/middlewares/summarization.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -440,7 +442,15 @@
       <option name="project" value="LOCAL" />
       <updated>1768665182324</updated>
     </task>
-    <option name="localTasksCounter" value="27" />
+    <task id="LOCAL-00027" summary="TODO refine stream_mode">
+      <option name="closed" value="true" />
+      <created>1768814172640</created>
+      <option name="number" value="00027" />
+      <option name="presentableId" value="LOCAL-00027" />
+      <option name="project" value="LOCAL" />
+      <updated>1768814172640</updated>
+    </task>
+    <option name="localTasksCounter" value="28" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -471,6 +481,7 @@
     <MESSAGE value="simplify structure" />
     <MESSAGE value="Convert the synchronous agent to an asynchronous one" />
     <MESSAGE value="create a global_search_engine" />
-    <option name="LAST_COMMIT_MESSAGE" value="create a global_search_engine" />
+    <MESSAGE value="TODO refine stream_mode" />
+    <option name="LAST_COMMIT_MESSAGE" value="TODO refine stream_mode" />
   </component>
 </project>

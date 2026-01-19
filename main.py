@@ -34,10 +34,14 @@ async def main():
             merge_AI_message_chunk = AIMessageChunk(content="")
             async for chunk in agent.astream({"messages":message_history}, config=config, stream_mode="messages" ):
                 msg_chunk:AIMessageChunk = chunk[0]
-                if isinstance(msg_chunk, AIMessageChunk):
+                event_dict = chunk[1]
+                langgraph_node = event_dict.get("langgraph_node")
+
+                if isinstance(msg_chunk, AIMessageChunk) and langgraph_node == 'model':
                     merge_AI_message_chunk += msg_chunk
                     content = msg_chunk.content
                     print(content,flush=True, end="")
+
                     if msg_chunk.chunk_position == "last":
                         ai_msg = AIMessage(
                             content = merge_AI_message_chunk.content,
@@ -60,7 +64,6 @@ async def main():
             print(result["messages"][-1].content)
             message_history=result["messages"]
         # 分隔线（美化输出）
-        print(message_history)
         print("\n" + "-" * 40)
 
 # 运行异步主函数
