@@ -1,1 +1,1 @@
-from .graphrag import query_background_info, query_candidate_questions
+from .graph import *
