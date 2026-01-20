@@ -4,10 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="823222bf-bcd3-4fc1-9584-1cc7eda194dc" name="Changes" comment="use checkPointer instead of custom array variable to memory history">
+    <list default="true" id="823222bf-bcd3-4fc1-9584-1cc7eda194dc" name="Changes" comment="update demo1.py">
+      <change afterPath="$PROJECT_DIR$/tools/rag/core_graph.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/rag/demo1.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/rag/demo1.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tools/rag/graphrag_source/.env" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -78,11 +79,11 @@
       <recent name="D:\project\EMA_AI_agent\tools\rag\rag_indexDB\openl\input" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\Administrator\Desktop\EMA_AI_agent-main\tools\rag" />
+      <recent name="C:\Users\Administrator\Desktop\EMA_AI_agent-main\tools\rag\core" />
       <recent name="D:\project\EMA_AI_agent\models\rag_specific" />
       <recent name="D:\project\EMA_AI_agent\tools\rag" />
       <recent name="D:\project\EMA_AI_agent\tools\rag\rag_indexDB" />
-      <recent name="D:\project\EMA_AI_agent\tools\rag\rag_indexDB\backgroundInfo" />
-      <recent name="C:\Users\Administrator\Desktop\EMA_AI_agent-main\tools\rag\core" />
     </key>
   </component>
   <component name="RunManager" selected="Python.main">
@@ -465,7 +466,15 @@
       <option name="project" value="LOCAL" />
       <updated>1768873654404</updated>
     </task>
-    <option name="localTasksCounter" value="30" />
+    <task id="LOCAL-00030" summary="update demo1.py">
+      <option name="closed" value="true" />
+      <created>1768874485948</created>
+      <option name="number" value="00030" />
+      <option name="presentableId" value="LOCAL-00030" />
+      <option name="project" value="LOCAL" />
+      <updated>1768874485948</updated>
+    </task>
+    <option name="localTasksCounter" value="31" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -497,6 +506,7 @@
     <MESSAGE value="Convert the synchronous agent to an asynchronous one" />
     <MESSAGE value="create a global_search_engine" />
     <MESSAGE value="use checkPointer instead of custom array variable to memory history" />
-    <option name="LAST_COMMIT_MESSAGE" value="use checkPointer instead of custom array variable to memory history" />
+    <MESSAGE value="update demo1.py" />
+    <option name="LAST_COMMIT_MESSAGE" value="update demo1.py" />
   </component>
 </project>
