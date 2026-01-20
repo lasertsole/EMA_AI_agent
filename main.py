@@ -32,7 +32,7 @@ async def main():
         print("橘雪莉：", end="", flush=True)
 
         if is_stream == 'True':
-            async for chunk in agent.astream({"messages":message_history}, config=config, stream_mode="messages" ):
+            async for chunk in agent.astream({"messages":message_history}, config=config, stream_mode="messages"):
                 msg_chunk: AIMessageChunk = chunk[0]
                 event_chunk: dict[str, Any] = chunk[1]
 

@@ -24,7 +24,7 @@ checkpoint = InMemorySaver()
 #生成agent对象
 agent = create_agent(
     model=base_model,
-    tools=[web_search],
+    tools=[web_search, query_background_info],
     system_prompt = systemPrompt,
     checkpointer=checkpoint,
     middleware=[dynamic_model_routing, summarization],
