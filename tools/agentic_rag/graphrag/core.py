@@ -47,7 +47,7 @@ embedding_api_base = os.getenv("EMBEDDING_API_BASE")
 embedding_api_name = os.getenv("EMBEDDING_API_NAME")
 
 current_dir = Path(__file__).parent.resolve()
-INPUT_DIR = current_dir / "graphrag_source/output"
+INPUT_DIR = current_dir / "output"
 INPUT_DIR = INPUT_DIR.as_posix()
 LANCEDB_URI = f"{INPUT_DIR}/lancedb"
 
