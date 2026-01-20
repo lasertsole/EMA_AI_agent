@@ -4,8 +4,7 @@ from langchain_core.prompts import PromptTemplate
 from langgraph.checkpoint.memory import InMemorySaver
 from langchain.agents import create_agent
 from pydantic import BaseModel, Field
-from typing import TypedDict, Annotated
-from langgraph.graph import StateGraph, START, END
+from langgraph.graph import StateGraph, START, END, MessagesState
 
 # 线程记忆功能
 checkpoint = InMemorySaver()
@@ -46,7 +45,7 @@ rewriter = rewriter_systemPrompt_Template | base_model.with_structured_output(Re
 
 
 
-class GraphState(TypedDict):
+class GraphState(MessagesState):
     query: str # 原问题
     reQueries: list[str] # 重写后问题列表
     res: str # 查询结果
