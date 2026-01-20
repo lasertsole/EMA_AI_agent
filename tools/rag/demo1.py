@@ -1,5 +1,6 @@
 import os
 import asyncio
+from pydantic import BaseModel, Field
 import pandas as pd
 from typing import List
 from pathlib import Path
@@ -239,10 +240,13 @@ async def query_candidate_questions(queries:List[str])->List[str]:
     )
     return candidate_questions.response
 
+# 工具输入参数
+class BackgroundInfoQuerySchema(BaseModel):
+    query: str = Field(description="具体问题")
 
-@tool
+@tool(args_schema=BackgroundInfoQuerySchema)
 async def query_background_info(query:str)->str:
-    """当需要回答 魔法少女的魔女审批 有关知识时调用此工具，输入 {query} 为具体问题，输出为知识库检索到的答案"""
+    """当需要回答 魔法少女的魔女审批 有关知识时调用此工具，输入为具体问题，输出为知识库检索到的答案"""
     result = await local_search_engine.search(query)
     return result.response
 
