@@ -245,7 +245,7 @@ class BackgroundInfoQuerySchema(BaseModel):
     query: str = Field(description="具体问题")
 
 @tool(args_schema=BackgroundInfoQuerySchema)
-async def query_background_info(query:str)->str:
+async def query_background_info(query:str)-> str:
     """当需要回答 魔法少女的魔女审批 有关知识时调用此工具，输入为具体问题，输出为知识库检索到的答案"""
     result = await local_search_engine.search(query)
     return result.response

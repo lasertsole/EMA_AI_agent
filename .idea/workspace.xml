@@ -4,16 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="823222bf-bcd3-4fc1-9584-1cc7eda194dc" name="Changes" comment="add tool_call_limit.py">
-      <change afterPath="$PROJECT_DIR$/tools/agentic_rag/naive/__init__.py" afterDir="false" />
+    <list default="true" id="823222bf-bcd3-4fc1-9584-1cc7eda194dc" name="Changes" comment="update structure">
       <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/middlewares/tool_call_limit.py" beforeDir="false" afterPath="$PROJECT_DIR$/middlewares/tool_call_limit.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/backgroundInfo.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/agentic_rag/naive/core.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/demo.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/agentic_rag/demo.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/rag_indexDB/backgroundInfo/index.faiss" beforeDir="false" afterPath="$PROJECT_DIR$/tools/agentic_rag/naive/output/index.faiss" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/rag_indexDB/backgroundInfo/index.pkl" beforeDir="false" afterPath="$PROJECT_DIR$/tools/agentic_rag/naive/output/index.pkl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/rag_source/allCharacters.txt" beforeDir="false" afterPath="$PROJECT_DIR$/tools/agentic_rag/naive/input/allCharacters.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/agentic_rag/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/core_graph.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/agentic_rag/core.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tools/rag/graphrag_source/.env" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -108,7 +103,7 @@
     </key>
   </component>
   <component name="RunManager" selected="Python.main">
-    <configuration name="core_graph" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="core" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="EMA_AI_agent-main" />
       <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -122,7 +117,7 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <option name="RUN_TOOL" value="" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tools/agentic_rag/core_graph.py" />
+      <option name="SCRIPT_NAME" value="C:\Users\Administrator\Desktop\EMA_AI_agent-main\tools\agentic_rag\core.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -444,7 +439,15 @@
       <option name="project" value="LOCAL" />
       <updated>1768957047384</updated>
     </task>
-    <option name="localTasksCounter" value="34" />
+    <task id="LOCAL-00034" summary="update structure">
+      <option name="closed" value="true" />
+      <created>1768960782379</created>
+      <option name="number" value="00034" />
+      <option name="presentableId" value="LOCAL-00034" />
+      <option name="project" value="LOCAL" />
+      <updated>1768960782379</updated>
+    </task>
+    <option name="localTasksCounter" value="35" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -479,6 +482,7 @@
     <MESSAGE value="update demo1.py" />
     <MESSAGE value="change structure" />
     <MESSAGE value="add tool_call_limit.py" />
-    <option name="LAST_COMMIT_MESSAGE" value="add tool_call_limit.py" />
+    <MESSAGE value="update structure" />
+    <option name="LAST_COMMIT_MESSAGE" value="update structure" />
   </component>
 </project>
