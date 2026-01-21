@@ -4,14 +4,16 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="823222bf-bcd3-4fc1-9584-1cc7eda194dc" name="Changes" comment="change structure">
-      <change afterPath="$PROJECT_DIR$/middlewares/tool_call_limit.py" afterDir="false" />
+    <list default="true" id="823222bf-bcd3-4fc1-9584-1cc7eda194dc" name="Changes" comment="add tool_call_limit.py">
+      <change afterPath="$PROJECT_DIR$/tools/agentic_rag/naive/__init__.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/EMA_AI_agent-main.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/EMA_AI_agent-main.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/agent.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/middlewares/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/middlewares/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/middlewares/tool_call_limit.py" beforeDir="false" afterPath="$PROJECT_DIR$/middlewares/tool_call_limit.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/backgroundInfo.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/agentic_rag/naive/core.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/demo.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/agentic_rag/demo.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/rag_indexDB/backgroundInfo/index.faiss" beforeDir="false" afterPath="$PROJECT_DIR$/tools/agentic_rag/naive/output/index.faiss" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/rag_indexDB/backgroundInfo/index.pkl" beforeDir="false" afterPath="$PROJECT_DIR$/tools/agentic_rag/naive/output/index.pkl" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/rag_source/allCharacters.txt" beforeDir="false" afterPath="$PROJECT_DIR$/tools/agentic_rag/naive/input/allCharacters.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tools/rag/graphrag_source/.env" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -27,6 +29,19 @@
     </option>
   </component>
   <component name="Git.Settings">
+    <excluded-from-favorite>
+      <branch-storage>
+        <map>
+          <entry type="LOCAL">
+            <value>
+              <list>
+                <branch-info repo="$PROJECT_DIR$" source="main" />
+              </list>
+            </value>
+          </entry>
+        </map>
+      </branch-storage>
+    </excluded-from-favorite>
     <option name="PUSH_AUTO_UPDATE" value="true" />
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
@@ -85,14 +100,14 @@
       <recent name="D:\project\EMA_AI_agent\tools\rag\rag_indexDB\openl\input" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\Administrator\Desktop\EMA_AI_agent-main\tools\agentic_rag\naive" />
       <recent name="D:\project\EMA_AI_agent\tools\agentic_rag\graphrag" />
       <recent name="C:\Users\Administrator\Desktop\EMA_AI_agent-main\tools\rag" />
       <recent name="C:\Users\Administrator\Desktop\EMA_AI_agent-main\tools\rag\core" />
       <recent name="D:\project\EMA_AI_agent\models\rag_specific" />
-      <recent name="D:\project\EMA_AI_agent\tools\rag" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.core_graph">
+  <component name="RunManager" selected="Python.main">
     <configuration name="core_graph" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="EMA_AI_agent-main" />
       <option name="ENV_FILES" value="" />
@@ -145,8 +160,8 @@
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.core_graph" />
         <item itemvalue="Python.main" />
+        <item itemvalue="Python.core_graph" />
       </list>
     </recent_temporary>
   </component>
@@ -421,7 +436,15 @@
       <option name="project" value="LOCAL" />
       <updated>1768910744018</updated>
     </task>
-    <option name="localTasksCounter" value="33" />
+    <task id="LOCAL-00033" summary="add tool_call_limit.py">
+      <option name="closed" value="true" />
+      <created>1768957047384</created>
+      <option name="number" value="00033" />
+      <option name="presentableId" value="LOCAL-00033" />
+      <option name="project" value="LOCAL" />
+      <updated>1768957047384</updated>
+    </task>
+    <option name="localTasksCounter" value="34" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -455,6 +478,7 @@
     <MESSAGE value="use checkPointer instead of custom array variable to memory history" />
     <MESSAGE value="update demo1.py" />
     <MESSAGE value="change structure" />
-    <option name="LAST_COMMIT_MESSAGE" value="change structure" />
+    <MESSAGE value="add tool_call_limit.py" />
+    <option name="LAST_COMMIT_MESSAGE" value="add tool_call_limit.py" />
   </component>
 </project>
