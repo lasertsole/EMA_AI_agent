@@ -1,0 +1,2 @@
+from langchain.agents.middleware import ToolCallLimitMiddleware
+tool_calling_limit = ToolCallLimitMiddleware(run_limit=8)
