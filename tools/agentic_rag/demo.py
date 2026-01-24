@@ -36,7 +36,7 @@ class KnowledgeExtraction:
         return " | ".join(parts)
 
 current_dir = Path(__file__).parent.resolve()
-TXT_PATH = current_dir / "rag_source/allCharacters.txt"
+TXT_PATH = current_dir / "input/allCharacters.txt"
 
 txt_file= Path(TXT_PATH)
 

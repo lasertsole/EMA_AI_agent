@@ -1,7 +1,7 @@
-import asyncio
 import datetime
 from tools import web_search
 from models import base_model
+from langchain_core.tools import tool
 from pydantic import BaseModel, Field
 from langchain.agents import create_agent
 from langchain.messages import HumanMessage
@@ -70,10 +70,11 @@ workflow.add_edge("rewriter", "researcher")
 workflow.add_edge("researcher", END)
 graph = workflow.compile()
 
-# 运行异步主函数
-if __name__ == "__main__":
-    async def test():
-        result = await graph.ainvoke({"query": "苹果手机今年在中国的销量是多少?"})
-        print(result["res"])
+# 工具输入参数
+class AgenticRagQuerySchema(BaseModel):
+    query: str = Field(description="具体问题")
 
-    asyncio.run(test())
+@tool(args_schema=AgenticRagQuerySchema)
+async def agentic_rag_query(query:str)->str:
+    result = await graph.ainvoke({"query": query})
+    return result["res"]

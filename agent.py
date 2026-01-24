@@ -2,7 +2,7 @@ from pathlib import Path
 from langchain.agents import create_agent
 from langgraph.checkpoint.memory import InMemorySaver
 from models import base_model
-from middlewares import dynamic_model_routing, summarization
+from middlewares import dynamic_model_routing, summarization, tool_calling_limit
 from tools import web_search, query_background_info
 
 current_dir = Path(__file__).parent.resolve()
@@ -27,5 +27,5 @@ agent = create_agent(
     tools=[web_search, query_background_info],
     system_prompt = systemPrompt,
     checkpointer=checkpoint,
-    middleware=[dynamic_model_routing, summarization],
+    middleware=[dynamic_model_routing, summarization, tool_calling_limit],
 )
