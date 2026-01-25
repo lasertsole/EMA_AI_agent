@@ -53,10 +53,11 @@ if __name__ == "__main__":
         with st.chat_message("user"):
             content = "远野汉娜:" + human_input
             st.markdown(content)
-        st.session_state.messages.append({"role": "user", "content": content})
-
+            st.session_state.messages.append({"role": "user", "content": content})
+        
         message_list = [human_input]
         with st.chat_message("assistant"):
             stream = async_generator(message_list, config)
             content = st.write_stream(stream)
             st.session_state.messages.append({"role": "assistant", "content": content})
+            #st.audio("./models/sovits_model/src/0101Adv04_Sherry001.ogg", format="audio/ogg")

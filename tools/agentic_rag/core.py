@@ -74,7 +74,18 @@ graph = workflow.compile()
 class AgenticRagQuerySchema(BaseModel):
     query: str = Field(description="具体问题")
 
-@tool(args_schema=AgenticRagQuerySchema)
+@tool(args_schema=AgenticRagQuerySchema, description="""
+       检索“魔法少女的魔女审批”相关知识的工具函数。
+
+       该函数用于当需要回答与“魔法少女的魔女审批”相关的问题时调用，
+       通过本地检索引擎获取知识库中的对应答案。
+
+       Args:
+           query (str): 具体的查询问题，需与“魔法少女的魔女审批”主题相关。
+
+       Returns:
+           str: 本地检索引擎从知识库中检索到的答案文本。
+   """)
 async def agentic_rag_query(query:str)->str:
     result = await graph.ainvoke({"query": query})
     return result["res"]
