@@ -14,6 +14,6 @@ reasoner_model =init_chat_model(
     model_provider=model_provider,
     model = api_name,
     api_key = api_key,
-    temperature=0.5,
+    temperature = 0.5,
     max_retries = 2
 )

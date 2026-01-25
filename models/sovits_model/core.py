@@ -1,7 +1,14 @@
-from typing import Union
+import os
 import json
+import time
+import signal
+import atexit
 import requests
+import subprocess
+from pathlib import Path
+from typing import Union
 from pydantic import BaseModel
+from dotenv import load_dotenv
 
 """
 ### 推理请求参数
@@ -38,17 +45,17 @@ class TTS_Request(BaseModel):
     aux_ref_audio_paths: list = None
     prompt_lang: str = None
     prompt_text: str = ""
-    top_k: int = 15
+    top_k: int = 5
     top_p: float = 1
     temperature: float = 1
-    text_split_method: str = "cut5"
+    text_split_method: str = "cut0"
     batch_size: int = 1
     batch_threshold: float = 0.75
     split_bucket: bool = True
     speed_factor: float = 1.0
     fragment_interval: float = 0.3
     seed: int = -1
-    media_type: str = "wav"
+    #media_type: str = "wav"
     streaming_mode: Union[bool, int] = False
     parallel_infer: bool = True
     repetition_penalty: float = 1.35
@@ -126,3 +133,40 @@ def changeReferAudio(refer_audio_path: str = None):
     res = requests.get(change_refer_audio_url, params=payload)
     print(res)
     return res
+
+# 加载环境变量
+env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../.env')
+load_dotenv(env_path, override=True)
+
+# 获取gpt-sovits项目所在文件夹
+gpt_sovits_dir = os.getenv("GPT_SOVITS_DIR")
+gpt_sovits_dir = Path(gpt_sovits_dir)
+
+# 获取gpt-sovits api路径
+api_path = gpt_sovits_dir / "api_v2.py"
+api_path = api_path.as_posix()
+
+# 获取gpt-sovits解释器路径
+interpreter_path = gpt_sovits_dir / 'runtime/python.exe'
+interpreter_path = interpreter_path.as_posix()
+
+# 获取gpt-sovits 配置路径
+config_path = Path(__file__).parent.resolve() / "config/tts_infer.yaml"
+config_path = config_path.as_posix()
+
+# 创建tts子进程
+proc = process = subprocess.Popen([interpreter_path, api_path, '-a', '127.0.0.1', '-p', '9880', '-c', config_path], cwd=gpt_sovits_dir)
+
+# 主进程结束时清理tts子进程
+def cleanup():
+    os.kill(proc.pid, signal.SIGTERM)
+atexit.register(cleanup)
+
+if __name__ == "__main__":
+    while True:
+        stdout,stderr = proc.communicate()
+        if stdout:
+            print("输出信息" + stdout.decode("utf-8"))
+        if stderr:
+            print("错误信息" + stderr.decode("utf-8"))
+        time.sleep(1)
