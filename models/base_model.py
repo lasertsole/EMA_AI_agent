@@ -11,7 +11,7 @@ model_provider = os.getenv("CHAT_MODEL_PROVIDER")
 
 #生成模型对象
 base_model =init_chat_model(
-    model_provider=model_provider,
+    model_provider = model_provider,
     model = api_name,
     api_key = api_key,
     temperature = 0.8,
