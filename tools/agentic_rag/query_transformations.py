@@ -1,11 +1,14 @@
 import os
+import asyncio
 import datetime
-from typing import List
+import operator
+from typing import List, Annotated
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 from langchain.chat_models import init_chat_model
 from langchain_core.prompts import PromptTemplate
 from langgraph.graph import StateGraph, START, END, MessagesState
+from langgraph.types import Send
 
 # 加载环境变量
 env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../.env')
@@ -16,7 +19,7 @@ model_provider = os.getenv("CHAT_MODEL_PROVIDER")
 
 query_transform_Template = """
 你是一名人工智能语言模型助手。
-你的任务是针对用户提出的原问题，生成五个不同的表述版本，用于从向量数据库中检索相关文档。
+你的任务是针对用户提出的原问题，生成多于等于五个，少于等于十个不同的表述版本，用于从向量数据库中检索相关文档。
 通过为用户的问题生成多种切入视角，助力用户突破基于距离的相似度检索的部分局限性。
 请将这些不同的提问版本用换行符分隔呈现,并且如果用户的查询是疑问句时，请重写为陈述句。
 辅助信息:当前时间为{dataTime} 原问题：{question}"""
@@ -24,7 +27,7 @@ query_transform_Template = PromptTemplate(
     template=query_transform_Template,
     input_variables=["query", "dataTime"]
 )
-query_transformation_Template = query_transform_Template.partial(dataTime=datetime.datetime.now().strftime("%Y年%m月%d日"))
+query_transformations_Template = query_transform_Template.partial(dataTime=datetime.datetime.now().strftime("%Y年%m月%d日"))
 
 chat_model = init_chat_model(
     model_provider = model_provider,
@@ -36,7 +39,7 @@ chat_model = init_chat_model(
 
 class QueryTransformationOutput(BaseModel):
     """字符串列表输出结构"""
-    requery: List[str] = Field(
+    query_transformations: List[str] = Field(
         description="生成的重写后的五个句子。",
         examples=[[
             "西瓜每斤的价格。",
@@ -47,17 +50,49 @@ class QueryTransformationOutput(BaseModel):
         ]]
     )
 
-query_transformation = query_transformation_Template | chat_model.with_structured_output(QueryTransformationOutput)
+query_transformations = query_transformations_Template | chat_model.with_structured_output(QueryTransformationOutput)
 
 class GraphState(MessagesState):
     query: str # 原问题
-    requery: str # 改写后的问题
+    query_transformations: List[str] # 变换后的问题列表
+    answers: Annotated[List[str], operator.add]
     res: str #查询结果
 
-# workflow = StateGraph(GraphState)
-# workflow.add_node("rewriter", rewriter_node)
-# workflow.add_node("researcher", researcher_node)
-# workflow.add_edge(START, "rewriter")
-# workflow.add_edge("rewriter", "researcher")
-# workflow.add_edge("researcher", END)
-# graph = workflow.compile()
+class JudgeState(MessagesState):
+    query_transformation: str # 单个变换后的问题
+
+async def query_transform_node(state: GraphState):
+    result:QueryTransformationOutput = await query_transformations.ainvoke(state["query"])
+    return {"query_transformations": result.query_transformations}
+
+def mapper(state: GraphState)-> List[Send]:
+    return [Send("query_judge_node", {"query_transformation" : query_transformation}) for query_transformation in state["query_transformations"]]
+
+async def query_judge_node(state: JudgeState):
+    return {"answers": [state["query_transformation"]]}
+
+def query_summarize_node(state: GraphState):
+    res = ' '.join(state["answers"])
+    return { 'res': res }
+
+
+workflow = StateGraph(GraphState)
+
+workflow.add_node("query_transform_node", query_transform_node)
+workflow.add_node("query_judge_node", query_judge_node)
+workflow.add_node("query_summarize_node", query_summarize_node)
+
+workflow.add_edge(START, "query_transform_node")
+workflow.add_conditional_edges("query_transform_node", mapper, ["query_judge_node"])
+workflow.add_edge("query_judge_node", "query_summarize_node")
+workflow.add_edge("query_summarize_node", END)
+
+graph = workflow.compile()
+
+
+
+async def main():
+    print(await graph.ainvoke({"query": "草莓多少元一斤?"}))
+
+if __name__ == "__main__":
+    asyncio.run(main())

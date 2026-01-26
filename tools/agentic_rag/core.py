@@ -15,9 +15,9 @@ researcher_systemPrompt = """
 """
 #生成agent对象
 researcher = create_agent(
-    model=base_model,
+    model = base_model,
     system_prompt = researcher_systemPrompt,
-    tools=[web_search],
+    tools = [web_search],
 )
 
 rewriter_systemPrompt = """
@@ -30,8 +30,8 @@ rewriter_systemPrompt = """
 """
 
 rewriter_systemPrompt_Template = PromptTemplate(
-    template=rewriter_systemPrompt,
-    input_variables=["query", "dataTime"]
+    template = rewriter_systemPrompt,
+    input_variables = ["query", "dataTime"]
 )
 rewriter_systemPrompt_Template = rewriter_systemPrompt_Template.partial(dataTime=datetime.datetime.now().strftime("%Y年%m月%d日"))
 
