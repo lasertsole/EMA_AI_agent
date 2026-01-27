@@ -1,1 +1,0 @@
-from .core import query_background_info
