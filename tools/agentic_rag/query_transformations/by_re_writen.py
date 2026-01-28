@@ -93,7 +93,7 @@ def build_query_by_re_writen_graph(retrieve_call: Callable[[str], List[str]]):
                 fused_scores[text] += 1 / (rank + k)
         res = [
             text
-            for text in sorted(fused_scores.items(), key=lambda x: x[1], reverse=True)
+            for text, _ in sorted(fused_scores.items(), key=lambda x: x[1], reverse=True)
         ]
 
         return { 'output': res }

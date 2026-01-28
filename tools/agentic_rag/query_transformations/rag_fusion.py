@@ -15,9 +15,10 @@ def rag_fusion_node(state: GraphState):
             if text not in fused_scores:
                 fused_scores[text] = 0
             fused_scores[text] += 1 / (rank + k)
+
     res = [
         text
-        for text in sorted(fused_scores.items(), key=lambda x: x[1], reverse=True)
+        for text, _ in sorted(fused_scores.items(), key=lambda x: x[1], reverse=True)
     ]
 
     return {'output': res}

@@ -1,14 +1,15 @@
 import os
 import json
 import requests
-from typing import List
 from dotenv import load_dotenv
+from typing import List, TypedDict, Any
 from langchain_core.documents import Document
 from langchain_core.retrievers import BaseRetriever
 from langchain_core.callbacks import CallbackManagerForRetrieverRun
+from langgraph.graph import StateGraph, START, END, MessagesState
 
 # 加载环境变量和模型初始化（同上）
-env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../.env')
+env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../../.env')
 load_dotenv(env_path, override=True)
 api_key = os.getenv("EMBEDDING_API_KEY")
 
@@ -22,17 +23,16 @@ model = "bge-reranker-v2-m3"
 
 # 创建自定义召回model
 class CustomRetriever(BaseRetriever):
+    k:int = 10
+
+    def __init__(self, k=10, *args: Any, **kwargs: Any):
+        super().__init__(*args, **kwargs)
+        self.k = k
+
     def _get_relevant_documents(self, query: str, *, run_manager: CallbackManagerForRetrieverRun = None, **kwargs) -> list[Document] | None:
-        k = kwargs.get("k", None)
         documents = kwargs.get("documents", None)
 
-        if(k is None):
-            raise ValueError("k is required")
-        elif(isinstance(k, int) == False):
-            raise TypeError("k must be an integer")
-        elif(k < 1):
-            raise ValueError("k is invalid")
-        elif(documents is None):
+        if(documents is None):
             raise ValueError("documents is None")
         elif(isinstance(documents, List) == False or any(isinstance(d, Document) == False for d in documents)):
             raise TypeError("documents has is type error")
@@ -53,9 +53,35 @@ class CustomRetriever(BaseRetriever):
             relevant_docs = [
                 Document(page_content=doc["document"]["text"]) for doc in res["results"]
             ]
-            return relevant_docs[:k]  # 返回前k个结果
+            return relevant_docs[:self.k]  # 返回前k个结果
         except Exception as e:
             print(e)
 
+class Input(TypedDict):
+    query: str
+    answers: List[str]
 
-rerank_model = CustomRetriever()
+class GraphState(MessagesState):
+    input: Input
+    output: str
+
+def build_rerank_graph(k:int = 10):
+    rerank_model = CustomRetriever(k = k)
+
+    def rerank_node(state: GraphState):
+        documents: List[Document] = [Document(page_content = answer) for answer in state["input"]["answers"]]
+        documents = rerank_model.invoke(state["input"]["query"], documents = documents)
+        res = [doc.page_content for doc in documents]
+
+        return { 'output': res }
+
+    workflow = StateGraph(GraphState)
+
+    workflow.add_node("rerank_node", rerank_node)
+
+    workflow.add_edge(START, "rerank_node")
+    workflow.add_edge("rerank_node", END)
+
+    graph = workflow.compile()
+
+    return graph

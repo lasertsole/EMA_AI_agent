@@ -4,21 +4,17 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="823222bf-bcd3-4fc1-9584-1cc7eda194dc" name="Changes" comment="update agentic_rag_process">
-      <change afterPath="$PROJECT_DIR$/tools/agentic_rag/query_transformations/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tools/agentic_rag/query_transformations/by_re_writen.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tools/agentic_rag/query_transformations/mutil_query.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tools/agentic_rag/query_transformations/rag_fusion.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tools/agentic_rag/test.py" afterDir="false" />
+    <list default="true" id="823222bf-bcd3-4fc1-9584-1cc7eda194dc" name="Changes" comment="completed query_transformations">
+      <change afterPath="$PROJECT_DIR$/tools/agentic_rag/rerank.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/rag_specific/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/rag_specific/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/rag_specific/rerank_model.py" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/tools/agentic_rag/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/agentic_rag/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/naive/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/agentic_rag/native/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/naive/core.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/agentic_rag/native/core.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/naive/input/allCharacters.txt" beforeDir="false" afterPath="$PROJECT_DIR$/tools/agentic_rag/native/input/allCharacters.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/naive/output/index.faiss" beforeDir="false" afterPath="$PROJECT_DIR$/tools/agentic_rag/native/output/index.faiss" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/naive/output/index.pkl" beforeDir="false" afterPath="$PROJECT_DIR$/tools/agentic_rag/native/output/index.pkl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/query_transformations.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/native/core.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/agentic_rag/native/core.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/query_transformations/by_re_writen.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/agentic_rag/query_transformations/by_re_writen.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/query_transformations/rag_fusion.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/agentic_rag/query_transformations/rag_fusion.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/test.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/agentic_rag/test.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -60,39 +56,39 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "Python.agent.executor": "Run",
-    "Python.backgroundInfo (1).executor": "Run",
-    "Python.backgroundInfo.executor": "Run",
-    "Python.by_re_writen.executor": "Run",
-    "Python.core.executor": "Run",
-    "Python.core_graph (1).executor": "Run",
-    "Python.core_graph.executor": "Run",
-    "Python.demo (1).executor": "Run",
-    "Python.demo.executor": "Run",
-    "Python.demo1 (1).executor": "Run",
-    "Python.demo1.executor": "Run",
-    "Python.extract_model.executor": "Run",
-    "Python.graphrag.executor": "Run",
-    "Python.graphrag_model.executor": "Run",
-    "Python.main.executor": "Run",
-    "Python.mutil_query.executor": "Run",
-    "Python.query_transformations.executor": "Run",
-    "Python.streamlit_main.executor": "Run",
-    "Python.test (1).executor": "Run",
-    "Python.test.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "deletionFromPopupRequiresConfirmation": "false",
-    "git-widget-placeholder": "main",
-    "last_opened_file_path": "D:/project/EMA_AI_agent/models/sovits_model/src",
-    "settings.editor.selected.configurable": "vcs.Git"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;Python.agent.executor&quot;: &quot;Run&quot;,
+    &quot;Python.backgroundInfo (1).executor&quot;: &quot;Run&quot;,
+    &quot;Python.backgroundInfo.executor&quot;: &quot;Run&quot;,
+    &quot;Python.by_re_writen.executor&quot;: &quot;Run&quot;,
+    &quot;Python.core.executor&quot;: &quot;Run&quot;,
+    &quot;Python.core_graph (1).executor&quot;: &quot;Run&quot;,
+    &quot;Python.core_graph.executor&quot;: &quot;Run&quot;,
+    &quot;Python.demo (1).executor&quot;: &quot;Run&quot;,
+    &quot;Python.demo.executor&quot;: &quot;Run&quot;,
+    &quot;Python.demo1 (1).executor&quot;: &quot;Run&quot;,
+    &quot;Python.demo1.executor&quot;: &quot;Run&quot;,
+    &quot;Python.extract_model.executor&quot;: &quot;Run&quot;,
+    &quot;Python.graphrag.executor&quot;: &quot;Run&quot;,
+    &quot;Python.graphrag_model.executor&quot;: &quot;Run&quot;,
+    &quot;Python.main.executor&quot;: &quot;Run&quot;,
+    &quot;Python.mutil_query.executor&quot;: &quot;Run&quot;,
+    &quot;Python.query_transformations.executor&quot;: &quot;Run&quot;,
+    &quot;Python.streamlit_main.executor&quot;: &quot;Run&quot;,
+    &quot;Python.test (1).executor&quot;: &quot;Run&quot;,
+    &quot;Python.test.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;deletionFromPopupRequiresConfirmation&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/project/EMA_AI_agent/models/sovits_model/src&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;vcs.Git&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="D:\project\EMA_AI_agent\models\sovits_model\src" />
@@ -529,7 +525,15 @@
       <option name="project" value="LOCAL" />
       <updated>1769436948176</updated>
     </task>
-    <option name="localTasksCounter" value="36" />
+    <task id="LOCAL-00036" summary="completed query_transformations">
+      <option name="closed" value="true" />
+      <created>1769528920932</created>
+      <option name="number" value="00036" />
+      <option name="presentableId" value="LOCAL-00036" />
+      <option name="project" value="LOCAL" />
+      <updated>1769528920932</updated>
+    </task>
+    <option name="localTasksCounter" value="37" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -565,6 +569,7 @@
     <MESSAGE value="change structure" />
     <MESSAGE value="prepare for tts" />
     <MESSAGE value="update agentic_rag_process" />
-    <option name="LAST_COMMIT_MESSAGE" value="update agentic_rag_process" />
+    <MESSAGE value="completed query_transformations" />
+    <option name="LAST_COMMIT_MESSAGE" value="completed query_transformations" />
   </component>
 </project>

@@ -1,10 +1,10 @@
 from pathlib import Path
 from typing import List
+from models import embed_model
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import TextLoader
 from langchain_community.vectorstores import FAISS
-from models import embed_model, rerank_model
 from langchain_core.tools import Tool
 
 separators=["\n\n\n"]
@@ -60,7 +60,6 @@ def _query_background_info(query:str) -> List[str]:
     documents = retriever.invoke(query)
 
     ### 重排 ###
-    # documents = rerank_model.invoke(query, k=k, documents=documents)
     retrieveResults = [doc.page_content for doc in documents]
     return retrieveResults
 
