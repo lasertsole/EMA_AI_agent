@@ -4,17 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="823222bf-bcd3-4fc1-9584-1cc7eda194dc" name="Changes" comment="completed query_transformations">
-      <change afterPath="$PROJECT_DIR$/tools/agentic_rag/rerank.py" afterDir="false" />
+    <list default="true" id="823222bf-bcd3-4fc1-9584-1cc7eda194dc" name="Changes" comment="completed rerank_node">
       <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/rag_specific/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/rag_specific/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/rag_specific/rerank_model.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/agentic_rag/__init__.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tools/agentic_rag/native/core.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/agentic_rag/native/core.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/query_transformations/by_re_writen.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/agentic_rag/query_transformations/by_re_writen.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/query_transformations/rag_fusion.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/agentic_rag/query_transformations/rag_fusion.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/test.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/agentic_rag/test.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -533,7 +526,15 @@
       <option name="project" value="LOCAL" />
       <updated>1769528920932</updated>
     </task>
-    <option name="localTasksCounter" value="37" />
+    <task id="LOCAL-00037" summary="completed rerank_node">
+      <option name="closed" value="true" />
+      <created>1769617614507</created>
+      <option name="number" value="00037" />
+      <option name="presentableId" value="LOCAL-00037" />
+      <option name="project" value="LOCAL" />
+      <updated>1769617614507</updated>
+    </task>
+    <option name="localTasksCounter" value="38" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -570,6 +571,7 @@
     <MESSAGE value="prepare for tts" />
     <MESSAGE value="update agentic_rag_process" />
     <MESSAGE value="completed query_transformations" />
-    <option name="LAST_COMMIT_MESSAGE" value="completed query_transformations" />
+    <MESSAGE value="completed rerank_node" />
+    <option name="LAST_COMMIT_MESSAGE" value="completed rerank_node" />
   </component>
 </project>
