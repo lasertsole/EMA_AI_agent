@@ -4,14 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="823222bf-bcd3-4fc1-9584-1cc7eda194dc" name="Changes" comment="try to use mutil representation indexing">
+    <list default="true" id="823222bf-bcd3-4fc1-9584-1cc7eda194dc" name="Changes" comment="complete multi-representation Indexing">
       <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/sovits_model/core.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/sovits_model/core.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tools/agentic_rag/native/core.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/agentic_rag/native/core.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/native/output/index.faiss" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/native/output/index.pkl" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/query_transformations/by_re_writen.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/agentic_rag/query_transformations/by_re_writen.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tools/agentic_rag/test.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/agentic_rag/test.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -547,7 +543,15 @@
       <option name="project" value="LOCAL" />
       <updated>1769705138742</updated>
     </task>
-    <option name="localTasksCounter" value="39" />
+    <task id="LOCAL-00039" summary="complete multi-representation Indexing">
+      <option name="closed" value="true" />
+      <created>1769790382173</created>
+      <option name="number" value="00039" />
+      <option name="presentableId" value="LOCAL-00039" />
+      <option name="project" value="LOCAL" />
+      <updated>1769790382173</updated>
+    </task>
+    <option name="localTasksCounter" value="40" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -586,6 +590,7 @@
     <MESSAGE value="completed query_transformations" />
     <MESSAGE value="completed rerank_node" />
     <MESSAGE value="try to use mutil representation indexing" />
-    <option name="LAST_COMMIT_MESSAGE" value="try to use mutil representation indexing" />
+    <MESSAGE value="complete multi-representation Indexing" />
+    <option name="LAST_COMMIT_MESSAGE" value="complete multi-representation Indexing" />
   </component>
 </project>

@@ -10,6 +10,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.documents import Document
 from langchain.chat_models import init_chat_model
 from langchain_classic.retrievers import MultiVectorRetriever
+from langchain_classic.retrievers.multi_vector import SearchType
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import TextLoader
 from langchain_community.vectorstores import FAISS
@@ -89,7 +90,8 @@ if not indexFolderPath.exists():
     retriever = MultiVectorRetriever(
         vectorstore = vector_store,
         byte_store = store,
-        id_key = id_key
+        id_key = id_key,
+        search_type = SearchType.similarity_score_threshold
     )
 
     # 将摘要持久化
@@ -106,14 +108,15 @@ else:
     vector_store = FAISS.load_local(
         embeddings = embed_model,
         folder_path = indexFolderPath.as_posix(),
-        allow_dangerous_deserialization = True
+        allow_dangerous_deserialization = True,
     )
 
     # 创建多向量召回器
     retriever = MultiVectorRetriever(
         vectorstore = vector_store,
         byte_store = store,
-        id_key = id_key
+        id_key = id_key,
+        search_type = SearchType.similarity_score_threshold
     )
 
 def _query_background_info(query:str) -> List[str]:
@@ -125,7 +128,7 @@ def _query_background_info(query:str) -> List[str]:
     elif (len(query) == 0):
         raise ValueError("query is empty")
 
-    documents = retriever.invoke(query, k = 10)
+    documents = retriever.invoke(query, k = 10, score_threshold = 0.5)
     retrieveResults = [doc.page_content for doc in documents]
     return retrieveResults
 
