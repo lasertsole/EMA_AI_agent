@@ -154,15 +154,19 @@ interpreter_path = interpreter_path.as_posix()
 config_path = Path(__file__).parent.resolve() / "config/tts_infer.yaml"
 config_path = config_path.as_posix()
 
-# 创建tts子进程
-proc = process = subprocess.Popen([interpreter_path, api_path, '-a', '127.0.0.1', '-p', '9880', '-c', config_path], cwd=gpt_sovits_dir)
-
-# 主进程结束时清理tts子进程
-def cleanup():
-    os.kill(proc.pid, signal.SIGTERM)
-atexit.register(cleanup)
-
 if __name__ == "__main__":
+    # 创建tts子进程
+    proc = subprocess.Popen([interpreter_path, api_path, '-a', '127.0.0.1', '-p', '9880', '-c', config_path],
+                            cwd=gpt_sovits_dir)
+
+
+    # 主进程结束时清理tts子进程
+    def cleanup():
+        os.kill(proc.pid, signal.SIGTERM)
+
+
+    atexit.register(cleanup)
+
     while True:
         stdout,stderr = proc.communicate()
         if stdout:

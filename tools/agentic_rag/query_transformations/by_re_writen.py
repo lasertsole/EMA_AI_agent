@@ -1,13 +1,13 @@
 import os
 import datetime
 import operator
-from typing import List, Annotated, Callable
 from dotenv import load_dotenv
 from langgraph.types import Send
 from pydantic import BaseModel, Field
+from typing import List, Annotated, Callable, TypedDict
 from langchain.chat_models import init_chat_model
 from langchain_core.prompts import PromptTemplate
-from langgraph.graph import StateGraph, START, END, MessagesState
+from langgraph.graph import StateGraph, START, END
 from .mutil_query import mutil_query_graph
 from .rag_fusion import rag_fusion_graph
 
@@ -57,14 +57,14 @@ class QueryTransformationOutput(BaseModel):
 query_transformations = query_transformations_Template | chat_model.with_structured_output(QueryTransformationOutput)
 
 
-class GraphState(MessagesState):
+class GraphState(TypedDict):
     input: str  # 原问题
     query_transformations: List[str]  # 变换后的问题列表
     answers: Annotated[List[List[str]], operator.add]
     output: str  # 查询结果
 
 
-class JudgeState(MessagesState):
+class JudgeState(TypedDict):
     query_transformation: str  # 单个变换后的问题
 
 
