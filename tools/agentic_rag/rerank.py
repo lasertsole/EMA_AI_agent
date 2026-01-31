@@ -1,6 +1,7 @@
 import os
 import json
 import requests
+from pathlib import Path
 from dotenv import load_dotenv
 from typing import List, TypedDict, Any
 from langchain_core.documents import Document
@@ -8,8 +9,12 @@ from langchain_core.retrievers import BaseRetriever
 from langchain_core.callbacks import CallbackManagerForRetrieverRun
 from langgraph.graph import StateGraph, START, END, MessagesState
 
+# 获取当前所在文件夹
+current_dir = Path(__file__).parent.resolve()
+
 # 加载环境变量和模型初始化（同上）
-env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../../.env')
+env_path = current_dir / '../../.env'
+env_path = env_path.resolve()
 load_dotenv(env_path, override=True)
 api_key = os.getenv("EMBEDDING_API_KEY")
 

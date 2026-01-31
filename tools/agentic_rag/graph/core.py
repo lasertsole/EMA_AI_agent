@@ -35,8 +35,12 @@ from graphrag.config.models.drift_search_config import DRIFTSearchConfig
 from graphrag.language_model.manager import ModelManager
 from graphrag.tokenizer.get_tokenizer import get_tokenizer
 
+# 获取当前所在文件夹
+current_dir = Path(__file__).parent.resolve()
+
 # 加载环境变量
-env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../.env')
+env_path = current_dir / '../../../.env'
+env_path = env_path.resolve()
 load_dotenv(env_path, override = True)
 text_api_key = os.getenv("CHAT_API_KEY")
 text_api_base = os.getenv("CHAT_API_BASE")
@@ -46,7 +50,6 @@ embedding_api_key = os.getenv("EMBEDDING_API_KEY")
 embedding_api_base = os.getenv("EMBEDDING_API_BASE")
 embedding_api_name = os.getenv("EMBEDDING_API_NAME")
 
-current_dir = Path(__file__).parent.resolve()
 INPUT_DIR = current_dir / "output"
 INPUT_DIR = INPUT_DIR.as_posix()
 LANCEDB_URI = f"{INPUT_DIR}/lancedb"
