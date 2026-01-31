@@ -4,17 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="823222bf-bcd3-4fc1-9584-1cc7eda194dc" name="Changes" comment="update multi-representation Indexing">
-      <change afterPath="$PROJECT_DIR$/tools/agentic_rag/self_refection.py" afterDir="false" />
+    <list default="true" id="823222bf-bcd3-4fc1-9584-1cc7eda194dc" name="Changes" comment="update envPath">
+      <change afterPath="$PROJECT_DIR$/tools/agentic_rag/self_refection/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tools/agentic_rag/self_refection/self_refection.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/base_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/base_model.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/rag_specific/embed_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/rag_specific/embed_model.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/rag_specific/extract_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/rag_specific/extract_model.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/reasoner_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/reasoner_model.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/core.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/agentic_rag/graph/core.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/native/core.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/agentic_rag/native/core.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/rerank.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/agentic_rag/rerank.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -95,11 +89,11 @@
       <recent name="D:\project\EMA_AI_agent\tools\rag\rag_indexDB\openl\input" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\project\EMA_AI_agent\tools\agentic_rag\self_refection" />
       <recent name="D:\project\EMA_AI_agent\tools\agentic_rag" />
       <recent name="D:\project\EMA_AI_agent\tools\agentic_rag\native" />
       <recent name="D:\project\EMA_AI_agent\tools\agentic_rag\module\query_transformations" />
       <recent name="D:\project\EMA_AI_agent\models\sovits_model" />
-      <recent name="D:\project\EMA_AI_agent\tools\agentic_rag\graphrag" />
     </key>
   </component>
   <component name="RunManager" selected="Python.main">
@@ -565,7 +559,15 @@
       <option name="project" value="LOCAL" />
       <updated>1769791549972</updated>
     </task>
-    <option name="localTasksCounter" value="41" />
+    <task id="LOCAL-00041" summary="update envPath">
+      <option name="closed" value="true" />
+      <created>1769850169755</created>
+      <option name="number" value="00041" />
+      <option name="presentableId" value="LOCAL-00041" />
+      <option name="project" value="LOCAL" />
+      <updated>1769850169755</updated>
+    </task>
+    <option name="localTasksCounter" value="42" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -580,7 +582,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="根据问题复杂度动态选择模型" />
     <MESSAGE value="根据问题复杂度动态选择 合适模型" />
     <MESSAGE value="delete" />
     <MESSAGE value="update personality" />
@@ -605,6 +606,7 @@
     <MESSAGE value="try to use mutil representation indexing" />
     <MESSAGE value="complete multi-representation Indexing" />
     <MESSAGE value="update multi-representation Indexing" />
-    <option name="LAST_COMMIT_MESSAGE" value="update multi-representation Indexing" />
+    <MESSAGE value="update envPath" />
+    <option name="LAST_COMMIT_MESSAGE" value="update envPath" />
   </component>
 </project>
