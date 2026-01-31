@@ -2,6 +2,7 @@ import os
 import datetime
 import operator
 from dotenv import load_dotenv
+from langchain_core.retrievers import BaseRetriever
 from langgraph.types import Send
 from pydantic import BaseModel, Field
 from typing import List, Annotated, Callable, TypedDict
@@ -77,10 +78,11 @@ def mapper(state: GraphState) -> List[Send]:
     return [Send("query_judge_node", {"query_transformation": query_transformation}) for query_transformation in
             state["query_transformations"]]
 
-def build_query_by_re_writen_graph(retrieve_call: Callable[[str], List[str]]):
+def build_query_by_re_writen_graph(retriever: BaseRetriever):
     async def query_judge_node(state: JudgeState):
-        retrieve_call_res = retrieve_call(state["query_transformation"])
-        return {"answers": [retrieve_call_res]}
+        documents = retriever.invoke(state["query_transformation"], k=10, score_threshold=0.5)
+        retrieveResults = [doc.page_content for doc in documents]
+        return {"answers": [retrieveResults]}
 
     def query_fusion_node(state: GraphState):
         k=60

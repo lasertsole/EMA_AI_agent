@@ -4,11 +4,18 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="823222bf-bcd3-4fc1-9584-1cc7eda194dc" name="Changes" comment="update envPath">
-      <change afterPath="$PROJECT_DIR$/tools/agentic_rag/self_refection/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tools/agentic_rag/self_refection/self_refection.py" afterDir="false" />
+    <list default="true" id="823222bf-bcd3-4fc1-9584-1cc7eda194dc" name="Changes" comment="update self_refection">
+      <change afterPath="$PROJECT_DIR$/tools/agentic_rag/self_refection/answer_grader.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tools/agentic_rag/self_refection/core.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tools/agentic_rag/self_refection/generator.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tools/agentic_rag/self_refection/hallucination_grader.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tools/agentic_rag/self_refection/retrieval_grader.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/native/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/agentic_rag/native/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/query_transformations/by_re_writen.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/agentic_rag/query_transformations/by_re_writen.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/self_refection.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/test.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/agentic_rag/test.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -50,53 +57,56 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;Python.agent.executor&quot;: &quot;Run&quot;,
-    &quot;Python.backgroundInfo (1).executor&quot;: &quot;Run&quot;,
-    &quot;Python.backgroundInfo.executor&quot;: &quot;Run&quot;,
-    &quot;Python.by_re_writen.executor&quot;: &quot;Run&quot;,
-    &quot;Python.core.executor&quot;: &quot;Run&quot;,
-    &quot;Python.core_graph (1).executor&quot;: &quot;Run&quot;,
-    &quot;Python.core_graph.executor&quot;: &quot;Run&quot;,
-    &quot;Python.demo (1).executor&quot;: &quot;Run&quot;,
-    &quot;Python.demo.executor&quot;: &quot;Run&quot;,
-    &quot;Python.demo1 (1).executor&quot;: &quot;Run&quot;,
-    &quot;Python.demo1.executor&quot;: &quot;Run&quot;,
-    &quot;Python.extract_model.executor&quot;: &quot;Run&quot;,
-    &quot;Python.graphrag.executor&quot;: &quot;Run&quot;,
-    &quot;Python.graphrag_model.executor&quot;: &quot;Run&quot;,
-    &quot;Python.main.executor&quot;: &quot;Run&quot;,
-    &quot;Python.mutil_query.executor&quot;: &quot;Run&quot;,
-    &quot;Python.query_transformations.executor&quot;: &quot;Run&quot;,
-    &quot;Python.streamlit_main.executor&quot;: &quot;Run&quot;,
-    &quot;Python.test (1).executor&quot;: &quot;Run&quot;,
-    &quot;Python.test.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;deletionFromPopupRequiresConfirmation&quot;: &quot;false&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;last_opened_file_path&quot;: &quot;D:/project/EMA_AI_agent/models/sovits_model/src&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;vcs.Git&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "Python.agent.executor": "Run",
+    "Python.backgroundInfo (1).executor": "Run",
+    "Python.backgroundInfo.executor": "Run",
+    "Python.by_re_writen.executor": "Run",
+    "Python.core.executor": "Run",
+    "Python.core_graph (1).executor": "Run",
+    "Python.core_graph.executor": "Run",
+    "Python.demo (1).executor": "Run",
+    "Python.demo.executor": "Run",
+    "Python.demo1 (1).executor": "Run",
+    "Python.demo1.executor": "Run",
+    "Python.extract_model.executor": "Run",
+    "Python.generate.executor": "Run",
+    "Python.graphrag.executor": "Run",
+    "Python.graphrag_model.executor": "Run",
+    "Python.hallucination_grader.executor": "Run",
+    "Python.main.executor": "Run",
+    "Python.mutil_query.executor": "Run",
+    "Python.query_transformations.executor": "Run",
+    "Python.retrieval_grader.executor": "Run",
+    "Python.streamlit_main.executor": "Run",
+    "Python.test (1).executor": "Run",
+    "Python.test.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "deletionFromPopupRequiresConfirmation": "false",
+    "git-widget-placeholder": "main",
+    "last_opened_file_path": "D:/project/EMA_AI_agent/models/sovits_model/src",
+    "settings.editor.selected.configurable": "vcs.Git"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="D:\project\EMA_AI_agent\models\sovits_model\src" />
       <recent name="D:\project\EMA_AI_agent\tools\rag\rag_indexDB\openl\input" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
-      <recent name="D:\project\EMA_AI_agent\tools\agentic_rag\self_refection" />
       <recent name="D:\project\EMA_AI_agent\tools\agentic_rag" />
+      <recent name="D:\project\EMA_AI_agent\tools\agentic_rag\self_refection" />
       <recent name="D:\project\EMA_AI_agent\tools\agentic_rag\native" />
       <recent name="D:\project\EMA_AI_agent\tools\agentic_rag\module\query_transformations" />
       <recent name="D:\project\EMA_AI_agent\models\sovits_model" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.main">
+  <component name="RunManager" selected="Python.hallucination_grader">
     <configuration name="agent" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="EMA_AI_agent-main" />
       <option name="ENV_FILES" value="" />
@@ -119,7 +129,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="by_re_writen" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="generator" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="EMA_AI_agent-main" />
       <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -128,11 +138,11 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tools/agentic_rag/query_transformations" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tools/agentic_rag/self_refection" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tools/agentic_rag/query_transformations/by_re_writen.py" />
+      <option name="SCRIPT_NAME" value="D:\project\EMA_AI_agent\tools\agentic_rag\self_refection\generator.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -141,7 +151,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="core" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="hallucination_grader" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="EMA_AI_agent-main" />
       <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -150,11 +160,11 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tools/agentic_rag/native" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tools/agentic_rag/self_refection" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tools/agentic_rag/native/core.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tools/agentic_rag/self_refection/hallucination_grader.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -185,7 +195,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="test (1)" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="retrieval_grader" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="EMA_AI_agent-main" />
       <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -194,11 +204,11 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tools/agentic_rag" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tools/agentic_rag/self_refection" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tools/agentic_rag/test.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tools/agentic_rag/self_refection/retrieval_grader.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -208,19 +218,19 @@
       <method v="2" />
     </configuration>
     <list>
-      <item itemvalue="Python.core" />
+      <item itemvalue="Python.generator" />
+      <item itemvalue="Python.hallucination_grader" />
+      <item itemvalue="Python.retrieval_grader" />
       <item itemvalue="Python.main" />
       <item itemvalue="Python.agent" />
-      <item itemvalue="Python.by_re_writen" />
-      <item itemvalue="Python.test (1)" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.hallucination_grader" />
+        <item itemvalue="Python.generator" />
+        <item itemvalue="Python.retrieval_grader" />
         <item itemvalue="Python.main" />
         <item itemvalue="Python.agent" />
-        <item itemvalue="Python.core" />
-        <item itemvalue="Python.test (1)" />
-        <item itemvalue="Python.by_re_writen" />
       </list>
     </recent_temporary>
   </component>
@@ -567,7 +577,15 @@
       <option name="project" value="LOCAL" />
       <updated>1769850169755</updated>
     </task>
-    <option name="localTasksCounter" value="42" />
+    <task id="LOCAL-00042" summary="update self_refection">
+      <option name="closed" value="true" />
+      <created>1769851448769</created>
+      <option name="number" value="00042" />
+      <option name="presentableId" value="LOCAL-00042" />
+      <option name="project" value="LOCAL" />
+      <updated>1769851448769</updated>
+    </task>
+    <option name="localTasksCounter" value="43" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -582,7 +600,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="根据问题复杂度动态选择 合适模型" />
     <MESSAGE value="delete" />
     <MESSAGE value="update personality" />
     <MESSAGE value="update otherCharacters.txt" />
@@ -607,6 +624,7 @@
     <MESSAGE value="complete multi-representation Indexing" />
     <MESSAGE value="update multi-representation Indexing" />
     <MESSAGE value="update envPath" />
-    <option name="LAST_COMMIT_MESSAGE" value="update envPath" />
+    <MESSAGE value="update self_refection" />
+    <option name="LAST_COMMIT_MESSAGE" value="update self_refection" />
   </component>
 </project>
