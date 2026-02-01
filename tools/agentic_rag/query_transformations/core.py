@@ -2,11 +2,11 @@ import os
 import operator
 from dotenv import load_dotenv
 from langgraph.types import Send
-from typing import List, Annotated, TypedDict
-from langchain_core.retrievers import BaseRetriever
-from langgraph.graph import StateGraph, START, END
-from .mutil_query import mutil_query_graph, QueryTransformationOutput
 from .rag_fusion import rag_fusion_graph
+from langchain_core.documents import Document
+from langgraph.graph import StateGraph, START, END
+from typing import List, Annotated, TypedDict, Callable, Awaitable
+from .mutil_query import mutil_query_graph, QueryTransformationOutput
 
 # 加载环境变量
 env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../../../.env')
@@ -28,18 +28,17 @@ class JudgeState(TypedDict):
 
 async def query_transform_node(state: GraphState):
     result: QueryTransformationOutput = await mutil_query_graph.ainvoke({"input" : state["input"]})
-    print(result)
     return {"query_transformations": result["output"]}
 
 def mapper(state: GraphState) -> List[Send]:
     return [Send("query_judge_node", {"query_transformation": query_transformation}) for query_transformation in
             state["query_transformations"]]
 
-def build_query_by_re_writen_graph(retriever: BaseRetriever):
+def build_query_by_re_writen_graph(retrieve_callback: Callable[[str], Awaitable[List[Document]]]):
     async def query_judge_node(state: JudgeState):
-        documents = retriever.invoke(state["query_transformation"], k=10, score_threshold=0.5)
+        documents:List[Document] = await retrieve_callback(state["query_transformation"])
         retrieveResults = [doc.page_content for doc in documents]
-        return {"answers": [retrieveResults]}
+        return { "answers" : [retrieveResults]}
 
     async def query_fusion_node(state: GraphState):
         res = await rag_fusion_graph.ainvoke({"input": state["answers"]})
