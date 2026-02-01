@@ -18,7 +18,7 @@ model_provider = os.getenv("CHAT_MODEL_PROVIDER")
 class GraphState(TypedDict):
     input: str  # 原问题
     query_transformations: List[str]  # 变换后的问题列表
-    answers: Annotated[List[List[str]], operator.add]
+    answers: Annotated[List[List[Document]], operator.add]
     output: str  # 查询结果
 
 
@@ -37,8 +37,7 @@ def mapper(state: GraphState) -> List[Send]:
 def build_query_by_re_writen_graph(retrieve_callback: Callable[[str], Awaitable[List[Document]]]):
     async def query_judge_node(state: JudgeState):
         documents:List[Document] = await retrieve_callback(state["query_transformation"])
-        retrieveResults = [doc.page_content for doc in documents]
-        return { "answers" : [retrieveResults]}
+        return { "answers" : [documents]}
 
     async def query_fusion_node(state: GraphState):
         res = await rag_fusion_graph.ainvoke({"input": state["answers"]})

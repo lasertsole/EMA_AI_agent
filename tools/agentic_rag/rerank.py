@@ -34,50 +34,57 @@ class CustomRetriever(BaseRetriever):
         super().__init__(*args, **kwargs)
         self.k = k
 
-    def _get_relevant_documents(self, query: str, *, run_manager: CallbackManagerForRetrieverRun = None, **kwargs) -> list[Document] | None:
-        documents = kwargs.get("documents", None)
+    def _get_relevant_documents(self, query: str, *, run_manager: CallbackManagerForRetrieverRun = None, **kwargs) -> list[str] | None:
+        texts = kwargs.get("texts", None)
 
-        if(documents is None):
-            raise ValueError("documents is None")
-        elif(isinstance(documents, List) == False or any(isinstance(d, Document) == False for d in documents)):
-            raise TypeError("documents has is type error")
-        elif(len(documents) == 0):
-            raise ValueError("documents is empty")
+        if(texts is None):
+            raise ValueError("texts is None")
+        elif(isinstance(texts, List) == False or any(isinstance(d, str) == False for d in texts)):
+            raise TypeError("texts has is type error")
+        elif(len(texts) == 0):
+            raise ValueError("texts is empty")
 
         data = {
             "model": model,
             "query": query,  # input类型可为string或string[]。
-            "documents": [
-                doc.page_content for doc in documents
-            ]
+            "documents": texts
         }
 
         try:
             response = requests.post(url, headers=headers, data=json.dumps(data), verify=True)
             res = json.loads(response.text)
+
             relevant_docs = [
-                Document(page_content=doc["document"]["text"]) for doc in res["results"]
+                doc["document"]["text"] for doc in res["results"]
             ]
+
             return relevant_docs[:self.k]  # 返回前k个结果
         except Exception as e:
             print(e)
 
 class Input(TypedDict):
     query: str
-    answers: List[str]
+    answers: List[Document]
 
 class GraphState(MessagesState):
     input: Input
-    output: str
+    output: List[Document]
 
 def build_rerank_graph(k:int = 10):
     rerank_model = CustomRetriever(k = k)
 
     def rerank_node(state: GraphState):
-        documents: List[Document] = [Document(page_content = answer) for answer in state["input"]["answers"]]
-        documents = rerank_model.invoke(state["input"]["query"], documents = documents)
-        res = [doc.page_content for doc in documents]
+        documents: List[Document] = state["input"]["answers"]
+        query: str = state["input"]["query"]
 
+        text_doc_dict: TypedDict[str, Document] = {}
+        for doc in documents:
+            text_doc_dict[doc.page_content] = doc
+
+        texts: List[str] = [key for key in text_doc_dict.keys()]
+        texts = rerank_model.invoke(query, texts = texts)
+
+        res = [text_doc_dict[text] for text in texts]
         return { 'output': res }
 
     workflow = StateGraph(GraphState)

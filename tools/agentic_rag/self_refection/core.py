@@ -34,6 +34,7 @@ def build_self_refection_graph(retrieve_callback: Callable[[str], Awaitable[List
 
         question = state["question"]
         documents = await retrieve_callback(question)
+
         return {"documents": documents, "question": question}
 
     async def generate(state):
@@ -147,7 +148,7 @@ def build_self_refection_graph(retrieve_callback: Callable[[str], Awaitable[List
     # Define the nodes
     workflow.add_node("retrieve", retrieve)  # retrieve
     workflow.add_node("grade_documents", grade_documents)  # grade documents
-    workflow.add_node("generate", generate)  # generatae
+    workflow.add_node("generate", generate)  # generate
     workflow.add_node("transform_query", transform_query)  # transform_query
 
     # Build graph
