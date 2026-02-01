@@ -4,14 +4,13 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="823222bf-bcd3-4fc1-9584-1cc7eda194dc" name="Changes" comment="update self_refection.py">
+    <list default="true" id="823222bf-bcd3-4fc1-9584-1cc7eda194dc" name="Changes" comment="update merge 'mutil_indexing','rerank','rag_fused', and 'self_reflect' in text.py">
+      <change afterPath="$PROJECT_DIR$/tools/agentic_rag/decomposition/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tools/agentic_rag/decomposition/answer_individually.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tools/agentic_rag/decomposition/answer_recursively.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tools/agentic_rag/decomposition/decomposition.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/query_transformations/core.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/agentic_rag/query_transformations/core.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/query_transformations/rag_fusion.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/agentic_rag/query_transformations/rag_fusion.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/rerank.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/agentic_rag/rerank.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/self_refection/core.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/agentic_rag/self_refection/core.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/test.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/agentic_rag/test.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/query_transformations/mutil_query.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/agentic_rag/query_transformations/mutil_query.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -96,11 +95,11 @@
       <recent name="D:\project\EMA_AI_agent\tools\rag\rag_indexDB\openl\input" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\project\EMA_AI_agent\tools\agentic_rag\decomposition" />
       <recent name="D:\project\EMA_AI_agent\tools\agentic_rag" />
       <recent name="D:\project\EMA_AI_agent\tools\agentic_rag\self_refection" />
       <recent name="D:\project\EMA_AI_agent\tools\agentic_rag\native" />
       <recent name="D:\project\EMA_AI_agent\tools\agentic_rag\module\query_transformations" />
-      <recent name="D:\project\EMA_AI_agent\models\sovits_model" />
     </key>
   </component>
   <component name="RunManager" selected="Python.test">
@@ -606,7 +605,15 @@
       <option name="project" value="LOCAL" />
       <updated>1769935099303</updated>
     </task>
-    <option name="localTasksCounter" value="46" />
+    <task id="LOCAL-00046" summary="update merge 'mutil_indexing','rerank','rag_fused', and 'self_reflect' in text.py">
+      <option name="closed" value="true" />
+      <created>1769950492359</created>
+      <option name="number" value="00046" />
+      <option name="presentableId" value="LOCAL-00046" />
+      <option name="project" value="LOCAL" />
+      <updated>1769950492359</updated>
+    </task>
+    <option name="localTasksCounter" value="47" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -621,7 +628,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="update otherCharacters.txt" />
     <MESSAGE value="update demo.py" />
     <MESSAGE value="update backgroundInfo.py" />
     <MESSAGE value="rag basically successful" />
@@ -646,6 +652,7 @@
     <MESSAGE value="update self_refection" />
     <MESSAGE value="update query_transformations.py" />
     <MESSAGE value="update self_refection.py" />
-    <option name="LAST_COMMIT_MESSAGE" value="update self_refection.py" />
+    <MESSAGE value="update merge 'mutil_indexing','rerank','rag_fused', and 'self_reflect' in text.py" />
+    <option name="LAST_COMMIT_MESSAGE" value="update merge 'mutil_indexing','rerank','rag_fused', and 'self_reflect' in text.py" />
   </component>
 </project>
