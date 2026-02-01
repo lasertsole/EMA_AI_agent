@@ -1,5 +1,6 @@
 import os
 import datetime
+from pathlib import Path
 from dotenv import load_dotenv
 from typing import List, TypedDict
 from pydantic import BaseModel, Field
@@ -7,8 +8,12 @@ from langchain.chat_models import init_chat_model
 from langchain_core.prompts import PromptTemplate
 from langgraph.graph import StateGraph, START, END
 
-# 加载环境变量
-env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../../.env')
+# 获取当前所在文件夹
+current_dir = Path(__file__).parent.resolve()
+
+# 加载环境变量和模型初始化（同上）
+env_path = current_dir / '../../../.env'
+env_path = env_path.resolve()
 load_dotenv(env_path, override = True)
 api_key = os.getenv("CHAT_API_KEY")
 api_name = os.getenv("CHAT_API_NAME")

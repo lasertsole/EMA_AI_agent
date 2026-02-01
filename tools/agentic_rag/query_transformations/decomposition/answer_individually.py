@@ -1,12 +1,16 @@
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 from langchain.chat_models import init_chat_model
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough, RunnableLambda
 from langchain_core.output_parsers import StrOutputParser
 
+# 获取当前所在文件夹
+current_dir = Path(__file__).parent.resolve()
+
 # 加载环境变量
-env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../../.env')
+env_path = current_dir / '../../../../.env'
 load_dotenv(env_path, override = True)
 api_key = os.getenv("CHAT_API_KEY")
 api_name = os.getenv("CHAT_API_NAME")
