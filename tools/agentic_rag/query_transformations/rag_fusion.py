@@ -21,7 +21,7 @@ def rag_fusion_node(state: GraphState):
         for text, _ in sorted(fused_scores.items(), key=lambda x: x[1], reverse=True)
     ]
 
-    return {'output': res}
+    return {'output': res }
 
 
 workflow = StateGraph(GraphState)
