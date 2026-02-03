@@ -35,7 +35,7 @@ store = LocalFileStore(indexFolderPath)
 if not indexFolderPath.exists():
     # 生成摘要模型对象
     summarize_model = init_chat_model(
-        model_provider=model_provider,
+        model_provider = model_provider,
         model = api_name,
         api_key = api_key,
         temperature = 0.8,
@@ -81,7 +81,7 @@ if not indexFolderPath.exists():
 
     # 将id列表绑定
     summary_docs = [
-        Document(page_content=s, metadata={id_key: doc_ids[i]})
+        Document(page_content = s, metadata = {id_key: doc_ids[i]})
         for i, s in enumerate(summaries)
     ]
 
