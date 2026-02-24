@@ -1,14 +1,24 @@
 import os
 import json
-import time
 import signal
 import atexit
 import requests
 import subprocess
 from pathlib import Path
-from typing import Union
-from pydantic import BaseModel
+from typing import Union, TypedDict
 from dotenv import load_dotenv
+from pydantic import BaseModel
+
+current_dir = Path(__file__).parent.resolve()
+
+refer_audio_path = current_dir / 'src/refer_audio.ogg'
+refer_audio_path = refer_audio_path.resolve().as_posix()
+
+refer_text_path = current_dir / "src/refer_text.txt"
+refer_text_path = refer_text_path.resolve().as_posix()
+
+with open(refer_text_path, "r", encoding="utf-8") as f:
+    refer_text = f.read()
 
 """
 ### 推理请求参数
@@ -41,28 +51,28 @@ from dotenv import load_dotenv
 class TTS_Request(BaseModel):
     text: str = None
     text_lang: str = None
-    ref_audio_path: str = None
+    ref_audio_path: str = refer_audio_path
     aux_ref_audio_paths: list = None
-    prompt_lang: str = None
-    prompt_text: str = ""
-    top_k: int = 5
-    top_p: float = 1
-    temperature: float = 1
-    text_split_method: str = "cut0"
-    batch_size: int = 1
-    batch_threshold: float = 0.75
-    split_bucket: bool = True
-    speed_factor: float = 1.0
-    fragment_interval: float = 0.3
-    seed: int = -1
-    #media_type: str = "wav"
-    streaming_mode: Union[bool, int] = False
-    parallel_infer: bool = True
-    repetition_penalty: float = 1.35
-    sample_steps: int = 32
-    super_sampling: bool = False
-    overlap_length: int = 2
-    min_chunk_length: int = 16
+    prompt_lang: str = 'jp'
+    prompt_text: str = refer_text
+    # top_k: int = 5
+    # top_p: float = 1
+    # temperature: float = 1
+    # text_split_method: str = "cut0"
+    # batch_size: int = 1
+    # batch_threshold: float = 0.75
+    # split_bucket: bool = True
+    # speed_factor: float = 1.0
+    # fragment_interval: float = 0.3
+    # seed: int = -1
+    # #media_type: str = "wav"
+    # streaming_mode: Union[bool, int] = False
+    # parallel_infer: bool = True
+    # repetition_penalty: float = 1.35
+    # sample_steps: int = 32
+    # super_sampling: bool = False
+    # overlap_length: int = 2
+    # min_chunk_length: int = 16
 
 base_url = "http://127.0.0.1:9880/"
 control_url = base_url + "/control"
@@ -73,8 +83,20 @@ change_refer_audio_url = base_url + "/set_refer_audio"
 
 ### 推理
 def fetchTTSSound(request: TTS_Request):
-    res = requests.post(tts_url, data=json.dumps(request), verify=True)
-    print(res)
+    print(request.model_dump())
+    params = {
+        "text": request.text,
+        "text_lang": "zh",
+        "ref_audio_path": "C:/app/code/project/EMA_AI_agent/models/sovits_model/src/refer_audio.ogg",
+        "prompt_lang": "zh",
+        "prompt_text": "朝食の後の自由時間が長いので、牢屋敷を探索しようと思ってるんです。一緒に行きません",
+        "prompt_lang": "ja",
+        "text_split_method": "cut5",
+        "batch_size": 1,
+        "media_type": "wav",
+        "streaming_mode" : True
+    }
+    res = requests.get("http://127.0.0.1:9880/tts", params=params, verify=True)
     return res
     
 '''
@@ -135,7 +157,8 @@ def changeReferAudio(refer_audio_path: str = None):
     return res
 
 # 加载环境变量
-env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../.env')
+env_path = current_dir /  '../../.env'
+env_path = env_path.resolve()
 load_dotenv(env_path, override=True)
 
 # 获取gpt-sovits项目所在文件夹
@@ -154,23 +177,12 @@ interpreter_path = interpreter_path.as_posix()
 config_path = Path(__file__).parent.resolve() / "config/tts_infer.yaml"
 config_path = config_path.as_posix()
 
-if __name__ == "__main__":
-    # 创建tts子进程
-    proc = subprocess.Popen([interpreter_path, api_path, '-a', '127.0.0.1', '-p', '9880', '-c', config_path],
-                            cwd=gpt_sovits_dir)
+# 创建tts子进程
+proc = subprocess.Popen([interpreter_path, api_path, '-a', '127.0.0.1', '-p', '9880', '-c', config_path],
+                        cwd=gpt_sovits_dir)
+
+def cleanup():
+    os.kill(proc.pid, signal.SIGTERM)
 
 
-    # 主进程结束时清理tts子进程
-    def cleanup():
-        os.kill(proc.pid, signal.SIGTERM)
-
-
-    atexit.register(cleanup)
-
-    while True:
-        stdout,stderr = proc.communicate()
-        if stdout:
-            print("输出信息" + stdout.decode("utf-8"))
-        if stderr:
-            print("错误信息" + stderr.decode("utf-8"))
-        time.sleep(1)
+atexit.register(cleanup)

@@ -15,6 +15,7 @@ from agent import agent
 from dotenv import load_dotenv
 from typing import AsyncGenerator
 from langchain.messages import AIMessageChunk
+from models import TTS_Request, fetchTTSSound
 
 env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), './.env')
 load_dotenv(env_path, override=True)
@@ -60,4 +61,6 @@ if __name__ == "__main__":
             stream = async_generator(message_list, config)
             content = st.write_stream(stream)
             st.session_state.messages.append({"role": "assistant", "content": content})
-            #st.audio("./models/sovits_model/src/0101Adv04_Sherry001.ogg", format="audio/ogg")
+            audio_requires = TTS_Request(text=content, text_lang = "zh")
+            response = fetchTTSSound(audio_requires)
+            st.audio(data=response.content, format="audio/ogg")

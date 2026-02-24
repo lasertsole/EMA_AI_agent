@@ -4,9 +4,13 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="823222bf-bcd3-4fc1-9584-1cc7eda194dc" name="Changes" comment="update structure">
+    <list default="true" id="823222bf-bcd3-4fc1-9584-1cc7eda194dc" name="Changes" comment="connect sovits">
       <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/EMA_AI_agent-main.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/EMA_AI_agent-main.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/sovits_model/core.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/sovits_model/core.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -61,33 +65,34 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;Python.backgroundInfo (1).executor&quot;: &quot;Run&quot;,
-    &quot;Python.backgroundInfo.executor&quot;: &quot;Run&quot;,
-    &quot;Python.core (1).executor&quot;: &quot;Run&quot;,
-    &quot;Python.core.executor&quot;: &quot;Run&quot;,
-    &quot;Python.core_graph (1).executor&quot;: &quot;Run&quot;,
-    &quot;Python.core_graph.executor&quot;: &quot;Run&quot;,
-    &quot;Python.demo (1).executor&quot;: &quot;Run&quot;,
-    &quot;Python.demo.executor&quot;: &quot;Run&quot;,
-    &quot;Python.demo1 (1).executor&quot;: &quot;Run&quot;,
-    &quot;Python.demo1.executor&quot;: &quot;Run&quot;,
-    &quot;Python.extract_model.executor&quot;: &quot;Run&quot;,
-    &quot;Python.graphrag.executor&quot;: &quot;Run&quot;,
-    &quot;Python.graphrag_model.executor&quot;: &quot;Run&quot;,
-    &quot;Python.main.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;deletionFromPopupRequiresConfirmation&quot;: &quot;false&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;last_opened_file_path&quot;: &quot;D:/project/EMA_AI_agent/tools/rag/rag_indexDB/openl/input&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;vcs.Git&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "Python.backgroundInfo (1).executor": "Run",
+    "Python.backgroundInfo.executor": "Run",
+    "Python.core (1).executor": "Run",
+    "Python.core.executor": "Run",
+    "Python.core_graph (1).executor": "Run",
+    "Python.core_graph.executor": "Run",
+    "Python.demo (1).executor": "Run",
+    "Python.demo.executor": "Run",
+    "Python.demo1 (1).executor": "Run",
+    "Python.demo1.executor": "Run",
+    "Python.extract_model.executor": "Run",
+    "Python.graphrag.executor": "Run",
+    "Python.graphrag_model.executor": "Run",
+    "Python.main.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "deletionFromPopupRequiresConfirmation": "false",
+    "git-widget-placeholder": "main",
+    "last_opened_file_path": "D:/project/EMA_AI_agent/tools/rag/rag_indexDB/openl/input",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "settings.editor.selected.configurable": "vcs.Git"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="D:\project\EMA_AI_agent\tools\rag\rag_indexDB\openl\input" />
@@ -114,6 +119,7 @@
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="RUN_TOOL" value="" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tools/agentic_rag/core.py" />
       <option name="PARAMETERS" value="" />
@@ -137,6 +143,7 @@
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="RUN_TOOL" value="" />
       <option name="SCRIPT_NAME" value="C:\Users\Administrator\Desktop\EMA_AI_agent-main\tools\agentic_rag\core.py" />
       <option name="PARAMETERS" value="" />
@@ -156,11 +163,11 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="SDK_NAME" value="Python 3.12 (EMA_AI_agent-main)" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
       <option name="IS_MODULE_SDK" value="false" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="RUN_TOOL" value="" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/main.py" />
       <option name="PARAMETERS" value="" />
@@ -506,6 +513,12 @@
     <MESSAGE value="change structure" />
     <MESSAGE value="add tool_call_limit.py" />
     <MESSAGE value="update structure" />
-    <option name="LAST_COMMIT_MESSAGE" value="update structure" />
+    <MESSAGE value="connect sovits" />
+    <option name="LAST_COMMIT_MESSAGE" value="connect sovits" />
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/EMA_AI_agent$core.coverage" NAME="core 覆盖结果" MODIFIED="1771933007685" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/models/sovits_model" />
+    <SUITE FILE_PATH="coverage/EMA_AI_agent$core__1_.coverage" NAME="core (1) 覆盖结果" MODIFIED="1771933779183" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tools/agentic_rag" />
+    <SUITE FILE_PATH="coverage/EMA_AI_agent$main.coverage" NAME="main 覆盖结果" MODIFIED="1771848366645" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>
