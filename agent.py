@@ -3,7 +3,7 @@ from langchain.agents import create_agent
 from langgraph.checkpoint.memory import InMemorySaver
 from models import base_model
 from middlewares import dynamic_model_routing, summarization, tool_calling_limit
-from tools import web_search, query_background_info
+from tools import web_search, agentic_rag_query
 
 current_dir = Path(__file__).parent.resolve()
 personality_path = current_dir / "personality.txt"
@@ -24,7 +24,7 @@ checkpoint = InMemorySaver()
 #生成agent对象
 agent = create_agent(
     model=base_model,
-    tools=[web_search, query_background_info],
+    tools=[web_search, agentic_rag_query],
     system_prompt = systemPrompt,
     checkpointer=checkpoint,
     middleware=[dynamic_model_routing, summarization, tool_calling_limit],

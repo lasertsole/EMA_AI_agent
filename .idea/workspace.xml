@@ -4,12 +4,108 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="823222bf-bcd3-4fc1-9584-1cc7eda194dc" name="Changes" comment="add decomposition">
-      <change afterPath="$PROJECT_DIR$/tools/agentic_rag/raptor/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tools/agentic_rag/raptor/core.py" afterDir="false" />
+    <list default="true" id="823222bf-bcd3-4fc1-9584-1cc7eda194dc" name="Changes" comment="update structure">
       <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/EMA_AI_agent-main.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/EMA_AI_agent-main.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/native/core.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/agentic_rag/native/core.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/agent.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/agentic_rag/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/core.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/agentic_rag/core.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/.env" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/community_reporting/chat_create_community_report_06de1da9f14a5b377e23136350acaca31037a1a592503ec1263b525eaaef1f45_v2" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/community_reporting/chat_create_community_report_5ebe8a927294bd988885aa9dbf9e81d5f34efcd1c1e2e7508823b345fef80db1_v2" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/community_reporting/chat_create_community_report_7d561f440b749a800e794262f16172072003cfc36420aaa25bda277233459bca_v2" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/community_reporting/chat_create_community_report_8a897e174929bed06d31babb26d0684f7d9f1cf8c2f6411856889da9a9883ea9_v2" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/extract_graph/chat_0ac0cf6ff28dddb680a0f367bc5e2049a2c8c4daf253ad20110b48abb9fda5e5_v2" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/extract_graph/chat_0ed2a603c15153f286878563eb655a939b9d2ff08d7bf0a7ccb1ee20ed13b0f8_v2" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/extract_graph/chat_3a9c3757be13a1dd68c36353e57327458afe613fb61ec2cbf9971abbcf68a72b_v2" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/extract_graph/chat_449dab65a708d20a528d6320e27965d00e8d67fde6aac8eee7528b00e85bc78d_v2" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/extract_graph/chat_84134bcf29142bca43a07b3e03dbba70f8f12c1c7692df8eb8e0f207784ab053_v2" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/extract_graph/chat_92f7e434fe425ee0f8e50d9afe6c39137cd17db3df92eee60ce1909dfbe1d894_v2" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/extract_graph/chat_bf6ecdb81b830e685937e9944c881f3f7fbe9a69a6d3b42671c97fbf57c55568_v2" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/extract_graph/chat_e2109f0a016219bcbb9781d90c733a776408f79a8035911a697ea202dbfa6b40_v2" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/extract_graph/chat_ea083c252bbc1e6669399ec1231836ced2074bbdca6074b6e331d88093c1ab64_v2" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/extract_graph/chat_ec2d1e364505d7395366f15b61f847c865978d1dcac7ea4f16fad240118bf302_v2" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/extract_graph/chat_extract-continuation-0_064627f9e9fa3d3bb63d2058b293fa991e877e0777d39c17b89e19e5f3c90a00_v2" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/extract_graph/chat_extract-continuation-0_36918581c07239d28bd1af82eb754261cdb9bce7d345cb9627081906c05e59c3_v2" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/extract_graph/chat_extract-continuation-0_4164498003026d137ba38cc4d6ce9157e0c744cc6965939af76703cd6ceb2c98_v2" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/extract_graph/chat_extract-continuation-0_58d120bd10ae8225fec241c34545e5d749246fa07e4832e57c0a2190210aab81_v2" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/extract_graph/chat_extract-continuation-0_a53affb304eef8cc3c0cb273f945fdbfc068af0855c769e4a614ca31898f3583_v2" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/extract_graph/chat_extract-continuation-0_a87ac089c1e10d254d037dd0b673985a6d898f19b2f1b805900d0f231dbf6446_v2" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/extract_graph/chat_extract-continuation-0_b2c5e1f4693bec7bb8da28fb6b945fd7ef2059f041b2b0084edd6c0f7298f1b7_v2" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/extract_graph/chat_extract-continuation-0_c0287d866262c6e55befbca1b3a450caee83a6ea708c970857dd39adf18f8018_v2" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/extract_graph/chat_extract-continuation-0_dcd5dd20d0f6c9a3c0c7bd8db22bde36c98172d9cf36a160267353576a28a88c_v2" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/extract_graph/chat_extract-continuation-0_e898a6939528bb5f304be32d661654b8d3f56014ecb6dabf18a132007f405c69_v2" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/extract_graph/chat_extract-continuation-0_f1b42c9d9e68a3f619a25617a090166bc74118e3d701ca236a753f69077a0bac_v2" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/extract_graph/chat_f3a1044f6aca551c6a523b1a64d3b18c612afb3639d813d9631a753c71efe02a_v2" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/summarize_descriptions/chat_summarize_062072316c6ccc01bfebce326ba05a52f278ab20902af88c33e3cd8c08231078_v2" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/summarize_descriptions/chat_summarize_0d3d53b8c6313907ea4eb16f023b64464e29142202f27b71bb2c76ded9db27c9_v2" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/summarize_descriptions/chat_summarize_0e782b4d277ec56c6c56eb89cf535d99efc084baad4b630078c6cc49224d74a6_v2" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/summarize_descriptions/chat_summarize_20043a7a9088d3c9de381672636d9b6b33f24716d070cc0e4bdb04b6bbd3e6b7_v2" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/summarize_descriptions/chat_summarize_3288c7d66eab6a6f345e2cd2074886bdd2c37e33d34ae5ae9fce8ff8e1e3c3f4_v2" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/summarize_descriptions/chat_summarize_4fac4e9f2b989c7da9ab94e1976dbe33a79d77702817eb0ad7479d2c0409e1cd_v2" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/summarize_descriptions/chat_summarize_85d5d58dfeb7db3e989094a667a563baa1b64836ffd9b7bf1cc7ceb531c0cbb7_v2" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/summarize_descriptions/chat_summarize_986d1c91b2f2c025edb2d06aa4322cc0c873e1d856ed004aa55075da1658cd68_v2" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/summarize_descriptions/chat_summarize_bdff0169475c5606e7ac407277e6e71862feba9b92562100e3cca9464baea94a_v2" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/summarize_descriptions/chat_summarize_c7d6a717d519565f7e6871db65d147965012ec120cdd26b6d075a9aecc78ab11_v2" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/summarize_descriptions/chat_summarize_effdfbe3b7e812730b8d5f58a817abd7adfb86e23d2c53f54cf50660a9e65c33_v2" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/text_embedding/embeddings_32e205b66f6ff3ce9658b28f124cc8524e3620399f1fded088d68dd319c08e7a_v2" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/text_embedding/embeddings_3917d7db3ec611fc6b3c503666d7a05b20775f2d6e38b007344053e8c68b1bde_v2" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/text_embedding/embeddings_477e596ff224a15f1b9b4630e04f2535df264873c1056da133c9ecc65042bb39_v2" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/text_embedding/embeddings_636b210e75ceb7e9bde5df05c644adb03b2ed173454015418ac9de195259783d_v2" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/text_embedding/embeddings_8758f27bbfc0f8e8580bd887a0528a5c34f79d72f42bc7dde201d020849bf6f9_v2" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/text_embedding/embeddings_9df72b0a6eb931858cbbb2d5b4ebe3af6f89fae0bcddc796e1120118eb5983a3_v2" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/text_embedding/embeddings_b1edd7ac3f9171b0d1f68a2078abbfee0037efbcfabd371b5c213c7c08c55700_v2" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/text_embedding/embeddings_d28a99cfb28d920e0dcd7a5ff383fe09b2cf6ebf71ff4c87c760ccb430e66c01_v2" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/text_embedding/embeddings_edf0f829659158734def8ba88d8fb0e299e1bd3061d4b891433dd74b8216946e_v2" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/core.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/input/allCharacters.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/logs/indexing-engine.log" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/logs/query.log" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/output/communities.parquet" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/output/community_reports.parquet" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/output/context.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/output/documents.parquet" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/output/entities.parquet" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/output/lancedb/default-community-full_content.lance/_indices/11ed9e13-2a3c-4040-90ab-a5938ba65510/auxiliary.idx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/output/lancedb/default-community-full_content.lance/_indices/11ed9e13-2a3c-4040-90ab-a5938ba65510/index.idx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/output/lancedb/default-community-full_content.lance/_transactions/0-242016ff-13a4-4414-ab96-324b2b05c6ff.txn" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/output/lancedb/default-community-full_content.lance/_transactions/1-fc0dc152-fd5f-4a52-8076-65451a74ccb0.txn" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/output/lancedb/default-community-full_content.lance/_versions/1.manifest" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/output/lancedb/default-community-full_content.lance/_versions/2.manifest" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/output/lancedb/default-community-full_content.lance/data/101011000001101111000100618ba54855972d3f2491610756.lance" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/output/lancedb/default-entity-description.lance/_indices/1f25544d-dd77-46ad-aba0-a213d89c273e/auxiliary.idx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/output/lancedb/default-entity-description.lance/_indices/1f25544d-dd77-46ad-aba0-a213d89c273e/index.idx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/output/lancedb/default-entity-description.lance/_transactions/0-f2ece27f-9fd0-4d2b-ba24-05436051bb52.txn" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/output/lancedb/default-entity-description.lance/_transactions/1-6587f597-e349-4c58-8eb9-20a0c7826e27.txn" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/output/lancedb/default-entity-description.lance/_versions/1.manifest" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/output/lancedb/default-entity-description.lance/_versions/2.manifest" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/output/lancedb/default-entity-description.lance/data/001010010111111011100101c4d73b4ee48b21661216dfafd3.lance" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/output/lancedb/default-text_unit-text.lance/_indices/ae6cc0b3-e93d-4401-adbc-25f3fab7caf6/auxiliary.idx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/output/lancedb/default-text_unit-text.lance/_indices/ae6cc0b3-e93d-4401-adbc-25f3fab7caf6/index.idx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/output/lancedb/default-text_unit-text.lance/_transactions/0-4558b37d-7350-4867-aca3-6589dd2c2763.txn" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/output/lancedb/default-text_unit-text.lance/_transactions/1-7e35a6c9-94e4-45d8-a8c6-5ba252cdc30c.txn" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/output/lancedb/default-text_unit-text.lance/_versions/1.manifest" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/output/lancedb/default-text_unit-text.lance/_versions/2.manifest" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/output/lancedb/default-text_unit-text.lance/data/0010100111110000011110011f7d8c47389912df8a4f198ff0.lance" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/output/relationships.parquet" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/output/stats.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/output/text_units.parquet" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/prompts/basic_search_system_prompt.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/prompts/community_report_graph.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/prompts/community_report_text.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/prompts/drift_reduce_prompt.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/prompts/drift_search_system_prompt.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/prompts/extract_claims.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/prompts/extract_graph.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/prompts/global_search_knowledge_system_prompt.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/prompts/global_search_map_system_prompt.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/prompts/global_search_reduce_system_prompt.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/prompts/local_search_system_prompt.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/prompts/question_gen_system_prompt.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/prompts/summarize_descriptions.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/settings.yaml" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -24,6 +120,19 @@
     </option>
   </component>
   <component name="Git.Settings">
+    <excluded-from-favorite>
+      <branch-storage>
+        <map>
+          <entry type="LOCAL">
+            <value>
+              <list>
+                <branch-info repo="$PROJECT_DIR$" source="main" />
+              </list>
+            </value>
+          </entry>
+        </map>
+      </branch-storage>
+    </excluded-from-favorite>
     <option name="PUSH_AUTO_UPDATE" value="true" />
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
@@ -36,7 +145,7 @@
   <component name="GithubPullRequestsUISettings">{
   &quot;selectedUrlAndAccountId&quot;: {
     &quot;url&quot;: &quot;https://github.com/lasertsole/EMA_AI_agent.git&quot;,
-    &quot;accountId&quot;: &quot;9f87a471-4c94-4fa0-8fc8-e230f7434780&quot;
+    &quot;accountId&quot;: &quot;ae79ac2f-2c77-42fa-befc-b34cf5aa12e7&quot;
   }
 }</component>
   <component name="ProjectColorInfo">{
@@ -54,79 +163,43 @@
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
     "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "Python.HyDE.executor": "Run",
-    "Python.agent.executor": "Run",
     "Python.backgroundInfo (1).executor": "Run",
     "Python.backgroundInfo.executor": "Run",
-    "Python.by_re_writen.executor": "Run",
     "Python.core (1).executor": "Run",
     "Python.core.executor": "Run",
     "Python.core_graph (1).executor": "Run",
     "Python.core_graph.executor": "Run",
-    "Python.decomposition.executor": "Run",
     "Python.demo (1).executor": "Run",
     "Python.demo.executor": "Run",
     "Python.demo1 (1).executor": "Run",
     "Python.demo1.executor": "Run",
     "Python.extract_model.executor": "Run",
-    "Python.generate.executor": "Run",
     "Python.graphrag.executor": "Run",
     "Python.graphrag_model.executor": "Run",
-    "Python.hallucination_grader.executor": "Run",
     "Python.main.executor": "Run",
-    "Python.mutil_query.executor": "Run",
-    "Python.query_transformations.executor": "Run",
-    "Python.retrieval_grader.executor": "Run",
-    "Python.streamlit_main.executor": "Run",
-    "Python.test (1).executor": "Run",
-    "Python.test.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
     "RunOnceActivity.git.unshallow": "true",
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "deletionFromPopupRequiresConfirmation": "false",
     "git-widget-placeholder": "main",
-    "last_opened_file_path": "D:/project/EMA_AI_agent/tools/agentic_rag/self_refection",
+    "last_opened_file_path": "D:/project/EMA_AI_agent/tools/rag/rag_indexDB/openl/input",
     "settings.editor.selected.configurable": "vcs.Git"
   }
 }]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
-      <recent name="D:\project\EMA_AI_agent\tools\agentic_rag\self_refection" />
-      <recent name="D:\project\EMA_AI_agent\models\sovits_model\src" />
       <recent name="D:\project\EMA_AI_agent\tools\rag\rag_indexDB\openl\input" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
-      <recent name="D:\project\EMA_AI_agent\tools\agentic_rag\query_transformations" />
-      <recent name="D:\project\EMA_AI_agent\tools\agentic_rag\decomposition" />
-      <recent name="D:\project\EMA_AI_agent\tools\agentic_rag" />
-      <recent name="D:\project\EMA_AI_agent\tools\agentic_rag\self_refection" />
-      <recent name="D:\project\EMA_AI_agent\tools\agentic_rag\native" />
+      <recent name="C:\Users\Administrator\Desktop\EMA_AI_agent-main\tools\agentic_rag\naive" />
+      <recent name="D:\project\EMA_AI_agent\tools\agentic_rag\graphrag" />
+      <recent name="C:\Users\Administrator\Desktop\EMA_AI_agent-main\tools\rag" />
+      <recent name="C:\Users\Administrator\Desktop\EMA_AI_agent-main\tools\rag\core" />
+      <recent name="D:\project\EMA_AI_agent\models\rag_specific" />
     </key>
   </component>
   <component name="RunManager" selected="Python.core (1)">
-    <configuration name="HyDE" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="EMA_AI_agent-main" />
-      <option name="ENV_FILES" value="" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tools/agentic_rag/query_transformations" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tools/agentic_rag/query_transformations/HyDE.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
     <configuration name="core (1)" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="EMA_AI_agent-main" />
       <option name="ENV_FILES" value="" />
@@ -136,11 +209,12 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tools/agentic_rag/raptor" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tools/agentic_rag" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tools/agentic_rag/raptor/core.py" />
+      <option name="RUN_TOOL" value="" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tools/agentic_rag/core.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -158,55 +232,36 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tools/agentic_rag/self_refection" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tools/agentic_rag/self_refection/core.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-    <configuration name="decomposition" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="EMA_AI_agent-main" />
-      <option name="ENV_FILES" value="" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tools/agentic_rag/query_transformations/decomposition" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tools/agentic_rag/query_transformations/decomposition/decomposition.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-    <configuration name="test" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="EMA_AI_agent-main" />
-      <option name="ENV_FILES" value="" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tools/agentic_rag" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tools/agentic_rag/test.py" />
+      <option name="RUN_TOOL" value="" />
+      <option name="SCRIPT_NAME" value="C:\Users\Administrator\Desktop\EMA_AI_agent-main\tools\agentic_rag\core.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="main" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="EMA_AI_agent-main" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="SDK_NAME" value="Python 3.12 (EMA_AI_agent-main)" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="RUN_TOOL" value="" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/main.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -217,25 +272,20 @@
     </configuration>
     <list>
       <item itemvalue="Python.core (1)" />
-      <item itemvalue="Python.HyDE" />
-      <item itemvalue="Python.decomposition" />
       <item itemvalue="Python.core" />
-      <item itemvalue="Python.test" />
+      <item itemvalue="Python.main" />
     </list>
     <recent_temporary>
       <list>
         <item itemvalue="Python.core (1)" />
-        <item itemvalue="Python.test" />
-        <item itemvalue="Python.decomposition" />
-        <item itemvalue="Python.HyDE" />
-        <item itemvalue="Python.core" />
+        <item itemvalue="Python.main" />
       </list>
     </recent_temporary>
   </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-python-sdk-164cda30dcd9-0af03a5fa574-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-252.26830.99" />
+        <option value="bundled-python-sdk-f2b7a9f6281b-6e1f45a539f7-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-253.29346.142" />
       </set>
     </attachedChunks>
   </component>
@@ -503,127 +553,23 @@
       <option name="project" value="LOCAL" />
       <updated>1768910744018</updated>
     </task>
-    <task id="LOCAL-00033" summary="change structure">
+    <task id="LOCAL-00033" summary="add tool_call_limit.py">
       <option name="closed" value="true" />
-      <created>1768917602338</created>
+      <created>1768957047384</created>
       <option name="number" value="00033" />
       <option name="presentableId" value="LOCAL-00033" />
       <option name="project" value="LOCAL" />
-      <updated>1768917602338</updated>
+      <updated>1768957047384</updated>
     </task>
-    <task id="LOCAL-00034" summary="prepare for tts">
+    <task id="LOCAL-00034" summary="update structure">
       <option name="closed" value="true" />
-      <created>1769336167254</created>
+      <created>1768960782379</created>
       <option name="number" value="00034" />
       <option name="presentableId" value="LOCAL-00034" />
       <option name="project" value="LOCAL" />
-      <updated>1769336167254</updated>
+      <updated>1768960782379</updated>
     </task>
-    <task id="LOCAL-00035" summary="update agentic_rag_process">
-      <option name="closed" value="true" />
-      <created>1769436948176</created>
-      <option name="number" value="00035" />
-      <option name="presentableId" value="LOCAL-00035" />
-      <option name="project" value="LOCAL" />
-      <updated>1769436948176</updated>
-    </task>
-    <task id="LOCAL-00036" summary="completed query_transformations">
-      <option name="closed" value="true" />
-      <created>1769528920932</created>
-      <option name="number" value="00036" />
-      <option name="presentableId" value="LOCAL-00036" />
-      <option name="project" value="LOCAL" />
-      <updated>1769528920932</updated>
-    </task>
-    <task id="LOCAL-00037" summary="completed rerank_node">
-      <option name="closed" value="true" />
-      <created>1769617614507</created>
-      <option name="number" value="00037" />
-      <option name="presentableId" value="LOCAL-00037" />
-      <option name="project" value="LOCAL" />
-      <updated>1769617614507</updated>
-    </task>
-    <task id="LOCAL-00038" summary="try to use mutil representation indexing">
-      <option name="closed" value="true" />
-      <created>1769705138742</created>
-      <option name="number" value="00038" />
-      <option name="presentableId" value="LOCAL-00038" />
-      <option name="project" value="LOCAL" />
-      <updated>1769705138742</updated>
-    </task>
-    <task id="LOCAL-00039" summary="complete multi-representation Indexing">
-      <option name="closed" value="true" />
-      <created>1769790382173</created>
-      <option name="number" value="00039" />
-      <option name="presentableId" value="LOCAL-00039" />
-      <option name="project" value="LOCAL" />
-      <updated>1769790382173</updated>
-    </task>
-    <task id="LOCAL-00040" summary="update multi-representation Indexing">
-      <option name="closed" value="true" />
-      <created>1769791549972</created>
-      <option name="number" value="00040" />
-      <option name="presentableId" value="LOCAL-00040" />
-      <option name="project" value="LOCAL" />
-      <updated>1769791549972</updated>
-    </task>
-    <task id="LOCAL-00041" summary="update envPath">
-      <option name="closed" value="true" />
-      <created>1769850169755</created>
-      <option name="number" value="00041" />
-      <option name="presentableId" value="LOCAL-00041" />
-      <option name="project" value="LOCAL" />
-      <updated>1769850169755</updated>
-    </task>
-    <task id="LOCAL-00042" summary="update self_refection">
-      <option name="closed" value="true" />
-      <created>1769851448769</created>
-      <option name="number" value="00042" />
-      <option name="presentableId" value="LOCAL-00042" />
-      <option name="project" value="LOCAL" />
-      <updated>1769851448769</updated>
-    </task>
-    <task id="LOCAL-00043" summary="update self_refection">
-      <option name="closed" value="true" />
-      <created>1769878667294</created>
-      <option name="number" value="00043" />
-      <option name="presentableId" value="LOCAL-00043" />
-      <option name="project" value="LOCAL" />
-      <updated>1769878667294</updated>
-    </task>
-    <task id="LOCAL-00044" summary="update query_transformations.py">
-      <option name="closed" value="true" />
-      <created>1769924519396</created>
-      <option name="number" value="00044" />
-      <option name="presentableId" value="LOCAL-00044" />
-      <option name="project" value="LOCAL" />
-      <updated>1769924519396</updated>
-    </task>
-    <task id="LOCAL-00045" summary="update self_refection.py">
-      <option name="closed" value="true" />
-      <created>1769935099303</created>
-      <option name="number" value="00045" />
-      <option name="presentableId" value="LOCAL-00045" />
-      <option name="project" value="LOCAL" />
-      <updated>1769935099303</updated>
-    </task>
-    <task id="LOCAL-00046" summary="update merge 'mutil_indexing','rerank','rag_fused', and 'self_reflect' in text.py">
-      <option name="closed" value="true" />
-      <created>1769950492359</created>
-      <option name="number" value="00046" />
-      <option name="presentableId" value="LOCAL-00046" />
-      <option name="project" value="LOCAL" />
-      <updated>1769950492359</updated>
-    </task>
-    <task id="LOCAL-00047" summary="add decomposition">
-      <option name="closed" value="true" />
-      <created>1769953490397</created>
-      <option name="number" value="00047" />
-      <option name="presentableId" value="LOCAL-00047" />
-      <option name="project" value="LOCAL" />
-      <updated>1769953490397</updated>
-    </task>
-    <option name="localTasksCounter" value="48" />
+    <option name="localTasksCounter" value="35" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -638,6 +584,13 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
+    <MESSAGE value="rewrite by langchain1.0 api" />
+    <MESSAGE value="根据问题复杂度动态选择模型" />
+    <MESSAGE value="根据问题复杂度动态选择 合适模型" />
+    <MESSAGE value="delete" />
+    <MESSAGE value="update personality" />
+    <MESSAGE value="update otherCharacters.txt" />
+    <MESSAGE value="update demo.py" />
     <MESSAGE value="update backgroundInfo.py" />
     <MESSAGE value="rag basically successful" />
     <MESSAGE value="graphrag build successful" />
@@ -650,19 +603,8 @@
     <MESSAGE value="use checkPointer instead of custom array variable to memory history" />
     <MESSAGE value="update demo1.py" />
     <MESSAGE value="change structure" />
-    <MESSAGE value="prepare for tts" />
-    <MESSAGE value="update agentic_rag_process" />
-    <MESSAGE value="completed query_transformations" />
-    <MESSAGE value="completed rerank_node" />
-    <MESSAGE value="try to use mutil representation indexing" />
-    <MESSAGE value="complete multi-representation Indexing" />
-    <MESSAGE value="update multi-representation Indexing" />
-    <MESSAGE value="update envPath" />
-    <MESSAGE value="update self_refection" />
-    <MESSAGE value="update query_transformations.py" />
-    <MESSAGE value="update self_refection.py" />
-    <MESSAGE value="update merge 'mutil_indexing','rerank','rag_fused', and 'self_reflect' in text.py" />
-    <MESSAGE value="add decomposition" />
-    <option name="LAST_COMMIT_MESSAGE" value="add decomposition" />
+    <MESSAGE value="add tool_call_limit.py" />
+    <MESSAGE value="update structure" />
+    <option name="LAST_COMMIT_MESSAGE" value="update structure" />
   </component>
 </project>
