@@ -6,106 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="823222bf-bcd3-4fc1-9584-1cc7eda194dc" name="Changes" comment="update structure">
       <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/EMA_AI_agent-main.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/EMA_AI_agent-main.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/agent.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/agentic_rag/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/core.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/agentic_rag/core.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/.env" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/community_reporting/chat_create_community_report_06de1da9f14a5b377e23136350acaca31037a1a592503ec1263b525eaaef1f45_v2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/community_reporting/chat_create_community_report_5ebe8a927294bd988885aa9dbf9e81d5f34efcd1c1e2e7508823b345fef80db1_v2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/community_reporting/chat_create_community_report_7d561f440b749a800e794262f16172072003cfc36420aaa25bda277233459bca_v2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/community_reporting/chat_create_community_report_8a897e174929bed06d31babb26d0684f7d9f1cf8c2f6411856889da9a9883ea9_v2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/extract_graph/chat_0ac0cf6ff28dddb680a0f367bc5e2049a2c8c4daf253ad20110b48abb9fda5e5_v2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/extract_graph/chat_0ed2a603c15153f286878563eb655a939b9d2ff08d7bf0a7ccb1ee20ed13b0f8_v2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/extract_graph/chat_3a9c3757be13a1dd68c36353e57327458afe613fb61ec2cbf9971abbcf68a72b_v2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/extract_graph/chat_449dab65a708d20a528d6320e27965d00e8d67fde6aac8eee7528b00e85bc78d_v2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/extract_graph/chat_84134bcf29142bca43a07b3e03dbba70f8f12c1c7692df8eb8e0f207784ab053_v2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/extract_graph/chat_92f7e434fe425ee0f8e50d9afe6c39137cd17db3df92eee60ce1909dfbe1d894_v2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/extract_graph/chat_bf6ecdb81b830e685937e9944c881f3f7fbe9a69a6d3b42671c97fbf57c55568_v2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/extract_graph/chat_e2109f0a016219bcbb9781d90c733a776408f79a8035911a697ea202dbfa6b40_v2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/extract_graph/chat_ea083c252bbc1e6669399ec1231836ced2074bbdca6074b6e331d88093c1ab64_v2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/extract_graph/chat_ec2d1e364505d7395366f15b61f847c865978d1dcac7ea4f16fad240118bf302_v2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/extract_graph/chat_extract-continuation-0_064627f9e9fa3d3bb63d2058b293fa991e877e0777d39c17b89e19e5f3c90a00_v2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/extract_graph/chat_extract-continuation-0_36918581c07239d28bd1af82eb754261cdb9bce7d345cb9627081906c05e59c3_v2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/extract_graph/chat_extract-continuation-0_4164498003026d137ba38cc4d6ce9157e0c744cc6965939af76703cd6ceb2c98_v2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/extract_graph/chat_extract-continuation-0_58d120bd10ae8225fec241c34545e5d749246fa07e4832e57c0a2190210aab81_v2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/extract_graph/chat_extract-continuation-0_a53affb304eef8cc3c0cb273f945fdbfc068af0855c769e4a614ca31898f3583_v2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/extract_graph/chat_extract-continuation-0_a87ac089c1e10d254d037dd0b673985a6d898f19b2f1b805900d0f231dbf6446_v2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/extract_graph/chat_extract-continuation-0_b2c5e1f4693bec7bb8da28fb6b945fd7ef2059f041b2b0084edd6c0f7298f1b7_v2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/extract_graph/chat_extract-continuation-0_c0287d866262c6e55befbca1b3a450caee83a6ea708c970857dd39adf18f8018_v2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/extract_graph/chat_extract-continuation-0_dcd5dd20d0f6c9a3c0c7bd8db22bde36c98172d9cf36a160267353576a28a88c_v2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/extract_graph/chat_extract-continuation-0_e898a6939528bb5f304be32d661654b8d3f56014ecb6dabf18a132007f405c69_v2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/extract_graph/chat_extract-continuation-0_f1b42c9d9e68a3f619a25617a090166bc74118e3d701ca236a753f69077a0bac_v2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/extract_graph/chat_f3a1044f6aca551c6a523b1a64d3b18c612afb3639d813d9631a753c71efe02a_v2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/summarize_descriptions/chat_summarize_062072316c6ccc01bfebce326ba05a52f278ab20902af88c33e3cd8c08231078_v2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/summarize_descriptions/chat_summarize_0d3d53b8c6313907ea4eb16f023b64464e29142202f27b71bb2c76ded9db27c9_v2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/summarize_descriptions/chat_summarize_0e782b4d277ec56c6c56eb89cf535d99efc084baad4b630078c6cc49224d74a6_v2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/summarize_descriptions/chat_summarize_20043a7a9088d3c9de381672636d9b6b33f24716d070cc0e4bdb04b6bbd3e6b7_v2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/summarize_descriptions/chat_summarize_3288c7d66eab6a6f345e2cd2074886bdd2c37e33d34ae5ae9fce8ff8e1e3c3f4_v2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/summarize_descriptions/chat_summarize_4fac4e9f2b989c7da9ab94e1976dbe33a79d77702817eb0ad7479d2c0409e1cd_v2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/summarize_descriptions/chat_summarize_85d5d58dfeb7db3e989094a667a563baa1b64836ffd9b7bf1cc7ceb531c0cbb7_v2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/summarize_descriptions/chat_summarize_986d1c91b2f2c025edb2d06aa4322cc0c873e1d856ed004aa55075da1658cd68_v2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/summarize_descriptions/chat_summarize_bdff0169475c5606e7ac407277e6e71862feba9b92562100e3cca9464baea94a_v2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/summarize_descriptions/chat_summarize_c7d6a717d519565f7e6871db65d147965012ec120cdd26b6d075a9aecc78ab11_v2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/summarize_descriptions/chat_summarize_effdfbe3b7e812730b8d5f58a817abd7adfb86e23d2c53f54cf50660a9e65c33_v2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/text_embedding/embeddings_32e205b66f6ff3ce9658b28f124cc8524e3620399f1fded088d68dd319c08e7a_v2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/text_embedding/embeddings_3917d7db3ec611fc6b3c503666d7a05b20775f2d6e38b007344053e8c68b1bde_v2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/text_embedding/embeddings_477e596ff224a15f1b9b4630e04f2535df264873c1056da133c9ecc65042bb39_v2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/text_embedding/embeddings_636b210e75ceb7e9bde5df05c644adb03b2ed173454015418ac9de195259783d_v2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/text_embedding/embeddings_8758f27bbfc0f8e8580bd887a0528a5c34f79d72f42bc7dde201d020849bf6f9_v2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/text_embedding/embeddings_9df72b0a6eb931858cbbb2d5b4ebe3af6f89fae0bcddc796e1120118eb5983a3_v2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/text_embedding/embeddings_b1edd7ac3f9171b0d1f68a2078abbfee0037efbcfabd371b5c213c7c08c55700_v2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/text_embedding/embeddings_d28a99cfb28d920e0dcd7a5ff383fe09b2cf6ebf71ff4c87c760ccb430e66c01_v2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/cache/text_embedding/embeddings_edf0f829659158734def8ba88d8fb0e299e1bd3061d4b891433dd74b8216946e_v2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/core.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/input/allCharacters.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/logs/indexing-engine.log" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/logs/query.log" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/output/communities.parquet" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/output/community_reports.parquet" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/output/context.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/output/documents.parquet" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/output/entities.parquet" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/output/lancedb/default-community-full_content.lance/_indices/11ed9e13-2a3c-4040-90ab-a5938ba65510/auxiliary.idx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/output/lancedb/default-community-full_content.lance/_indices/11ed9e13-2a3c-4040-90ab-a5938ba65510/index.idx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/output/lancedb/default-community-full_content.lance/_transactions/0-242016ff-13a4-4414-ab96-324b2b05c6ff.txn" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/output/lancedb/default-community-full_content.lance/_transactions/1-fc0dc152-fd5f-4a52-8076-65451a74ccb0.txn" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/output/lancedb/default-community-full_content.lance/_versions/1.manifest" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/output/lancedb/default-community-full_content.lance/_versions/2.manifest" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/output/lancedb/default-community-full_content.lance/data/101011000001101111000100618ba54855972d3f2491610756.lance" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/output/lancedb/default-entity-description.lance/_indices/1f25544d-dd77-46ad-aba0-a213d89c273e/auxiliary.idx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/output/lancedb/default-entity-description.lance/_indices/1f25544d-dd77-46ad-aba0-a213d89c273e/index.idx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/output/lancedb/default-entity-description.lance/_transactions/0-f2ece27f-9fd0-4d2b-ba24-05436051bb52.txn" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/output/lancedb/default-entity-description.lance/_transactions/1-6587f597-e349-4c58-8eb9-20a0c7826e27.txn" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/output/lancedb/default-entity-description.lance/_versions/1.manifest" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/output/lancedb/default-entity-description.lance/_versions/2.manifest" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/output/lancedb/default-entity-description.lance/data/001010010111111011100101c4d73b4ee48b21661216dfafd3.lance" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/output/lancedb/default-text_unit-text.lance/_indices/ae6cc0b3-e93d-4401-adbc-25f3fab7caf6/auxiliary.idx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/output/lancedb/default-text_unit-text.lance/_indices/ae6cc0b3-e93d-4401-adbc-25f3fab7caf6/index.idx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/output/lancedb/default-text_unit-text.lance/_transactions/0-4558b37d-7350-4867-aca3-6589dd2c2763.txn" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/output/lancedb/default-text_unit-text.lance/_transactions/1-7e35a6c9-94e4-45d8-a8c6-5ba252cdc30c.txn" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/output/lancedb/default-text_unit-text.lance/_versions/1.manifest" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/output/lancedb/default-text_unit-text.lance/_versions/2.manifest" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/output/lancedb/default-text_unit-text.lance/data/0010100111110000011110011f7d8c47389912df8a4f198ff0.lance" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/output/relationships.parquet" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/output/stats.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/output/text_units.parquet" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/prompts/basic_search_system_prompt.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/prompts/community_report_graph.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/prompts/community_report_text.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/prompts/drift_reduce_prompt.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/prompts/drift_search_system_prompt.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/prompts/extract_claims.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/prompts/extract_graph.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/prompts/global_search_knowledge_system_prompt.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/prompts/global_search_map_system_prompt.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/prompts/global_search_reduce_system_prompt.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/prompts/local_search_system_prompt.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/prompts/question_gen_system_prompt.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/prompts/summarize_descriptions.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/agentic_rag/graph/settings.yaml" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -160,33 +61,33 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "Python.backgroundInfo (1).executor": "Run",
-    "Python.backgroundInfo.executor": "Run",
-    "Python.core (1).executor": "Run",
-    "Python.core.executor": "Run",
-    "Python.core_graph (1).executor": "Run",
-    "Python.core_graph.executor": "Run",
-    "Python.demo (1).executor": "Run",
-    "Python.demo.executor": "Run",
-    "Python.demo1 (1).executor": "Run",
-    "Python.demo1.executor": "Run",
-    "Python.extract_model.executor": "Run",
-    "Python.graphrag.executor": "Run",
-    "Python.graphrag_model.executor": "Run",
-    "Python.main.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "deletionFromPopupRequiresConfirmation": "false",
-    "git-widget-placeholder": "main",
-    "last_opened_file_path": "D:/project/EMA_AI_agent/tools/rag/rag_indexDB/openl/input",
-    "settings.editor.selected.configurable": "vcs.Git"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;Python.backgroundInfo (1).executor&quot;: &quot;Run&quot;,
+    &quot;Python.backgroundInfo.executor&quot;: &quot;Run&quot;,
+    &quot;Python.core (1).executor&quot;: &quot;Run&quot;,
+    &quot;Python.core.executor&quot;: &quot;Run&quot;,
+    &quot;Python.core_graph (1).executor&quot;: &quot;Run&quot;,
+    &quot;Python.core_graph.executor&quot;: &quot;Run&quot;,
+    &quot;Python.demo (1).executor&quot;: &quot;Run&quot;,
+    &quot;Python.demo.executor&quot;: &quot;Run&quot;,
+    &quot;Python.demo1 (1).executor&quot;: &quot;Run&quot;,
+    &quot;Python.demo1.executor&quot;: &quot;Run&quot;,
+    &quot;Python.extract_model.executor&quot;: &quot;Run&quot;,
+    &quot;Python.graphrag.executor&quot;: &quot;Run&quot;,
+    &quot;Python.graphrag_model.executor&quot;: &quot;Run&quot;,
+    &quot;Python.main.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;deletionFromPopupRequiresConfirmation&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/project/EMA_AI_agent/tools/rag/rag_indexDB/openl/input&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;vcs.Git&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="D:\project\EMA_AI_agent\tools\rag\rag_indexDB\openl\input" />
