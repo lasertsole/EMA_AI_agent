@@ -1,5 +1,4 @@
 import os
-import json
 import signal
 import atexit
 import requests
@@ -11,11 +10,17 @@ from pydantic import BaseModel
 
 current_dir = Path(__file__).parent.resolve()
 
+#参考语音地址
 refer_audio_path = current_dir / 'src/refer_audio.ogg'
 refer_audio_path = refer_audio_path.resolve().as_posix()
 
+#参考文本地址
 refer_text_path = current_dir / "src/refer_text.txt"
 refer_text_path = refer_text_path.resolve().as_posix()
+
+#辅助语言地址列表
+aux_ref_audio_folder_path = current_dir / "src/aux_ref_audio"
+aux_ref_audio_path_list = [(aux_ref_audio_folder_path / f.name).as_posix() for f in aux_ref_audio_folder_path.iterdir() if f.is_file()]
 
 with open(refer_text_path, "r", encoding="utf-8") as f:
     refer_text = f.read()
@@ -52,29 +57,28 @@ class TTS_Request(BaseModel):
     text: str = None
     text_lang: str = None
     ref_audio_path: str = refer_audio_path
-    aux_ref_audio_paths: list = None
-    prompt_lang: str = 'jp'
+    aux_ref_audio_paths: list = aux_ref_audio_path_list
+    prompt_lang: str = 'ja'
     prompt_text: str = refer_text
-    # top_k: int = 5
-    # top_p: float = 1
-    # temperature: float = 1
-    # text_split_method: str = "cut0"
-    # batch_size: int = 1
-    # batch_threshold: float = 0.75
-    # split_bucket: bool = True
-    # speed_factor: float = 1.0
-    # fragment_interval: float = 0.3
-    # seed: int = -1
-    # #media_type: str = "wav"
-    # streaming_mode: Union[bool, int] = False
-    # parallel_infer: bool = True
-    # repetition_penalty: float = 1.35
-    # sample_steps: int = 32
-    # super_sampling: bool = False
-    # overlap_length: int = 2
-    # min_chunk_length: int = 16
+    top_k: int = 5
+    top_p: float = 1
+    temperature: float = 1
+    text_split_method: str = "cut5"
+    batch_size: int = 20
+    batch_threshold: float = 0.75
+    split_bucket: bool = True
+    speed_factor: float = 1.0
+    fragment_interval: float = 0.3
+    seed: int = -1
+    streaming_mode: Union[bool, int] = False
+    parallel_infer: bool = True
+    repetition_penalty: float = 1.35
+    sample_steps: int = 32
+    super_sampling: bool = False
+    overlap_length: int = 2
+    min_chunk_length: int = 16
 
-base_url = "http://127.0.0.1:9880/"
+base_url = "http://127.0.0.1:9880"
 control_url = base_url + "/control"
 tts_url = base_url + "/tts"
 change_GPT_url = base_url + "/set_gpt_weights"
@@ -83,20 +87,8 @@ change_refer_audio_url = base_url + "/set_refer_audio"
 
 ### 推理
 def fetchTTSSound(request: TTS_Request):
-    print(request.model_dump())
-    params = {
-        "text": request.text,
-        "text_lang": "zh",
-        "ref_audio_path": "C:/app/code/project/EMA_AI_agent/models/sovits_model/src/refer_audio.ogg",
-        "prompt_lang": "zh",
-        "prompt_text": "朝食の後の自由時間が長いので、牢屋敷を探索しようと思ってるんです。一緒に行きません",
-        "prompt_lang": "ja",
-        "text_split_method": "cut5",
-        "batch_size": 1,
-        "media_type": "wav",
-        "streaming_mode" : True
-    }
-    res = requests.get("http://127.0.0.1:9880/tts", params=params, verify=True)
+    params = request.model_dump()
+    res = requests.get(tts_url, params=params, verify=True)
     return res
     
 '''

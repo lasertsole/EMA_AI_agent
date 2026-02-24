@@ -61,6 +61,8 @@ if __name__ == "__main__":
             stream = async_generator(message_list, config)
             content = st.write_stream(stream)
             st.session_state.messages.append({"role": "assistant", "content": content})
+
+            #生成语音
             audio_requires = TTS_Request(text=content, text_lang = "zh")
             response = fetchTTSSound(audio_requires)
             st.audio(data=response.content, format="audio/ogg")
