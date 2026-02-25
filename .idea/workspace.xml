@@ -4,9 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="823222bf-bcd3-4fc1-9584-1cc7eda194dc" name="Changes" comment="connect sovits">
+    <list default="true" id="823222bf-bcd3-4fc1-9584-1cc7eda194dc" name="Changes" comment="update sovits configuration">
       <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/sovits_model/config/tts_infer.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/models/sovits_model/config/tts_infer.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -200,8 +201,8 @@
       <method v="2" />
     </configuration>
     <list>
-      <item itemvalue="Python.core (2)" />
       <item itemvalue="Python.core (1)" />
+      <item itemvalue="Python.core (2)" />
       <item itemvalue="Python.core" />
       <item itemvalue="Python.main" />
     </list>
@@ -508,7 +509,15 @@
       <option name="project" value="LOCAL" />
       <updated>1771940333385</updated>
     </task>
-    <option name="localTasksCounter" value="36" />
+    <task id="LOCAL-00036" summary="update sovits configuration">
+      <option name="closed" value="true" />
+      <created>1772008071912</created>
+      <option name="number" value="00036" />
+      <option name="presentableId" value="LOCAL-00036" />
+      <option name="project" value="LOCAL" />
+      <updated>1772008071912</updated>
+    </task>
+    <option name="localTasksCounter" value="37" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -545,7 +554,8 @@
     <MESSAGE value="add tool_call_limit.py" />
     <MESSAGE value="update structure" />
     <MESSAGE value="connect sovits" />
-    <option name="LAST_COMMIT_MESSAGE" value="connect sovits" />
+    <MESSAGE value="update sovits configuration" />
+    <option name="LAST_COMMIT_MESSAGE" value="update sovits configuration" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/EMA_AI_agent$core.coverage" NAME="core 覆盖结果" MODIFIED="1771933007685" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/models/sovits_model" />

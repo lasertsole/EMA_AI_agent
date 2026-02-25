@@ -62,7 +62,10 @@ if __name__ == "__main__":
             content = st.write_stream(stream)
             st.session_state.messages.append({"role": "assistant", "content": content})
 
-            #生成语音
-            audio_requires = TTS_Request(text=content, text_lang = "zh")
-            response = fetchTTSSound(audio_requires)
-            st.audio(data=response.content, format="audio/ogg")
+            # 生成语音,当生成失败时跳过生成
+            try:
+                audio_requires = TTS_Request(text=content, text_lang = "zh")
+                response = fetchTTSSound(audio_requires)
+                st.audio(data=response.content, format="audio/ogg")
+            except Exception as e:
+                pass
