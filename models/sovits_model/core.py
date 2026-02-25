@@ -4,7 +4,7 @@ import atexit
 import requests
 import subprocess
 from pathlib import Path
-from typing import Union, TypedDict
+from typing import Union
 from dotenv import load_dotenv
 from pydantic import BaseModel
 
@@ -85,70 +85,6 @@ change_GPT_url = base_url + "/set_gpt_weights"
 change_sovits_url = base_url + "/set_sovits_weights"
 change_refer_audio_url = base_url + "/set_refer_audio"
 
-initialed = False
-### 推理
-def fetchTTSSound(request: TTS_Request):
-    params = request.model_dump()
-    res = requests.get(tts_url, params=params, verify=True)
-    return res
-    
-'''
-### 命令控制
-
-command:
-"restart": 重新运行
-"exit": 结束运行
-'''
-def controlModel(command: str = None):
-    if(command is None or (command != "restart" and command != "exit")):
-        return
-    payload={
-        command: command
-    }
-    
-    res = requests.get(control_url, params=payload)
-    print(res)
-    return res
-
-### 切换GPT模型
-def changeGPTModel(weights_path: str = None):
-    if(weights_path is None):
-        return
-
-    payload={
-        weights_path: weights_path
-    }
-    
-    res = requests.get(change_GPT_url, params=payload)
-    print(res)
-    return res
-
-### 切换Sovits模型
-def changeSovitsModel(weights_path: str = None):
-    if(weights_path is None):
-        return
-
-    payload={
-        weights_path: weights_path
-    }
-    
-    res = requests.get(change_sovits_url, params=payload)
-    print(res)
-    return res
-    
-### 切换参考音频
-def changeReferAudio(refer_audio_path: str = None):
-    if(refer_audio_path is None):
-        return
-
-    payload={
-        refer_audio_path: refer_audio_path
-    }
-    
-    res = requests.get(change_refer_audio_url, params=payload)
-    print(res)
-    return res
-
 # 加载环境变量
 env_path = current_dir /  '../../.env'
 env_path = env_path.resolve()
@@ -170,6 +106,14 @@ interpreter_path = interpreter_path.as_posix()
 config_path = Path(__file__).parent.resolve() / "config/tts_infer.yaml"
 config_path = config_path.as_posix()
 
+# 模型gpt权重路径
+gpt_weight_path = gpt_sovits_dir / 'GPT_weights_v2ProPlus/sherry-e15.ckpt'
+gpt_weight_path = gpt_weight_path.as_posix()
+
+# 模型sovits权重路径
+sovits_weight_path = gpt_sovits_dir / 'SoVITS_weights_v2ProPlus/sherry_e8_s808.pth'
+sovits_weight_path = sovits_weight_path.as_posix()
+
 # 创建tts子进程
 proc = subprocess.Popen([interpreter_path, api_path, '-a', '127.0.0.1', '-p', '9880', '-c', config_path],
                         cwd=gpt_sovits_dir)
@@ -179,3 +123,76 @@ def cleanup():
 
 
 atexit.register(cleanup)
+
+
+
+
+"""以下是api"""
+initialed = False
+### 推理
+def fetchTTSSound(request: TTS_Request):
+    global initialed
+    if initialed:
+        res = requests.post(tts_url, json=request.model_dump(), verify=True)
+    else:
+        changeGPTModel(gpt_weight_path)
+        changeSovitsModel(sovits_weight_path)
+
+        res = requests.post(tts_url, json=request.model_dump(), verify=True)
+        initialed = True
+    return res
+
+
+'''
+### 命令控制
+
+command:
+"restart": 重新运行
+"exit": 结束运行
+'''
+def controlModel(command: str = None):
+    if (command is None or (command != "restart" and command != "exit")):
+        return
+    payload = {
+        "command": command
+    }
+
+    res = requests.get(control_url, params=payload, verify=True)
+    return res
+
+
+### 切换GPT模型
+def changeGPTModel(weights_path: str = None):
+    if (weights_path is None):
+        return
+
+    payload = {
+        "weights_path": weights_path
+    }
+    res = requests.get(change_GPT_url, params=payload, verify=True)
+    return res
+
+
+### 切换Sovits模型
+def changeSovitsModel(weights_path: str = None):
+    if (weights_path is None):
+        return
+
+    payload = {
+        "weights_path": weights_path
+    }
+    res = requests.get(change_sovits_url, params=payload, verify=True)
+    return res
+
+
+### 切换参考音频
+def changeReferAudio(refer_audio_path: str = None):
+    if (refer_audio_path is None):
+        return
+
+    payload = {
+        refer_audio_path: refer_audio_path
+    }
+
+    res = requests.get(change_refer_audio_url, params=payload, verify=True)
+    return res
