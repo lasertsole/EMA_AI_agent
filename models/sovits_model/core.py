@@ -85,6 +85,7 @@ change_GPT_url = base_url + "/set_gpt_weights"
 change_sovits_url = base_url + "/set_sovits_weights"
 change_refer_audio_url = base_url + "/set_refer_audio"
 
+initialed = False
 ### 推理
 def fetchTTSSound(request: TTS_Request):
     params = request.model_dump()
