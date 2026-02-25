@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Union
 from dotenv import load_dotenv
 from pydantic import BaseModel
+from requests import Response
 
 current_dir = Path(__file__).parent.resolve()
 
@@ -130,17 +131,25 @@ atexit.register(cleanup)
 """以下是api"""
 initialed = False
 ### 推理
-def fetchTTSSound(request: TTS_Request):
+def fetchTTSSound(request: TTS_Request)-> Response | None:
     global initialed
     if initialed:
         res = requests.post(tts_url, json=request.model_dump(), verify=True)
+        return res
     else:
-        changeGPTModel(gpt_weight_path)
-        changeSovitsModel(sovits_weight_path)
+        try:
+            res = changeGPTModel(gpt_weight_path)
+            res.raise_for_status()
 
-        res = requests.post(tts_url, json=request.model_dump(), verify=True)
-        initialed = True
-    return res
+            res = changeSovitsModel(sovits_weight_path)
+            res.raise_for_status()
+
+            res = requests.post(tts_url, json=request.model_dump(), verify=True)
+            res.raise_for_status()
+            initialed = True
+            return res
+        except Exception as e:
+            pass
 
 
 '''
@@ -150,7 +159,7 @@ command:
 "restart": 重新运行
 "exit": 结束运行
 '''
-def controlModel(command: str = None):
+def controlModel(command: str = None)-> Response:
     if (command is None or (command != "restart" and command != "exit")):
         return
     payload = {
@@ -162,7 +171,7 @@ def controlModel(command: str = None):
 
 
 ### 切换GPT模型
-def changeGPTModel(weights_path: str = None):
+def changeGPTModel(weights_path: str = None)-> Response:
     if (weights_path is None):
         return
 
@@ -174,7 +183,7 @@ def changeGPTModel(weights_path: str = None):
 
 
 ### 切换Sovits模型
-def changeSovitsModel(weights_path: str = None):
+def changeSovitsModel(weights_path: str = None)-> Response:
     if (weights_path is None):
         return
 

@@ -66,6 +66,7 @@ if __name__ == "__main__":
             try:
                 audio_requires = TTS_Request(text=content, text_lang = "zh")
                 response = fetchTTSSound(audio_requires)
-                st.audio(data=response.content, format="audio/ogg")
+                if response is not None:
+                    st.audio(data=response.content, format="audio/ogg")
             except Exception as e:
                 pass

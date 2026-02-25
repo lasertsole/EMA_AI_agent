@@ -7,7 +7,7 @@
     <list default="true" id="823222bf-bcd3-4fc1-9584-1cc7eda194dc" name="Changes" comment="update sovits configuration">
       <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/sovits_model/config/tts_infer.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/models/sovits_model/config/tts_infer.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/models/sovits_model/core.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/sovits_model/core.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -45,12 +45,12 @@
     &quot;assignee&quot;: &quot;lasertsole&quot;
   }
 }</component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/lasertsole/EMA_AI_agent.git",
-    "accountId": "783a0b19-4cba-4cab-9ff3-54a703a55db6"
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/lasertsole/EMA_AI_agent.git&quot;,
+    &quot;accountId&quot;: &quot;783a0b19-4cba-4cab-9ff3-54a703a55db6&quot;
   }
-}]]></component>
+}</component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 2
 }</component>
@@ -63,40 +63,40 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "Python.backgroundInfo (1).executor": "Run",
-    "Python.backgroundInfo.executor": "Run",
-    "Python.core (1).executor": "Run",
-    "Python.core (2).executor": "Run",
-    "Python.core.executor": "Run",
-    "Python.core_graph (1).executor": "Run",
-    "Python.core_graph.executor": "Run",
-    "Python.demo (1).executor": "Run",
-    "Python.demo.executor": "Run",
-    "Python.demo1 (1).executor": "Run",
-    "Python.demo1.executor": "Run",
-    "Python.extract_model.executor": "Run",
-    "Python.graphrag.executor": "Run",
-    "Python.graphrag_model.executor": "Run",
-    "Python.main.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
-    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "deletionFromPopupRequiresConfirmation": "false",
-    "git-widget-placeholder": "main",
-    "last_opened_file_path": "C:/app/code/project/EMA_AI_agent/models/sovits_model/src/model_weight",
-    "node.js.detected.package.eslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "preferences.pluginManager",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;Python.backgroundInfo (1).executor&quot;: &quot;Run&quot;,
+    &quot;Python.backgroundInfo.executor&quot;: &quot;Run&quot;,
+    &quot;Python.core (1).executor&quot;: &quot;Run&quot;,
+    &quot;Python.core (2).executor&quot;: &quot;Run&quot;,
+    &quot;Python.core.executor&quot;: &quot;Run&quot;,
+    &quot;Python.core_graph (1).executor&quot;: &quot;Run&quot;,
+    &quot;Python.core_graph.executor&quot;: &quot;Run&quot;,
+    &quot;Python.demo (1).executor&quot;: &quot;Run&quot;,
+    &quot;Python.demo.executor&quot;: &quot;Run&quot;,
+    &quot;Python.demo1 (1).executor&quot;: &quot;Run&quot;,
+    &quot;Python.demo1.executor&quot;: &quot;Run&quot;,
+    &quot;Python.extract_model.executor&quot;: &quot;Run&quot;,
+    &quot;Python.graphrag.executor&quot;: &quot;Run&quot;,
+    &quot;Python.graphrag_model.executor&quot;: &quot;Run&quot;,
+    &quot;Python.main.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;deletionFromPopupRequiresConfirmation&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/app/code/project/EMA_AI_agent/models/sovits_model/src/model_weight&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\app\code\project\EMA_AI_agent\models\sovits_model\src\model_weight" />
@@ -236,7 +236,8 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1765603870737</updated>
-      <workItem from="1772018421596" duration="3821000" />
+      <workItem from="1772018421596" duration="5255000" />
+      <workItem from="1772031132428" duration="616000" />
     </task>
     <task id="LOCAL-00001" summary="rewrite by langchain1.0 api">
       <option name="closed" value="true" />
@@ -526,7 +527,15 @@
       <option name="project" value="LOCAL" />
       <updated>1772008071912</updated>
     </task>
-    <option name="localTasksCounter" value="37" />
+    <task id="LOCAL-00037" summary="update sovits configuration">
+      <option name="closed" value="true" />
+      <created>1772022780399</created>
+      <option name="number" value="00037" />
+      <option name="presentableId" value="LOCAL-00037" />
+      <option name="project" value="LOCAL" />
+      <updated>1772022780399</updated>
+    </task>
+    <option name="localTasksCounter" value="38" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
