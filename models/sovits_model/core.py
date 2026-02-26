@@ -108,11 +108,13 @@ config_path = Path(__file__).parent.resolve() / "config/tts_infer.yaml"
 config_path = config_path.as_posix()
 
 # 模型gpt权重路径
-gpt_weight_path = gpt_sovits_dir / 'GPT_weights_v2ProPlus/sherry-e15.ckpt'
+gpt_weight_path = os.getenv("GPT_WEIGHT_PATH")
+gpt_weight_path = gpt_sovits_dir / gpt_weight_path
 gpt_weight_path = gpt_weight_path.as_posix()
 
 # 模型sovits权重路径
-sovits_weight_path = gpt_sovits_dir / 'SoVITS_weights_v2ProPlus/sherry_e8_s808.pth'
+sovits_weight_path = os.getenv("SOVITS_WEIGHT_PATH")
+sovits_weight_path = gpt_sovits_dir / sovits_weight_path
 sovits_weight_path = sovits_weight_path.as_posix()
 
 # 创建tts子进程
