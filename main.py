@@ -26,6 +26,9 @@ is_stream = os.getenv("IS_STREAM")
 ai_reply_prefix = "橘雪莉:"
 
 async def async_generator(message_list, config)-> AsyncGenerator[str, None]:
+    """
+    生成AI回复
+    """
     if is_stream == 'True':
         yield ai_reply_prefix
         async for chunk in agent.astream({"messages": message_list}, config=config, stream_mode="messages"):
@@ -39,6 +42,14 @@ async def async_generator(message_list, config)-> AsyncGenerator[str, None]:
     else:
         result = await agent.ainvoke({"messages": message_list}, config=config)
         yield ai_reply_prefix + result["messages"][-1].content
+
+def filter_content_for_tts(content: str) -> str:
+    """
+    去除多余字符
+    """
+    res = content[len(ai_reply_prefix):-1]
+    res = re.sub(r'[（\(].*?[）\)]', ' ', res)
+    return res
 
 
 if __name__ == "__main__":
@@ -73,8 +84,7 @@ if __name__ == "__main__":
             # 生成语音,当生成失败时跳过生成
             try:
                 # 去除多余字符
-                content = content[len(ai_reply_prefix):-1]
-                content = re.sub(r'[（\(].*?[）\)]', ' ', content)
+                content = filter_content_for_tts(content)
 
                 audio_requires = TTS_Request(text=content, text_lang = "zh")
                 response = fetchTTSSound(audio_requires)

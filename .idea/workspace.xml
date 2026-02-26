@@ -4,8 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="823222bf-bcd3-4fc1-9584-1cc7eda194dc" name="Changes" comment="update sovits config">
-      <change afterPath="$PROJECT_DIR$/test.py" afterDir="false" />
+    <list default="true" id="823222bf-bcd3-4fc1-9584-1cc7eda194dc" name="Changes" comment="update streamlit">
       <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
@@ -265,7 +264,7 @@
       <updated>1765603870737</updated>
       <workItem from="1772018421596" duration="5255000" />
       <workItem from="1772031132428" duration="755000" />
-      <workItem from="1772110656037" duration="6183000" />
+      <workItem from="1772110656037" duration="6955000" />
     </task>
     <task id="LOCAL-00001" summary="rewrite by langchain1.0 api">
       <option name="closed" value="true" />
@@ -579,7 +578,15 @@
       <option name="project" value="LOCAL" />
       <updated>1772111303762</updated>
     </task>
-    <option name="localTasksCounter" value="40" />
+    <task id="LOCAL-00040" summary="update streamlit">
+      <option name="closed" value="true" />
+      <created>1772117217069</created>
+      <option name="number" value="00040" />
+      <option name="presentableId" value="LOCAL-00040" />
+      <option name="project" value="LOCAL" />
+      <updated>1772117217069</updated>
+    </task>
+    <option name="localTasksCounter" value="41" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -597,7 +604,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="rewrite by langchain1.0 api" />
     <MESSAGE value="根据问题复杂度动态选择模型" />
     <MESSAGE value="根据问题复杂度动态选择 合适模型" />
     <MESSAGE value="delete" />
@@ -622,7 +628,8 @@
     <MESSAGE value="update sovits configuration" />
     <MESSAGE value="update sovits code" />
     <MESSAGE value="update sovits config" />
-    <option name="LAST_COMMIT_MESSAGE" value="update sovits config" />
+    <MESSAGE value="update streamlit" />
+    <option name="LAST_COMMIT_MESSAGE" value="update streamlit" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/EMA_AI_agent$core.coverage" NAME="core 覆盖结果" MODIFIED="1771933007685" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/models/sovits_model" />
