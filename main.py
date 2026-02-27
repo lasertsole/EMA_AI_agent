@@ -55,6 +55,8 @@ def filter_content_for_tts(content: str) -> str:
 if __name__ == "__main__":
     config = {"configurable": {"thread_id": 1}}
 
+    ai_message = st.chat_message("assistant")
+    ai_message.write(ai_reply_prefix + "汉娜さん，来茶间聊天吧！")
     if 'messages' in agent.get_state(config).values:
         for message in agent.get_state(config).values['messages']:
             if isinstance(message, HumanMessage):
@@ -66,11 +68,12 @@ if __name__ == "__main__":
                 with st.chat_message("assistant"):
                     content = ai_reply_prefix + message.content
                     st.markdown(content)
-    else:
-        ai_message = st.chat_message("assistant")
-        ai_message.write(ai_reply_prefix + "汉娜さん，来茶间聊天吧！")
 
-    human_input = st.chat_input("请输入对话内容")
+    human_input = st.chat_input(
+        "请输入对话内容",
+        accept_file = True,
+        file_type=["png", "jpg", "jpeg"]
+    )
     if human_input:
         with st.chat_message("user"):
             content = "远野汉娜:" + human_input
