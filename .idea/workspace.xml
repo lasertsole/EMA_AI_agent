@@ -6,9 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="823222bf-bcd3-4fc1-9584-1cc7eda194dc" name="Changes" comment="update streamlit UI">
       <change beforePath="$PROJECT_DIR$/.idea/EMA_AI_agent-main.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/EMA_AI_agent-main.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -45,12 +42,12 @@
     &quot;assignee&quot;: &quot;lasertsole&quot;
   }
 }</component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/lasertsole/EMA_AI_agent.git",
-    "accountId": "ae79ac2f-2c77-42fa-befc-b34cf5aa12e7"
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/lasertsole/EMA_AI_agent.git&quot;,
+    &quot;accountId&quot;: &quot;ae79ac2f-2c77-42fa-befc-b34cf5aa12e7&quot;
   }
-}]]></component>
+}</component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 2
 }</component>
@@ -233,11 +230,11 @@
       <method v="2" />
     </configuration>
     <list>
-      <item itemvalue="Python.test" />
-      <item itemvalue="Python.core (2)" />
       <item itemvalue="Python.core (1)" />
+      <item itemvalue="Python.core (2)" />
       <item itemvalue="Python.core" />
       <item itemvalue="Python.main" />
+      <item itemvalue="Python.test" />
     </list>
     <recent_temporary>
       <list>
@@ -594,7 +591,15 @@
       <option name="project" value="LOCAL" />
       <updated>1772163395832</updated>
     </task>
-    <option name="localTasksCounter" value="42" />
+    <task id="LOCAL-00042" summary="update streamlit UI">
+      <option name="closed" value="true" />
+      <created>1772178195351</created>
+      <option name="number" value="00042" />
+      <option name="presentableId" value="LOCAL-00042" />
+      <option name="project" value="LOCAL" />
+      <updated>1772178195351</updated>
+    </task>
+    <option name="localTasksCounter" value="43" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

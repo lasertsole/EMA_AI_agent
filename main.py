@@ -57,11 +57,13 @@ if __name__ == "__main__":
     config = {"configurable": {"thread_id": 1}}
     localS = LocalStorage()
     chat_history_maxlen = 20
-    saved_data = deque(localS.getItem("chat_history"), maxlen=20)
 
+    saved_data = localS.getItem("chat_history")
     if saved_data is None:
-        saved_data = deque(maxlen=chat_history_maxlen)
+        saved_data = deque(maxlen = chat_history_maxlen)
         saved_data.append({"role": "assistant", "content": ai_reply_prefix + "汉娜さん，来茶间聊天吧！"})
+    else:
+        saved_data = deque(saved_data, maxlen = chat_history_maxlen)
 
     for message in saved_data:
         with st.chat_message(message["role"]):
