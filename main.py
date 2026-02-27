@@ -13,11 +13,12 @@ import re
 import streamlit as st
 from typing import Any
 from agent import agent
+from collections import deque
 from dotenv import load_dotenv
 from typing import AsyncGenerator
 from langchain.messages import AIMessageChunk
 from models import TTS_Request, fetchTTSSound
-from langchain_core.messages import HumanMessage, AIMessage
+from streamlit_local_storage import LocalStorage
 
 env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), './.env')
 load_dotenv(env_path, override=True)
@@ -54,20 +55,17 @@ def filter_content_for_tts(content: str) -> str:
 
 if __name__ == "__main__":
     config = {"configurable": {"thread_id": 1}}
+    localS = LocalStorage()
+    chat_history_maxlen = 20
+    saved_data = deque(localS.getItem("chat_history"), maxlen=20)
 
-    ai_message = st.chat_message("assistant")
-    ai_message.write(ai_reply_prefix + "汉娜さん，来茶间聊天吧！")
-    if 'messages' in agent.get_state(config).values:
-        for message in agent.get_state(config).values['messages']:
-            if isinstance(message, HumanMessage):
-                with st.chat_message("user"):
-                    content = "远野汉娜:" + message.content
-                    st.markdown(content)
+    if saved_data is None:
+        saved_data = deque(maxlen=chat_history_maxlen)
+        saved_data.append({"role": "assistant", "content": ai_reply_prefix + "汉娜さん，来茶间聊天吧！"})
 
-            elif isinstance(message, AIMessage):
-                with st.chat_message("assistant"):
-                    content = ai_reply_prefix + message.content
-                    st.markdown(content)
+    for message in saved_data:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
 
     human_input = st.chat_input(
         "请输入对话内容",
@@ -83,6 +81,8 @@ if __name__ == "__main__":
 
             for file in files:
                 st.image(file)
+
+            saved_data.append({"role": "user", "content": content})
         
         message_list = [human_input]
         with st.chat_message("assistant"):
@@ -92,11 +92,14 @@ if __name__ == "__main__":
             # 生成语音,当生成失败时跳过生成
             try:
                 # 去除多余字符
-                content = filter_content_for_tts(content)
+                clear_content = filter_content_for_tts(content)
 
-                audio_requires = TTS_Request(text=content, text_lang = "zh")
+                audio_requires = TTS_Request(text=clear_content, text_lang = "zh")
                 response = fetchTTSSound(audio_requires)
                 if response is not None:
                     st.audio(data=response.content, format="audio/ogg")
             except Exception as e:
                 pass
+            saved_data.append({"role": "assistant", "content": content})
+
+        localS.setItem("chat_history", list(saved_data))
