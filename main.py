@@ -74,10 +74,15 @@ if __name__ == "__main__":
         accept_file = True,
         file_type=["png", "jpg", "jpeg"]
     )
+    text = human_input.text
+    files = human_input.files
     if human_input:
         with st.chat_message("user"):
-            content = "远野汉娜:" + human_input
+            content = "远野汉娜:" + text
             st.markdown(content)
+
+            for file in files:
+                st.image(file)
         
         message_list = [human_input]
         with st.chat_message("assistant"):
