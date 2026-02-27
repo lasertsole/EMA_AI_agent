@@ -5,14 +5,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="823222bf-bcd3-4fc1-9584-1cc7eda194dc" name="Changes" comment="update streamlit">
-      <change afterPath="$PROJECT_DIR$/.idea/dataSources.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/avatar/assistant.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/avatar/user.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/utils/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/utils/chats_storage.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/session/chats_storage.jsonl" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/db/chat_history.db" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/chats_storage.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/chats_storage.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -89,6 +87,7 @@
     "Python.extract_model.executor": "Run",
     "Python.graphrag.executor": "Run",
     "Python.graphrag_model.executor": "Run",
+    "Python.jsonl_storage.executor": "Run",
     "Python.main.executor": "Run",
     "Python.test.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
@@ -127,7 +126,7 @@
       <recent name="C:\Users\Administrator\Desktop\EMA_AI_agent-main\tools\rag\core" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.chats_storage (1)">
+  <component name="RunManager" selected="Python.chats_storage">
     <configuration name="chats_storage (1)" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="EMA_AI_agent-main" />
       <option name="ENV_FILES" value="" />
@@ -162,6 +161,30 @@
       </envs>
       <option name="SDK_HOME" value="" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="RUN_TOOL" value="" />
+      <option name="SCRIPT_NAME" value="C:\app\code\project\EMA_AI_agent\utils\chats_storage.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="chats_storage" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="EMA_AI_agent-main" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/utils" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
@@ -224,44 +247,19 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="main" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="EMA_AI_agent-main" />
-      <option name="ENV_FILES" value="" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="false" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="RUN_TOOL" value="" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/main.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
     <list>
       <item itemvalue="Python.chats_storage (1)" />
       <item itemvalue="Python.core (1)" />
       <item itemvalue="Python.core (2)" />
-      <item itemvalue="Python.main" />
       <item itemvalue="Python.chats_storage" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.chats_storage" />
         <item itemvalue="Python.chats_storage (1)" />
         <item itemvalue="Python.chats_storage" />
         <item itemvalue="Python.core (2)" />
         <item itemvalue="Python.core (1)" />
-        <item itemvalue="Python.main" />
       </list>
     </recent_temporary>
   </component>
@@ -283,7 +281,7 @@
       <workItem from="1772018421596" duration="5255000" />
       <workItem from="1772031132428" duration="755000" />
       <workItem from="1772110656037" duration="6955000" />
-      <workItem from="1772188135064" duration="9754000" />
+      <workItem from="1772188135064" duration="17746000" />
     </task>
     <task id="LOCAL-00001" summary="rewrite by langchain1.0 api">
       <option name="closed" value="true" />
@@ -621,7 +619,15 @@
       <option name="project" value="LOCAL" />
       <updated>1772178195351</updated>
     </task>
-    <option name="localTasksCounter" value="43" />
+    <task id="LOCAL-00043" summary="update streamlit">
+      <option name="closed" value="true" />
+      <created>1772198339889</created>
+      <option name="number" value="00043" />
+      <option name="presentableId" value="LOCAL-00043" />
+      <option name="project" value="LOCAL" />
+      <updated>1772198339889</updated>
+    </task>
+    <option name="localTasksCounter" value="44" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -662,11 +668,12 @@
     <MESSAGE value="update sovits configuration" />
     <MESSAGE value="update sovits code" />
     <MESSAGE value="update sovits config" />
-    <MESSAGE value="update streamlit" />
     <MESSAGE value="update streamlit UI" />
-    <option name="LAST_COMMIT_MESSAGE" value="update streamlit UI" />
+    <MESSAGE value="update streamlit" />
+    <option name="LAST_COMMIT_MESSAGE" value="update streamlit" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/EMA_AI_agent$jsonl_storage.coverage" NAME="jsonl_storage 覆盖结果" MODIFIED="1772204004979" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/utils" />
     <SUITE FILE_PATH="coverage/EMA_AI_agent$core.coverage" NAME="core 覆盖结果" MODIFIED="1771933007685" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/models/sovits_model" />
     <SUITE FILE_PATH="coverage/EMA_AI_agent$core__2_.coverage" NAME="core (2) 覆盖结果" MODIFIED="1771943425575" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/models/sovits_model" />
     <SUITE FILE_PATH="coverage/EMA_AI_agent$test.coverage" NAME="test 覆盖结果" MODIFIED="1772193860050" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />

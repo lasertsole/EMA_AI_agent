@@ -20,6 +20,8 @@ from langchain.messages import AIMessageChunk
 from models import TTS_Request, fetchTTSSound
 from streamlit_local_storage import LocalStorage
 
+from utils import add_files, FileType
+
 env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), './.env')
 load_dotenv(env_path, override=True)
 is_stream = os.getenv("IS_STREAM")
@@ -106,6 +108,7 @@ if __name__ == "__main__":
                     response = fetchTTSSound(audio_requires)
                     if response is not None:
                         st.audio(data=response.content, format="audio/ogg")
+                        add_files([{"content":response.content, "type":FileType.AUDIO}])
                 except Exception as e:
                     pass
 
