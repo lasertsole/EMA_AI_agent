@@ -16,6 +16,7 @@ from agent import agent
 from collections import deque
 from dotenv import load_dotenv
 from typing import AsyncGenerator
+from utils import Chat, add_chats, get_chats, add_files
 from langchain.messages import AIMessageChunk
 from models import TTS_Request, fetchTTSSound
 from streamlit_local_storage import LocalStorage
@@ -90,6 +91,7 @@ if __name__ == "__main__":
                 st.image(file)
 
             saved_data.append({"role": "user", "content": content})
+            add_chats([Chat(role="user", content=content)])
 
         with st.chat_message("assistant", avatar="./src/avatar/assistant.jpg"):
             stream = async_generator(text, config)
