@@ -27,6 +27,7 @@ class Chat(BaseModel):
 class File(TypedDict):
     content: bytes
     type: FileType
+    extension: str # 后缀
 
 # 聊天记录存储类
 class ChatStorage:
@@ -47,11 +48,8 @@ class ChatStorage:
         # 将新聊天记录装入双向列表
         self._chats_deque = deque(chats_list[-chats_maxlen:], maxlen=chats_maxlen)
 
-        # 将旧聊天记录装入旧聊天记录列表
-        old_chats_list = chats_list[:-chats_maxlen]
-
         # 将聊天记录对应的文件删除
-        self.delete_file_from_chats(old_chats_list)
+        self.delete_file(self._chats_deque)
 
         # 将新聊天记录列表写回文件
         self.storage_chats_deque(self._chats_deque)
@@ -59,16 +57,28 @@ class ChatStorage:
     def get_chats(self) -> List[Chat]:
         return list(self._chats_deque)
 
-    def delete_file_from_chats(self, chats_list: List[Chat]):
-        # 将聊天记录对应的文件删除
-        for chat in chats_list:
-            for file_path in chat.audio_path_list:
-                try:
-                    if Path(file_path).exists():
-                        Path(file_path).unlink()
-                except Exception as e:
-                    pass
-            for file_path in chat.image_path_list:
+    def delete_file(self, new_chat_deque: Deque[Chat]):
+        # 获取所有多媒体文件夹
+        file_type_list:List[str] = [member.value for member in FileType.__members__.values()]
+
+        # 根据文件夹名创建dict类型变量delete_folders_dict
+        delete_folders_dict = {folder: [] for folder in file_type_list}
+
+        # 将对于文件夹下的所有文件路径读进delete_folders_dict
+        for fileType in file_type_list:
+            for file_path in Path(SESSION_FOLDER / fileType).glob("*"):
+                delete_folders_dict[file_path.parent.name].append(file_path.as_posix())
+
+        # 如果new_chat_deque内的文件在delete_folders_dict内，则将文件从delete_folders_dict字典内中移除
+        for chat in new_chat_deque:
+            for file_type in file_type_list:
+                file_list: List[str] = getattr(chat, f"{file_type}_path_list")
+                if file_list:
+                    delete_folders_dict[file_type] = [file_path for file_path in delete_folders_dict[file_type] if file_path not in file_list]
+
+        # 根据delete_folders_dict删除文件
+        for file_type in file_type_list:
+            for file_path in delete_folders_dict[file_type]:
                 try:
                     if Path(file_path).exists():
                         Path(file_path).unlink()
@@ -97,12 +107,13 @@ class ChatStorage:
                 file_path = folder_path / str(time.time_ns())
                 file_path = file_path.as_posix()
 
+                extension = file["extension"]
                 match file["type"]:
                     case FileType.AUDIO:
-                        file_path = file_path + '.wav'
+                        file_path = file_path + (extension or '.wav')
                         audio_path_list.append(file_path)
                     case FileType.IMAGE:
-                        file_path = file_path + '.jpg'
+                        file_path = file_path + (extension or '.jpg')
                         image_path_list.append(file_path)
                     case _:
                         raise ValueError("Invalid file type")

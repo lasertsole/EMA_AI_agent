@@ -105,7 +105,7 @@ if __name__ == "__main__":
                     response = fetchTTSSound(audio_requires)
                     if response is not None:
                         st.audio(data=response.content, format="audio/ogg")
-                        file = {"content":response.content, "type":FileType.AUDIO}
+                        file = {"content":response.content, "type":FileType.AUDIO, "extension": '.wav'}
                 except Exception as e:
                     pass
 
