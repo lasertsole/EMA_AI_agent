@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from typing import List, Optional, TypedDict, Deque
 
 current_dir = Path(__file__).parent.resolve()
-SESSION_FOLDER = current_dir / '../src/session'
+SESSION_FOLDER = current_dir / '../../src/session'
 SESSION_FOLDER = SESSION_FOLDER.resolve()
 
 CHATS_STORAGE_FILE = SESSION_FOLDER / "chats_storage.jsonl"
@@ -49,15 +49,15 @@ class ChatStorage:
         self._chats_deque = deque(chats_list[-chats_maxlen:], maxlen=chats_maxlen)
 
         # 将聊天记录对应的文件删除
-        self.delete_file(self._chats_deque)
+        self.__delete_file(self._chats_deque)
 
         # 将新聊天记录列表写回文件
-        self.storage_chats_deque(self._chats_deque)
+        self.__storage_chats_deque(self._chats_deque)
 
     def get_chats(self) -> List[Chat]:
         return list(self._chats_deque)
 
-    def delete_file(self, new_chat_deque: Deque[Chat]):
+    def __delete_file(self, new_chat_deque: Deque[Chat]):
         # 获取所有多媒体文件夹
         file_type_list:List[str] = [member.value for member in FileType.__members__.values()]
 
@@ -85,7 +85,7 @@ class ChatStorage:
                 except Exception as e:
                     pass
 
-    def storage_chats_deque(self, _chats_deque: Deque[Chat]):
+    def __storage_chats_deque(self, _chats_deque: Deque[Chat]):
         SESSION_FOLDER.mkdir(parents=True, exist_ok=True)
 
         # 将新聊天记录列表写回文件
