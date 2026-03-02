@@ -5,7 +5,6 @@ import os
 from pathlib import Path
 from typing import Any
 
-
 class MemoryIndexer:
     """Indexes memory/MEMORY.md for RAG retrieval.
 
@@ -19,3 +18,8 @@ class MemoryIndexer:
         self._storage_dir = base_dir / "storage" / "memory_index"
         self._hash_path = self._storage_dir / ".memory_hash"
         self._index: Any = None
+
+    def initialize(self, base_dir: Path) -> None:
+        """Initial LLM (Deepseek) and tools. Called once at startup."""
+        self._base_dir = base_dir
+        # self._tools = get_all_tools(base_dir)

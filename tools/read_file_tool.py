@@ -4,7 +4,6 @@ from typing import Type, Any
 
 from langchain_core.tools import BaseTool
 from pydantic import BaseModel, Field
-from sympy.printing.pretty.pretty_symbology import root
 
 
 class ReadFileInput(BaseModel):
