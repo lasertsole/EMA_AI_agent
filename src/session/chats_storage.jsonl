@@ -1,2 +1,5 @@
-{"name": "123", "age": 30}
-{"name": "456", "age": 27}
+{"role": "assistant", "content": "橘雪莉:（眼睛突然亮起来，蹦跳着挥手）啊！汉娜さん！中午好呀～(◕ᴗ◕✿) 今天的茶会点心看起来超级美味呢！名侦探橘雪莉已经准备好享受悠闲的午后时光啦！", "audio_path_list": ["C:/app/code/project/EMA_AI_agent/src/session/audio/1772335705903251600.wav"], "image_path_list": [], "timestamp": 1.7723353716629445e+18}
+{"role": "user", "content": "远野汉娜:晚上好雪莉", "audio_path_list": [], "image_path_list": [], "timestamp": 1.772337797870406e+18}
+{"role": "assistant", "content": "橘雪莉:（眼睛突然亮起来，开心地挥手）啊！汉娜さん！晚上好呢～(✧∇✧)ゞ\n\n（左右张望了一下，压低声音）说起来，刚才我在城堡走廊那边发现了一个很可疑的痕迹哦！看起来像是有人偷偷摸摸地经过留下的...要不要一起去调查看看？名侦探橘雪莉的直觉告诉我，这背后一定有什么秘密！", "audio_path_list": ["C:/app/code/project/EMA_AI_agent/src/session/audio/1772337805483481300.wav"], "image_path_list": [], "timestamp": 1.772337797870406e+18}
+{"role": "user", "content": "远野汉娜:拜托了雪莉，帮我查查 星降之海", "audio_path_list": [], "image_path_list": [], "timestamp": 1.7723392909511137e+18}
+{"role": "assistant", "content": "橘雪莉:（眼睛突然闪闪发亮）哇！汉娜さん对这个感兴趣吗？让我看看搜索结果～(✧∇✧)ゞ\n\n嗯...根据资料显示，\"星降之海\"是动画电影《超时空辉夜姬！》的插入歌曲呢！演唱者是月见八千代，作词作曲编曲都是Aqu3raさん～这首歌在2026年1月23日发行的专辑中收录哦！\n\n（托腮思考状）不过汉娜さん，为什么突然问起这个呢？难道...这里面隐藏着什么谜题吗？还是说你在寻找什么线索？名侦探橘雪莉的推理雷达开始运作啦！(｀・ω・´)\n\n啊！难道说...这首歌和魔女审判有什么关联？或者是你发现了什么重要的证据？快告诉我吧，汉娜さん！", "audio_path_list": ["C:/app/code/project/EMA_AI_agent/src/session/audio/1772339388927556900.wav"], "image_path_list": [], "timestamp": 1.7723392909511137e+18}

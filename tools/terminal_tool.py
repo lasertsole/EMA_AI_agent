@@ -1,6 +1,5 @@
 """SafeTerminalTool - sandboxed shell execute with command blacklist."""
 import subprocess
-from pathlib import Path
 from typing import Type
 from langchain_core.tools import BaseTool
 from pydantic import BaseModel, Field
@@ -68,5 +67,5 @@ class SafeTerminalTool(BaseTool):
         except Exception as e:
             return f"Error: {str(e)}"
 
-def create_terminal_tool(base_dir: Path) -> SafeTerminalTool:
-    return SafeTerminalTool(root_dir=str(base_dir))
+def create_terminal_tool(root_dir: str) -> SafeTerminalTool:
+    return SafeTerminalTool(root_dir= root_dir)

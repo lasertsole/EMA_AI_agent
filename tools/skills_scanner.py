@@ -2,10 +2,10 @@
 from pathlib import Path
 import yaml
 
-def scan_skills(base_dir: Path) -> str:
+def scan_skills(root_dir: Path) -> str:
     """scan all SKILL.md files and generate SKILLS_SNAPSHOT.md."""
-    skills_dir = base_dir / "skills"
-    snapshot_path = base_dir / "SKILLS_SNAPSHOT.md"
+    skills_dir = root_dir / "skills"
+    snapshot_path = root_dir / "SKILLS_SNAPSHOT.md"
 
     if not skills_dir.exists():
         skills_dir.mkdir(parents = True)

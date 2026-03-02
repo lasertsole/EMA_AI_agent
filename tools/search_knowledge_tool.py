@@ -3,12 +3,12 @@ from pathlib import Path
 from models import embed_model
 from typing import Type, Optional
 from pydantic import BaseModel, Field
-
+from langchain_core.tools import BaseTool
 
 class SearchKnowledgeInput(BaseModel):
     query: str = Field(description="The search query to find relevant knowledge")
 
-class SearchKnowledgeBaseTool(BaseModel):
+class SearchKnowledgeBaseTool(BaseTool):
     name:str = "search_knowledge_base"
     description: str = (
         "Search the local knowledge base using hybrid retrieval (keyword + semantic)."
@@ -16,7 +16,7 @@ class SearchKnowledgeBaseTool(BaseModel):
         "Returns the most relevant passages from the knowledge base."
     )
     args_schema: Type[BaseModel] = SearchKnowledgeInput
-    base_dir: str = ""
+    root_dir: str = ""
     _index: Optional[object] = None
 
     class Config:
@@ -24,8 +24,8 @@ class SearchKnowledgeBaseTool(BaseModel):
 
     def _build_index(self):
         """Build or load LlamaIndex index from knowledge/ directory."""
-        knowledge_dir = Path(self.base_dir) / "knowledge"
-        storage_dir = Path(self.base_dir) / "storage"
+        knowledge_dir = Path(self.root_dir) / "knowledge"
+        storage_dir = Path(self.root_dir) / "storage"
 
         if not knowledge_dir.exists() or not any(knowledge_dir.iterdir()):
             raise None
@@ -85,5 +85,5 @@ class SearchKnowledgeBaseTool(BaseModel):
         except Exception as e:
             return f"Search error: {str(e)}"
 
-def create_search_knowledge_base_tool(base_dir: Path) -> SearchKnowledgeBaseTool:
-    return SearchKnowledgeBaseTool(base_dir=str(base_dir))
+def create_search_knowledge_base_tool(root_dir: str) -> SearchKnowledgeBaseTool:
+    return SearchKnowledgeBaseTool(root_dir = root_dir)
