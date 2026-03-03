@@ -1,7 +1,8 @@
 import os
 import uuid
-from pathlib import Path
+import jieba
 from typing import List
+from pathlib import Path
 from models import embed_model
 from dotenv import load_dotenv
 from langchain_classic.storage import LocalFileStore
@@ -124,8 +125,18 @@ else:
     )
 
 vector_retriever = MultiQueryRetriever.from_llm(retriever = vector_retriever, llm = llm)
-BM25_retriever = BM25Retriever.from_documents(documents = docs)
-retriever = EnsembleRetriever(retrievers=[vector_retriever, BM25_retriever], weights=[0.6, 0.4])
+
+# 自定义中文预处理函数
+def chinese_preprocessing_func(text: str) -> List[str]:
+    # 使用 jieba 进行中文分词
+    return list(jieba.cut(text))
+
+BM25_retriever = BM25Retriever.from_documents(
+    documents = docs,
+    preprocess_func=chinese_preprocessing_func
+)
+
+retriever = EnsembleRetriever(retrievers=[vector_retriever, BM25_retriever], weights=[0.5, 0.5])
 
 def _query_background_info(query:str) -> List[str]:
     ### 检验参数 ###
@@ -142,6 +153,3 @@ def _query_background_info(query:str) -> List[str]:
 
 #query_background_info = Tool(name="query_background_info", func=_query_background_info, description="""当需要回答 魔法少女的魔女审批 有关知识时调用此工具，
 # 输入为具体问题，输出为知识库检索到的答案""")
-
-if __name__ == "__main__":
-    print(_query_background_info("宝生玛格"))

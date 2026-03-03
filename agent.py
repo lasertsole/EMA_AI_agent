@@ -1,9 +1,11 @@
+from typing import Any
 from pathlib import Path
+from langchain_core.tools import Tool
 from langchain.agents import create_agent
 from langgraph.checkpoint.memory import InMemorySaver
 from models import base_model
 from middlewares import dynamic_model_routing, summarization, tool_calling_limit
-from tools import web_search
+from tools import web_search, build_terminal_tool, build_python_repl_tool, build_fetch_tool, build_read_file_tool, search_knowledge_base
 
 current_dir = Path(__file__).parent.resolve()
 personality_path = current_dir / "personality.txt"
@@ -21,10 +23,24 @@ systemPrompt = personality + systemPrompt
 # 线程记忆功能
 checkpoint = InMemorySaver()
 
+def _build_tools() -> list[Any]:
+    return [
+        web_search,
+        build_terminal_tool(),
+        build_python_repl_tool(),
+        build_fetch_tool(),
+        build_read_file_tool(),
+        Tool.from_function(
+            name="search_knowledge_base",
+            description="Hybrid retrieval over local knowledge base.",
+            func=search_knowledge_base,
+        ),
+    ]
+
 #生成agent对象
 agent = create_agent(
     model=base_model,
-    tools=[web_search],
+    tools=_build_tools(),
     system_prompt = systemPrompt,
     checkpointer=checkpoint,
     middleware=[dynamic_model_routing, summarization, tool_calling_limit],
