@@ -23,6 +23,9 @@ def read_session(session_id: str) -> list[dict[str, Any]]:
     path = _session_path(session_id)
     if not path.exists():
         return []
+    # 如果文件存在但内容为空，则返回空列表
+    if path.stat().st_size == 0:
+        return []
     return json.loads(path.read_text(encoding="utf-8"))
 
 

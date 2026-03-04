@@ -133,7 +133,7 @@ def chinese_preprocessing_func(text: str) -> List[str]:
 
 BM25_retriever = BM25Retriever.from_documents(
     documents = docs,
-    preprocess_func=chinese_preprocessing_func
+    preprocess_func = chinese_preprocessing_func
 )
 
 retriever = EnsembleRetriever(retrievers=[vector_retriever, BM25_retriever], weights=[0.5, 0.5])
