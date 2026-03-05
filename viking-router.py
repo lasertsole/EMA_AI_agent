@@ -1,12 +1,30 @@
-from typing import List, TypedDict, Optional
+from typing import List, TypedDict, Optional, Literal
 
+"""总开关"""
+VIKING_ENABLED:bool = True
+
+"""类型"""
+class VikingRouteResult(TypedDict):
+  tools: set[str]
+  files: set[str]
+  # TODO
+  # promptLayer: Literal["full", "l0", "l1"]
+  skillsMode: Literal["names", "summaries"]
+  skipped: bool
+  needsL1: bool # 是否需要加载 L1 关键决策
+  l1Dates: List[str] # 需要加载哪些日期的 L1 决策（空数组 = 不需要）
+  needsL2: bool # 是否需要加载 L2 完整对话
+
+"""判断是否跳过路由"""
+def shouldSkipRouting()-> bool:
+  return not VIKING_ENABLED
 
 class ToolListIndexEntry(TypedDict):
     tools: List[str]
     description: str
 
-
-"""构建工具包索引"""
+"""构建能力包索引"""
+CORE_TOOLS: set[str] = {"read", "exec"}
 TOOL_PACKS: dict[str, ToolListIndexEntry] = {
     "base-ext": {
         "tools": ["write", "edit", "apply_patch", "grep", "find", "ls", "process"],
@@ -123,3 +141,71 @@ class RoutingModelResult(TypedDict):
     needsL1: Optional[bool]
     l1Dates: Optional[List[str]]
     needsL2: Optional[bool]
+
+# TODO
+# async def callRoutingModel(provider: str, system: str, user: str)-> RoutingModelResult:
+#
+#
+
+"""
+    展开能力包
+"""
+def expand_packs(pack_names: List[str])->set[str]:
+    tools = CORE_TOOLS
+    for name in pack_names:
+        pack = TOOL_PACKS[name]
+        if pack:
+            for tool in pack["tools"]:
+                tools.add(tool)
+        else:
+            print(f"[viking] unknown pack \"{name}\", ignored");
+
+    return tools
+
+"""
+    Skills 名称+描述列表
+"""
+def build_skill_names_only_prompt(skills: List[SkillIndexEntry])-> str:
+  if skills.length == 0:
+      return ""
+
+  lines = [
+      f"- {s.name}: {s.description}" if s.description else f"- {s.name}"
+      for s in skills
+  ]
+
+  return "\n".join([
+      "## Skills",
+      *lines,
+      "Use `read` on the skill's SKILL.md when needed.",
+  ])
+
+"""
+    TODO 主入口
+"""
+class AgentToolLike(TypedDict):
+  name: str
+  description: Optional[str]
+
+def vikingRoute(
+  prompt: str,
+  tools: List[AgentToolLike],
+  fileNames: List[str],
+  skills: List[SkillIndexEntry],
+
+  timeline: Optional[str],  #L0 时间线原始文本，供路由模型判断是否需要 L1/L2
+)-> VikingRouteResult:
+    ALL_TOOL_NAMES = set([t["name"] for t in tools])
+    ALL_FILE_NAMES = set(fileNames)
+
+    if shouldSkipRouting():
+        return {
+            "tools": ALL_TOOL_NAMES,
+            "files": ALL_FILE_NAMES,
+            "promptLayer": "full",
+            "skillsMode": "summaries",
+            "skipped": True,
+            "needsL1": False,
+            "l1Dates": [],
+            "needsL2": False,
+        }
