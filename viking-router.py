@@ -7,7 +7,40 @@ class ToolListIndexEntry(TypedDict):
 
 
 """构建工具包索引"""
-TOOL_PACKS: dict[str, ToolListIndexEntry] = {}
+TOOL_PACKS: dict[str, ToolListIndexEntry] = {
+    "base-ext": {
+        "tools": ["write", "edit", "apply_patch", "grep", "find", "ls", "process"],
+        "description": "文件编辑、搜索、目录操作、后台进程管理",
+    },
+    "web": {
+        "tools": ["web_search", "web_fetch"],
+        "description": "搜索互联网、抓取网页内容",
+    },
+    "browser": {
+        "tools": ["browser"],
+        "description": "控制浏览器打开和操作网页",
+    },
+    "message": {
+        "tools": ["message"],
+        "description": "发送消息到钉钉、Telegram、Discord等通道",
+    },
+    "media": {
+        "tools": ["canvas", "image"],
+        "description": "图片生成、画布展示和截图",
+    },
+    "infra": {
+        "tools": ["cron", "gateway", "session_status"],
+        "description": "定时任务、系统管理、状态查询、提醒",
+    },
+    "agents": {
+        "tools": ["agents_list", "sessions_list", "sessions_history", "sessions_send", "sessions_spawn", "subagents"],
+        "description": "多Agent协作、子任务派发、会话管理",
+    },
+    "nodes": {
+        "tools": ["nodes"],
+        "description": "设备控制、摄像头、屏幕操作",
+    },
+}
 def buildPackIndex()-> str:
     lines = [f"  - {name}: {pack['description']}" for name, pack in TOOL_PACKS.items()]
 
@@ -25,7 +58,15 @@ def buildSkillIndex(skills: List[SkillIndexEntry])-> str:
     lines = [f"  - ${s['name']}" for s in skills]
     return "\n".join(lines)
 
-FILE_DESCRIPTIONS: dict[str, str]
+FILE_DESCRIPTIONS: dict[str, str] = {
+  "AGENTS.md": "Agent核心规则：会话流程、安全、模块索引",
+  "SOUL.md": "Agent人格、语气、性格（任何对话都需要）",
+  "TOOLS.md": "本地环境备注（SSH、摄像头、TTS语音等）",
+  "IDENTITY.md": "Agent身份：名字、emoji、头像（任何对话都需要）",
+  "USER.md": "用户信息和偏好（个性化回复需要）",
+  "HEARTBEAT.md": "心跳任务清单",
+  "BOOTSTRAP.md": "首次运行引导（仅首次需要）",
+}
 def buildFileIndex(file_names: List[str])-> str:
     lines = [
         f"  - {name}: {FILE_DESCRIPTIONS.get(name, 'workspace文件')}"

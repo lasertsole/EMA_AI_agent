@@ -21,18 +21,24 @@ def delete_session(session_id: str) -> None:
 
 def read_session(session_id: str) -> list[dict[str, Any]]:
     path = _session_path(session_id)
+
     if not path.exists():
         return []
+
     # 如果文件存在但内容为空，则返回空列表
     if path.stat().st_size == 0:
         return []
+
     return json.loads(path.read_text(encoding="utf-8"))
 
 
 def append_session_message(session_id: str, message: dict[str, Any]) -> None:
     path = _session_path(session_id)
     if path.exists():
-        data = json.loads(path.read_text(encoding="utf-8"))
+        if path.stat().st_size == 0:
+            data = []
+        else:
+            data = json.loads(path.read_text(encoding="utf-8"))
     else:
         data = []
     data.append(message)
