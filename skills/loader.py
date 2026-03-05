@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Any
 
 import yaml
@@ -38,7 +37,7 @@ def scan_skills() -> list[dict[str, str]]:
     return skills
 
 
-def build_skills_snapshot() -> str:
+def get_skills_text() -> str:
     skills = scan_skills()
     lines = ["<available_skills>"]
     for s in skills:
@@ -49,18 +48,3 @@ def build_skills_snapshot() -> str:
         lines.append("  </skill>")
     lines.append("</available_skills>")
     return "\n".join(lines)
-
-
-def write_skills_snapshot() -> Path:
-    WORKSPACE_DIR.mkdir(parents=True, exist_ok=True)
-    content = build_skills_snapshot()
-    path = WORKSPACE_DIR / "SKILLS_SNAPSHOT.md"
-    path.write_text(content, encoding="utf-8")
-    return path
-
-
-def get_skills_snapshot_text() -> str:
-    path = WORKSPACE_DIR / "SKILLS_SNAPSHOT.md"
-    if not path.exists():
-        write_skills_snapshot()
-    return path.read_text(encoding="utf-8")
