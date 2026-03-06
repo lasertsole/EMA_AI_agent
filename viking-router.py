@@ -3,8 +3,9 @@ from enum import Enum
 from pathlib import Path
 from dotenv import load_dotenv
 from langchain.chat_models import init_chat_model
-from typing import List, TypedDict, Optional, Literal
+from typing import List, TypedDict, Optional, Literal, Any
 from langchain.messages import SystemMessage, HumanMessage
+from pydantic import BaseModel, Field
 
 current_dir = Path(__file__).parent.resolve()
 env_path = current_dir / '.env'
@@ -14,13 +15,20 @@ api_key = os.getenv("CHAT_API_KEY")
 api_name = os.getenv("CHAT_API_NAME")
 model_provider = os.getenv("CHAT_MODEL_PROVIDER")
 
+class RoutingModelResult(BaseModel):
+    packs: List[str] = Field(description="List of capability pack names to load.")
+    files: List[str] = Field(description="List of workspace files to load.")
+    needsL1: Optional[bool] = Field(description="Whether to load L1 layer index (historical key decisions). Set to true when user's question references previous work or requires context from past conversations")
+    l1Dates: Optional[List[str]] = Field(description="List of dates for L1 decisions to load, format: ['YYYY-MM-DD']. Empty array means no specific L1 dates needed")
+    needsL2: Optional[bool] = Field(description="Whether to load L2 layer full conversation history. Set to true when complete conversation context is required")
+
 routing_model = init_chat_model(
     model_provider = model_provider,
     model = api_name,
     api_key = api_key,
     temperature = 0,
     max_retries = 2,
-)
+).with_structured_output(RoutingModelResult)
 
 """
 Controls which hardcoded sections are included in the system prompt.
@@ -137,7 +145,7 @@ class Prompt(TypedDict):
     user: str
 
 def build_routing_prompt(user_message: str, file_names: List[str], skills: List[SkillIndexEntry], timeline: Optional[str] = None)-> Prompt:
-    system: str = "You are a resource router. Select capability packs and files needed for the task. Reply with ONLY a JSON object, no other text, no markdown."
+    system: str = "You are a resource router. Select capability packs and files needed for the task."
     pack_index: str = build_pack_index()
     skill_index: str = build_skill_index(skills)
     file_index: str = build_file_index(file_names)
@@ -159,8 +167,7 @@ def build_routing_prompt(user_message: str, file_names: List[str], skills: List[
         f"{skill_index}\n\n"
         f"===== Workspace Files (select needed) =====\n"
         f"{file_index}\n\n"
-        "Reply JSON:\n"
-        "{\"packs\":[\"pack names\"],\"files\":[\"file names\"],\"needsL1\":false,\"l1Dates\":[],\"needsL2\":false,\"reason\":\"brief reason\"}\n\n"
+
         "Rules:\n"
         "1. SKILLS: If the task matches any skill above, no extra pack needed (exec is always loaded). But if the skill also needs web/message/etc, include those packs.\n"
         "2. For ANY conversation: include SOUL.md, IDENTITY.md, USER.md.\n"
@@ -174,22 +181,15 @@ def build_routing_prompt(user_message: str, file_names: List[str], skills: List[
 
     return {"system": system, "user": user}
 
-class RoutingModelResult(TypedDict):
-    packs: List[str]
-    files: List[str]
-    needsL1: Optional[bool]
-    l1Dates: Optional[List[str]]
-    needsL2: Optional[bool]
 
-
-async def call_routing_model(system: str, user: str)-> RoutingModelResult | None:
+def call_routing_model(system: str, user: str)-> dict[str, Any] | None:
     messages = [
         SystemMessage(content = system),
         HumanMessage(content = user),
     ]
     
     try:
-        return routing_model.invoke(messages, max_tokens = 200).with_structured_output(RoutingModelResult)
+        return routing_model.invoke(messages, max_tokens = 200).model_dump()
     except Exception as e:
         print(e)
         return None
@@ -269,7 +269,7 @@ async def viking_route(
         }
 
     routing_prompt = build_routing_prompt(user_message= prompt, file_names= file_names, skills= skills, timeline= timeline)
-    result = await call_routing_model(system = routing_prompt["system"], user = routing_prompt["user"])
+    result = call_routing_model(system = routing_prompt["system"], user = routing_prompt["user"])
 
     if result is None:
         return {

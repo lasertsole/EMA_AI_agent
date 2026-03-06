@@ -7,11 +7,7 @@ from pydantic import BaseModel
 from typing import List, Optional, TypedDict, Deque
 
 current_dir = Path(__file__).parent.resolve()
-SESSION_FOLDER = current_dir / '../../src/session'
-SESSION_FOLDER = SESSION_FOLDER.resolve()
-
-CHATS_STORAGE_FILE = SESSION_FOLDER / "chats_storage.jsonl"
-CHATS_STORAGE_FILE = CHATS_STORAGE_FILE.resolve()
+SESSION_FOLDER = (current_dir / '../../src/session').resolve()
 
 class FileType(Enum):
     AUDIO = "audio"
@@ -31,16 +27,23 @@ class File(TypedDict):
 
 # 聊天记录存储类
 class ChatStorage:
+    _session_id: str
     _chats_deque: deque[Chat]
+    _chats_storage_file: Path
 
-    def __init__(self, chats_maxlen: int = 20):
+    def __init__(self, session_id: str, chats_maxlen: int = 20):
+        self._session_id = session_id
+
         # 获取已持久化的聊天记录
         chats_list: List[Chat] = []
 
         SESSION_FOLDER.mkdir(parents=True, exist_ok=True)
-        with open(CHATS_STORAGE_FILE, 'r', encoding='utf-8') as f:
-            for line in f:
-                chats_list.append(Chat(**json.loads(line.strip())))
+        self._chats_storage_file = (SESSION_FOLDER / f"{self._session_id}.jsonl").resolve()
+
+        if self._chats_storage_file.exists():
+            with open(self._chats_storage_file, 'r', encoding='utf-8') as f:
+                for line in f:
+                    chats_list.append(Chat(**json.loads(line.strip())))
 
         # 根据时间戳排序聊天记录,从新到旧
         chats_list.sort(key=lambda x: x.timestamp)
@@ -89,7 +92,7 @@ class ChatStorage:
         SESSION_FOLDER.mkdir(parents=True, exist_ok=True)
 
         # 将新聊天记录列表写回文件
-        with open(CHATS_STORAGE_FILE, 'w', encoding='utf-8') as f:
+        with open(self._chats_storage_file, 'w', encoding='utf-8') as f:
             for chat in _chats_deque:
                 f.write(json.dumps(chat.model_dump(), ensure_ascii=False) + "\n")
 
@@ -130,5 +133,5 @@ class ChatStorage:
         new_chat.image_path_list = image_path_list
 
         # 将聊天记录追加到文件末尾
-        with open(CHATS_STORAGE_FILE, 'a', encoding='utf-8') as f:
+        with open(self._chats_storage_file, 'a', encoding='utf-8') as f:
             f.write(json.dumps(new_chat.model_dump(), ensure_ascii=False) + "\n")

@@ -30,10 +30,14 @@ env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), './.env')
 load_dotenv(env_path, override=True)
 is_stream = os.getenv("IS_STREAM")
 
+# 创建会话ID和线程ID
+session_id = '1'
+thread_id = 1
+
 # 创建任务队列
 task_queue: BackgroundTaskQueue | None = BackgroundTaskQueue()
 # streamlit最大显示对话数
-streamlit_chatStorage = Streamlit_ChatStorage(chats_maxlen = 20)
+streamlit_chatStorage = Streamlit_ChatStorage(session_id = session_id,chats_maxlen = 20)
 
 user_name = "远野汉娜"
 assistant_name = "橘雪莉"
@@ -92,10 +96,6 @@ def filter_content_for_tts(content: str) -> str:
     """
     res = re.sub(r'[（\(].*?[）\)]', ' ', content)
     return res
-
-session_id = '1'
-thread_id = 1
-
 
 
 if __name__ == "__main__":
