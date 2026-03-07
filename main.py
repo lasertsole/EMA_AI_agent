@@ -11,18 +11,21 @@
 import os
 import re
 import asyncio
+import threading
 from typing import Any
 import streamlit as st
 from agent import agent
 from pathlib import Path
+import concurrent.futures
 from dotenv import load_dotenv
 from typing import List, Optional
 from typing import AsyncGenerator
+from asyncio import AbstractEventLoop
 from tasks.queue import BackgroundTaskQueue
 from utils import Chat, File, FileType, ChatStorage as Streamlit_ChatStorage
 from langchain.messages import AIMessageChunk
 from models import TTS_Request, fetchTTSSound
-from sessions.store import append_session_message,read_session
+from sessions.store import append_session_message, read_session
 from config import COMPRESS_THRESHOLD
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 
@@ -34,8 +37,24 @@ is_stream = os.getenv("IS_STREAM")
 session_id = '1'
 thread_id = 1
 
+# 创建事件循环
+@st.cache_resource
+def get_event_loop()->AbstractEventLoop:
+    return asyncio.new_event_loop()
+
+# 给asyncio设置事件循环
+asyncio.set_event_loop(get_event_loop())
+
 # 创建任务队列
-task_queue: BackgroundTaskQueue | None = BackgroundTaskQueue()
+@st.cache_resource
+def get_task_queue() -> BackgroundTaskQueue:
+    return BackgroundTaskQueue(get_event_loop())
+
+# 启动任务队列
+task_queue: BackgroundTaskQueue | None = get_task_queue()
+executor = concurrent.futures.ThreadPoolExecutor(max_workers=3)
+threading.Thread(target= lambda: task_queue.start(), daemon=True).start()
+
 # streamlit最大显示对话数
 streamlit_chatStorage = Streamlit_ChatStorage(session_id = session_id,chats_maxlen = 20)
 
@@ -97,7 +116,6 @@ def filter_content_for_tts(content: str) -> str:
     res = re.sub(r'[（\(].*?[）\)]', ' ', content)
     return res
 
-
 if __name__ == "__main__":
     config = {"configurable": {"thread_id": thread_id}}
     history = read_session(session_id)
@@ -137,8 +155,9 @@ if __name__ == "__main__":
 
         # 如果达到压缩阈值，则压缩历史会话
         total_chars = sum(len(m.get("content", "")) for m in history) + len(user_input)
+
         if total_chars > COMPRESS_THRESHOLD and task_queue:
-            asyncio.create_task(task_queue.enqueue_compress(session_id))
+            asyncio.run_coroutine_threadsafe(task_queue.enqueue_compress(session_id), get_event_loop())
 
         with st.chat_message("assistant", avatar="./src/avatar/assistant.jpg"):
             stream = async_generator(user_input, config)

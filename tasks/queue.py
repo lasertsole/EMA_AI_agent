@@ -3,6 +3,7 @@
 import asyncio
 import logging
 from typing import Any, Literal
+from asyncio import AbstractEventLoop
 
 logger = logging.getLogger(__name__)
 
@@ -12,32 +13,15 @@ TaskType = Literal["compress_session", "update_memory_index"]
 class BackgroundTaskQueue:
     """Async task queue for background operations."""
 
-    def __init__(self) -> None:
+    def __init__(self, event_loop: AbstractEventLoop) -> None:
         self.queue: asyncio.Queue[tuple[TaskType, dict[str, Any]]] = asyncio.Queue()
-        self.worker_task: asyncio.Task[None] | None = None
+        self._event_loop = event_loop
 
-    async def start(self) -> None:
+    def start(self) -> None:
         """Start the background worker."""
-        self.worker_task = asyncio.create_task(self._worker())
-        logger.info("Background task queue started")
-
-    async def stop(self) -> None:
-        """Stop the background worker gracefully."""
-        if self.worker_task:
-            # Wait for queue to drain first
-            try:
-                await asyncio.wait_for(self.queue.join(), timeout=5.0)
-            except asyncio.TimeoutError:
-                logger.warning("Queue did not drain within timeout")
-
-            # Then cancel worker
-            self.worker_task.cancel()
-            try:
-                await self.worker_task
-            except asyncio.CancelledError:
-                pass
-
-        logger.info("Background task queue stopped")
+        if not self._event_loop.is_running():
+            self._event_loop.call_soon(asyncio.create_task, self._worker())
+            self._event_loop.run_forever()
 
     async def _worker(self) -> None:
         """Process tasks from the queue."""
