@@ -5,7 +5,7 @@ from pathlib import Path
 from datetime import datetime
 from dotenv import load_dotenv
 from langchain_core.messages import SystemMessage, HumanMessage
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from config import SESSIONS_DIR
 from typing import Any, List, Optional
 from langchain.chat_models import init_chat_model
@@ -40,7 +40,6 @@ MAX_MESSAGE_CHARS = 1000
 MAX_MESSAGES_TO_READ = 20
 DEFAULT_RECENT_TURNS = 5
 
-HISTORY_DIR = "history"
 TIMELINE_FILE = "timeline.md"
 DECISIONS_FILE = "decisions.md"
 TSID_MAP_FILE = "tsid-session-map.json"
@@ -69,8 +68,8 @@ class JournalEntry:
     data: Optional[Any]
 
 class Summary(BaseModel):
-    l0: str
-    l1: str
+    l0: str = Field(description="一句话极简概括，10-20字，只说做了什么事，不要带任何前缀符号")
+    l1: str = Field(description="如果本轮有关键技术内容，列出具体细节；如果只是闲聊/问候，输出'无'")
 
 # L1 加载结果（按日期按需加载）
 class L1DecisionsResult(BaseModel):
@@ -83,17 +82,14 @@ class L1DecisionsResult(BaseModel):
 def get_sessions_dir(agent_dir: str)-> str:
     return (Path(agent_dir) / "sessions").as_posix()
 
-def get_history_dir(agent_dir: str)-> str:
-    return (Path(agent_dir) / HISTORY_DIR).as_posix()
+def get_decisions_path(agent_dir: str, session_id: str)-> str:
+    return (Path(get_sessions_dir(agent_dir)) / session_id / DECISIONS_FILE).as_posix()
 
-def get_decisions_path(agent_dir: str)-> str:
-    return (Path(get_history_dir(agent_dir)) / DECISIONS_FILE).as_posix()
-
-def get_timeline_path(agent_dir: str)-> str:
-    return (Path(get_history_dir(agent_dir)) / TIMELINE_FILE).as_posix()
+def get_timeline_path(agent_dir: str, session_id: str)-> str:
+    return (Path(get_sessions_dir(agent_dir)) / session_id / TIMELINE_FILE).as_posix()
 
 def get_tsid_map_path(agent_dir: str)-> str:
-    return (Path(agent_dir) / TSID_MAP_FILE).as_posix()
+    return (Path(get_sessions_dir(agent_dir)) / TSID_MAP_FILE).as_posix()
 
 
 def _session_path(session_id: str) -> str:
@@ -106,44 +102,19 @@ def format_date()->str:
     day = str(now.day).zfill(2)
     return f"{year}-{month}-{day}"
 
-def read_session_messages(session_dir: str, session_id: str)-> str:
+def read_session_messages(sessions_dir: str, session_id: str)-> str:
     """L2: 读取完整对话（内部使用）"""
-    jsonl_path: Path = Path(session_dir) / f"{session_id}.jsonl"
+    session_dir: Path = Path(sessions_dir) / f"{session_id}"
+    json_path: Path = session_dir / "L2.json"
 
-    if not jsonl_path.exists():
+    if not json_path.exists():
         return ""
 
     try:
-        raw = jsonl_path.read_text(encoding="utf-8")
-        lines = [line for line in raw.split("\n") if line.strip()]
-
-        messages: List[dict[str, str]] = []
-
-        for line in lines:
-            try:
-                entry: JournalEntry = json.loads(line)
-                if entry.type != "message" or entry.message is None:
-                    continue
-
-                role = entry.message.role
-
-                if role != "user" and role != "assistant":
-                    continue
-
-                text = ""
-                if type(entry.message.content) == str:
-                    text = entry.message.content
-                elif isinstance(entry.message.content, list):
-                    text:str = "\n".join([(block.text if block.text else "") for block in entry.message.content if block.type == "text" and block.text])
-
-                if len(text.strip()) > 0:
-                    messages.append({ "role": role, "text": text[:MAX_MESSAGE_CHARS] })
-            except Exception:
-                pass
-
+        messages = json.loads(json_path.read_text(encoding="utf-8"))
         recent = messages[-MAX_MESSAGES_TO_READ:]
 
-        return "\n\n".join([f"{r.role}: {r.text}" for r in recent])
+        return "\n\n".join([f"{r["role"]}: {r["content"]}" for r in recent])
     except Exception:
         return ""
 
@@ -308,7 +279,6 @@ def save_tsid_mapping(agent_dir: str, tsid: str, sessionId: str)-> None:
 async def append_timeline_entry(
     agent_dir: str,
     session_id: str,
-    prompt: str,
     tool_metas: List[str],
 )-> None:
     try:
@@ -333,13 +303,6 @@ async def append_timeline_entry(
         system = """你是一个技术记录助手。根据完整对话内容，生成两部分输出。使用中文。
 
 严格按以下格式输出，不要输出任何其他内容：
-
-[L0]
-{一句话极简概括，10-20字，只说做了什么事，不要带任何前缀符号}
-
-[L1]
-{如果本轮有关键技术内容，列出具体细节；如果只是闲聊/问候，输出"无"}
-
 L0 是时间线目录，要极度精简，像书的章节标题。注意：只输出摘要文本本身，不要输出时间戳、不要输出"- "前缀，这些由系统自动添加。
 
 L1 是详细摘要，要包含具体的：
@@ -358,38 +321,37 @@ L1 每条要有足够的细节，让人不看原文也能知道具体怎么做�
 
 请按格式生成 [L0] 和 [L1]。"""
 
-        result = summary_LLM.invoke(
+
+        summary: BaseModel = summary_LLM.with_structured_output(Summary).invoke(
             [SystemMessage(content=system), HumanMessage(content=user)],
             max_tokens = 800
         )
 
-        summary:str = result.content
-
-        if not summary:
+        if not summary and not isinstance(summary, Summary):
             raise Exception("生成L0 和 L1 时发生错误")
 
-        parsed = parse_summary_result(summary)
-
         # 写入 L0（代码拼接时间戳ID，不让 LLM 生成）
-        if parsed.l0:
-            l0_summary = parsed.l0
+        if summary.l0:
+            l0_summary = summary.l0
             # 去掉 LLM 可能残留的前缀
             l0_summary = re.sub(r'^-\s*', '', l0_summary)
             l0_summary = re.sub(r'^\d{12}\s*\|\s*', '', l0_summary)
 
             l0_line = f"- {tsid} | {l0_summary}"
-            timeline_path = Path(get_timeline_path(agent_dir))
-            timeline_path.parent.mkdir(parents=True, exist_ok=True)
+            timeline_path = get_timeline_path(agent_dir, session_id)
+            Path(timeline_path).parent.mkdir(parents=True, exist_ok=True)
+
             with open(timeline_path, "a", encoding="utf-8") as f:
                 f.write(l0_line + "\n")
 
         # 写入 L1（每条决策添加 [tsid] 前缀）
-        if parsed.l1:
-            l1_with_tsid = add_tsid_to_l1(parsed.l1, tsid)
-            decisions_path = get_decisions_path(agent_dir)
-            existing = safe_read_file(decisions_path).trim()
+        if summary.l1:
+            l1_with_tsid = add_tsid_to_l1(summary.l1, tsid)
+            decisions_path = get_decisions_path(agent_dir, session_id)
+            existing = safe_read_file(decisions_path).strip()
 
             today_header = f"## {date_str}"
+
             if today_header in existing:
                 with open(decisions_path, "a", encoding="utf-8") as f:
                     f.write("\n" + l1_with_tsid + "\n")
