@@ -1,14 +1,26 @@
+"""
+OpenViking 分层路由器 v4
+
+设计原则：大道至简
+- 工具按"能力包"分类，路由模型做分类选择题
+- core（read + exec）永远加载，保证 Agent 基础能力
+- Skills 只给名称列表，主模型需要时自己 read SKILL.md
+- 路由模型看到 L0 时间线，判断是否需要加载 L1（指定日期）/L2
+- 路由失败自动回退全量
+"""
 import os
 from enum import Enum
 from pathlib import Path
 from dotenv import load_dotenv
 from langchain.chat_models import init_chat_model
-from typing import List, TypedDict, Optional, Literal, Any
+from typing import List, TypedDict, Optional, Literal
 from langchain.messages import SystemMessage, HumanMessage
 from pydantic import BaseModel, Field
+from tools import CORE_TOOLS, ALL_TOOLS
+from workspace import CORE_FILE_NAMES
 
 current_dir = Path(__file__).parent.resolve()
-env_path = current_dir / '.env'
+env_path = current_dir / '../.env'
 env_path = env_path.resolve()
 load_dotenv(env_path, override = True)
 api_key = os.getenv("CHAT_API_KEY")
@@ -16,7 +28,7 @@ api_name = os.getenv("CHAT_API_NAME")
 model_provider = os.getenv("CHAT_MODEL_PROVIDER")
 
 class RoutingModelResult(BaseModel):
-    packs: List[str] = Field(description="List of capability pack names to load.")
+    tools: List[str] = Field(description="List of capability tool names to load.")
     files: List[str] = Field(description="List of workspace files to load.")
     needsL1: Optional[bool] = Field(description="Whether to load L1 layer index (historical key decisions). Set to true when user's question references previous work or requires context from past conversations")
     l1Dates: Optional[List[str]] = Field(description="List of dates for L1 decisions to load, format: ['YYYY-MM-DD']. Empty array means no specific L1 dates needed")
@@ -71,43 +83,9 @@ class ToolListIndexEntry(TypedDict):
     description: str
 
 """构建能力包索引"""
-CORE_TOOLS: set[str] = {"read", "exec"}
-TOOL_PACKS: dict[str, ToolListIndexEntry] = {
-    "base-ext": {
-        "tools": ["write", "edit", "apply_patch", "grep", "find", "ls", "process"],
-        "description": "文件编辑、搜索、目录操作、后台进程管理",
-    },
-    "web": {
-        "tools": ["web_search", "web_fetch"],
-        "description": "搜索互联网、抓取网页内容",
-    },
-    "browser": {
-        "tools": ["browser"],
-        "description": "控制浏览器打开和操作网页",
-    },
-    "message": {
-        "tools": ["message"],
-        "description": "发送消息到钉钉、Telegram、Discord等通道",
-    },
-    "media": {
-        "tools": ["canvas", "image"],
-        "description": "图片生成、画布展示和截图",
-    },
-    "infra": {
-        "tools": ["cron", "gateway", "session_status"],
-        "description": "定时任务、系统管理、状态查询、提醒",
-    },
-    "agents": {
-        "tools": ["agents_list", "sessions_list", "sessions_history", "sessions_send", "sessions_spawn", "subagents"],
-        "description": "多Agent协作、子任务派发、会话管理",
-    },
-    "nodes": {
-        "tools": ["nodes"],
-        "description": "设备控制、摄像头、屏幕操作",
-    },
-}
-def build_pack_index()-> str:
-    lines = [f"  - {name}: {pack['description']}" for name, pack in TOOL_PACKS.items()]
+CORE_TOOL_NAMES: set[str] = set([ tool.name for tool in CORE_TOOLS])
+def build_tool_index()-> str:
+    lines = [f" - {tool.name}: {tool.description}" for tool in ALL_TOOLS]
 
     return "\n".join(lines)
 
@@ -121,6 +99,7 @@ def build_skill_index(skills: List[SkillIndexEntry])-> str:
         return "  (无)"
 
     lines = [f"  - ${s['name']}" for s in skills]
+
     return "\n".join(lines)
 
 FILE_DESCRIPTIONS: dict[str, str] = {
@@ -145,8 +124,8 @@ class Prompt(TypedDict):
     user: str
 
 def build_routing_prompt(user_message: str, file_names: List[str], skills: List[SkillIndexEntry], timeline: Optional[str] = None)-> Prompt:
-    system: str = "You are a resource router. Select capability packs and files needed for the task."
-    pack_index: str = build_pack_index()
+    system: str = "You are a resource router. Select capability tools and files needed for the task."
+    tool_index: str = build_tool_index()
     skill_index: str = build_skill_index(skills)
     file_index: str = build_file_index(file_names)
 
@@ -160,29 +139,29 @@ def build_routing_prompt(user_message: str, file_names: List[str], skills: List[
 
     user: str = (
         f"User message: {user_message}\n"
-        f"{time_line_section}===== Capability Packs (select needed) =====\n"
+        f"{time_line_section}===== Capability Tools (select needed) =====\n"
         f"Always loaded: read + exec (do not select)\n"
-        f"{pack_index}\n\n"
+        f"{tool_index}\n\n"
         f"===== Skills (for reference, all run via exec) =====\n"
         f"{skill_index}\n\n"
         f"===== Workspace Files (select needed) =====\n"
         f"{file_index}\n\n"
 
         "Rules:\n"
-        "1. SKILLS: If the task matches any skill above, no extra pack needed (exec is always loaded). But if the skill also needs web/message/etc, include those packs.\n"
+        "1. SKILLS: If the task matches any skill above, no extra tool needed (exec is always loaded). But if the skill also needs web/message/etc, include those tools.\n"
         "2. For ANY conversation: include SOUL.md, IDENTITY.md, USER.md.\n"
         "3. File editing/coding: include \"base-ext\".\n"
         "4. Web search: include \"web\".\n"
         "5. Send messages/notifications: include \"message\".\n"
         "6. Scheduled tasks/reminders: include \"infra\".\n"
-        "7. Simple chat: packs=[], files=[\"SOUL.md\",\"IDENTITY.md\",\"USER.md\"].\n"
-        "8. When unsure: include more packs (cheap). Do NOT leave packs empty if the task needs"
+        "7. Simple chat: tools=[], files=[\"SOUL.md\",\"IDENTITY.md\",\"USER.md\"].\n"
+        "8. When unsure: include more tools (cheap). Do NOT leave tools empty if the task needs"
     )
 
     return {"system": system, "user": user}
 
 
-def call_routing_model(system: str, user: str)-> dict[str, Any] | None:
+def call_routing_model(system: str, user: str)-> RoutingModelResult | None:
     messages = [
         SystemMessage(content = system),
         HumanMessage(content = user),
@@ -193,21 +172,6 @@ def call_routing_model(system: str, user: str)-> dict[str, Any] | None:
     except Exception as e:
         print(e)
         return None
-
-"""
-    展开能力包
-"""
-def expand_packs(pack_names: List[str])->set[str]:
-    tools = CORE_TOOLS
-    for name in pack_names:
-        pack = TOOL_PACKS[name]
-        if pack:
-            for tool in pack["tools"]:
-                tools.add(tool)
-        else:
-            print(f"[viking] unknown pack \"{name}\", ignored")
-
-    return tools
 
 """
     Skills 名称+描述列表
@@ -230,20 +194,16 @@ def build_skill_names_only_prompt(skills: List[SkillIndexEntry])-> str:
 """
     TODO 主入口
 """
-class AgentToolLike(TypedDict):
-  name: str
-  description: Optional[str]
-
 async def viking_route(
   prompt: str,
-  tools: List[AgentToolLike],
+  tools: List[str],
   file_names: List[str],
   skills: List[SkillIndexEntry],
   timeline: Optional[str],  #L0 时间线原始文本，供路由模型判断是否需要 L1/L2
 )-> VikingRouteResult:
-    all_tool_names:set[str] = set([t["name"] for t in tools])
+    all_tool_names: set[str] = set(tools)
     all_file_names:set[str] = set(file_names)
-    
+
     if should_skip_routing():
         return {
             "tools": all_tool_names,
@@ -258,7 +218,7 @@ async def viking_route(
                     
     if not prompt or len(prompt.strip()) == 0:
         return {
-            "tools": set(CORE_TOOLS),
+            "tools": set(CORE_TOOL_NAMES),
             "files": set(),
             "promptLayer": PromptMode.L0,
             "skillsMode": "names",
@@ -283,23 +243,33 @@ async def viking_route(
             "needsL2": False,
         }
 
-    expanded_tools:set[str] = expand_packs(result["packs"])
+    selected_tools:set[str] = set()
 
-    valid_tools:set[str] = set()
-    for t in expanded_tools:
-        if t in all_file_names:
-            valid_tools.add(t)
-            
-    for c in CORE_TOOLS:
-        if c in all_file_names:
-            valid_tools.add(c)
-    
-    selected_files:set[str] = set(result["files"]) & all_file_names
-    count:int = len(valid_tools)
-    
+    # 如果模型选择了工具，则添加到路由工具列表里
+    for t in result["tools"]:
+        if t in all_tool_names:
+            selected_tools.add(t)
+
+    # 如果核心工具在已有工具的列表里，则总是加载核心工具
+    for t in CORE_TOOL_NAMES:
+        if t in all_tool_names:
+            selected_tools.add(t)
+
+    selected_files: set[str] = set()
+    # 如果核心文件在已有文件的列表里，则总是加载核心文件
+    for f in result["files"]:
+        if f in all_file_names:
+             selected_files.add(f)
+
+    # 总是加载核心文件
+    for f in CORE_FILE_NAMES:
+         selected_files.add(f)
+
+    # 根据工具数量选择路由层级
+    tools_count:int = len(selected_tools)
     prompt_layer: PromptMode = (
-       PromptMode.L0 if count <= 2 else
-       PromptMode.L1 if count <= 12 else
+       PromptMode.L0 if tools_count <= len(CORE_TOOL_NAMES) else
+       PromptMode.L1 if tools_count <= len(ALL_TOOLS) else
        PromptMode.FULL
     )
     
@@ -307,7 +277,7 @@ async def viking_route(
     l1_dates: List[str] = result.get("l1Dates") if result.get("l1Dates") is not None else []
     needs_l2: bool = result.get("needsL2") if result.get("needsL2") is not None else False
     return {
-       "tools": valid_tools,
+       "tools": selected_tools,
        "files": selected_files,
        "promptLayer": prompt_layer,
        "skillsMode": "names",
@@ -315,5 +285,4 @@ async def viking_route(
        "needsL1": needs_l1,
        "l1Dates": l1_dates,
        "needsL2": needs_l2,
-       
     }

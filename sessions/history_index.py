@@ -58,15 +58,6 @@ class Message:
     content: str | List[MessageContentItem]
     timestamp: Optional[int]
 
-class JournalEntry:
-    type: str
-    id: Optional[str]
-    parentId: Optional[str | None]
-    timestamp: Optional[str]
-    message: Optional[Message]
-    customType: Optional[str]
-    data: Optional[Any]
-
 class Summary(BaseModel):
     l0: str = Field(description="一句话极简概括，10-20字，只说做了什么事，不要带任何前缀符号")
     l1: str = Field(description="如果本轮有关键技术内容，列出具体细节；如果只是闲聊/问候，输出'无'")
@@ -75,6 +66,15 @@ class Summary(BaseModel):
 class L1DecisionsResult(BaseModel):
   available: bool
   prompt: str # L1 关键决策文本
+
+class L0TimelineResult(BaseModel):
+    available: bool
+    prompt: str #L0 时间线文本，直接注入 system prompt
+    rawTimeline: str # L0 原始文本（不带 XML 标签，给路由模型用）
+    recentTurns: int # 分层模式下保留的最近对话轮数
+    dateTsidMap: dict[str, List[str]] # 日期(YYYY-MM-DD) → 时间戳ID[] 映射
+    tsidSessionMap: dict[str, str] # 时间戳ID → sessionId 映射（用于 L2 加载）
+
 
 # ========================
 # 工具函数
@@ -208,6 +208,45 @@ def build_date_tsid_map(timeline: str) -> dict[str, list[str]]:
 
     return tsid_map
 
+# ========================
+# L1 解析：从 decisions 文本中提取时间戳 ID
+# ========================
+
+"""
+从 L1 文本中提取所有时间戳 ID
+匹配格式: [202602260705]
+"""
+def extract_tsids(l1Text: str) -> List[str]:
+    ids: List[str] = []
+    regex = re.compile(r'\[(\d{12})\]')
+
+    for match in regex.finditer(l1Text):
+        tsid = match.group(1)
+        if tsid and tsid not in ids:
+            ids.append(tsid)
+
+    return ids
+
+"""
+从 L0 的 dateTsidMap 中根据日期提取时间戳 ID 列表
+"""
+def extract_tsids_from_L0(
+        l0_result: L0TimelineResult,
+        dates: Optional[List[str]] = None,
+) -> List[str]:
+    if not dates or len(dates) == 0:
+        return []
+
+    ids: List[str] = []
+    for date in dates:
+        tsids = l0_result.dateTsidMap.get(date)
+        if tsids:
+            for tsid in tsids:
+                if tsid not in ids:
+                    ids.append(tsid)
+
+    return ids
+
 """
 给 L1 的每条决策添加 [tsid] 前缀
 输入: "- 决策1\n- 决策2"
@@ -276,6 +315,10 @@ def save_tsid_mapping(agent_dir: str, tsid: str, sessionId: str)-> None:
     with map_path.open("w", encoding="utf-8") as f:
         json.dump(existing, f, ensure_ascii=False, indent=2)
 
+
+"""
+写入：每轮结束后从 L2 生成 L0 + L1
+"""
 async def append_timeline_entry(
     agent_dir: str,
     session_id: str,
@@ -449,21 +492,14 @@ async def load_l1_decisions(
     # 无过滤，加载全部
     prompt = f"<key_decisions>\n以下是历史对话中提取的关键决策和技术细节：\n{full_content}\n</key_decisions>"
     return {"available": True, "prompt": prompt}
-
-
-# ========================
-# 兼容函数
-# ========================
-
-
 # ========================
 # 读取 L0（始终加载）
 # ========================
 
 
-async def load_l0_timeline(agent_dir: str) -> dict[str, Any]:
+async def load_l0_timeline(agent_dir: str, session_id: str) -> dict[str, Any]:
     """读取 L0（始终加载）"""
-    timeline_path = get_timeline_path(agent_dir)
+    timeline_path = get_timeline_path(agent_dir, session_id)
     timeline = safe_read_file(timeline_path).strip()
 
     if not timeline:
