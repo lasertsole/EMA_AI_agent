@@ -1,6 +1,5 @@
 import os
 import re
-import asyncio
 import threading
 from typing import Any
 
@@ -34,22 +33,13 @@ is_stream = os.getenv("IS_STREAM")
 session_id = '1'
 thread_id = 1
 
-# 创建事件循环
-@st.cache_resource
-def get_event_loop()->AbstractEventLoop:
-    return asyncio.new_event_loop()
-
-# 给asyncio设置事件循环
-asyncio.set_event_loop(get_event_loop())
-
 # 创建任务队列
 @st.cache_resource
 def get_task_queue() -> BackgroundTaskQueue:
-    return BackgroundTaskQueue(get_event_loop())
+    return BackgroundTaskQueue()
 
 # 启动任务队列
 task_queue: BackgroundTaskQueue | None = get_task_queue()
-executor = concurrent.futures.ThreadPoolExecutor(max_workers=3)
 threading.Thread(target= lambda: task_queue.start(), daemon=True).start()
 
 # streamlit最大显示对话数
@@ -148,7 +138,6 @@ def _storage_add_chat(chat: dict[str, Any], files: Optional[List[File]] = None):
     append_session_message(session_id, {"role": chat["role"], "content": chat["content"], "timestamp": timestamp})
 
     # 增加角色前缀
-    print(chat)
     if chat["role"] == "assistant":
         chat["content"] = f"{assistant_name}:{chat['content']}"
     elif chat["role"] == "user":
@@ -215,12 +204,12 @@ if __name__ == "__main__":
         if memory_entry:
             _append_memory(memory_entry)
             if task_queue:
-                asyncio.create_task(task_queue.enqueue_memory_index(memory_entry))
+                threading.Thread(target=lambda: task_queue.enqueue_memory_index(memory_entry)).start()
 
         # 如果达到压缩阈值，则压缩历史会话
         total_chars = sum(len(m.get("content", "")) for m in _history) + len(_user_input)
         if total_chars > COMPRESS_THRESHOLD and task_queue:
-            asyncio.run_coroutine_threadsafe(task_queue.enqueue_compress(session_id), get_event_loop())
+            threading.Thread(target=lambda: task_queue.enqueue_compress(session_id)).start()
 
         # 添加AI消息框UI
         with st.chat_message("assistant", avatar="./src/avatar/assistant.jpg"):

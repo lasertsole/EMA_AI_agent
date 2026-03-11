@@ -13,9 +13,9 @@ TaskType = Literal["compress_session", "update_memory_index"]
 class BackgroundTaskQueue:
     """Async task queue for background operations."""
 
-    def __init__(self, event_loop: AbstractEventLoop) -> None:
+    def __init__(self) -> None:
         self.queue: asyncio.Queue[tuple[TaskType, dict[str, Any]]] = asyncio.Queue()
-        self._event_loop = event_loop
+        self._event_loop = asyncio.new_event_loop()
 
     def start(self) -> None:
         """Start the background worker."""
