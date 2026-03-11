@@ -117,19 +117,6 @@ sovits_weight_path = os.getenv("SOVITS_WEIGHT_PATH")
 sovits_weight_path = gpt_sovits_dir / sovits_weight_path
 sovits_weight_path = sovits_weight_path.as_posix()
 
-try:
-    # 创建tts子进程
-    proc = subprocess.Popen([interpreter_path, api_path, '-a', '127.0.0.1', '-p', '9880', '-c', config_path],
-                            cwd=gpt_sovits_dir)
-
-    def cleanup():
-        os.kill(proc.pid, signal.SIGTERM)
-
-
-    atexit.register(cleanup)
-except Exception:
-    pass
-
 """以下是api"""
 initialed = False
 ### 推理

@@ -3,7 +3,12 @@ import re
 import asyncio
 import threading
 from typing import Any
+
+import requests
 import streamlit as st
+from langchain_core.tools import ToolException
+from langgraph.errors import GraphRecursionError
+
 from agent import agent
 from pathlib import Path
 import concurrent.futures
@@ -109,19 +114,28 @@ async def _async_generator(history: list[dict[str, Any]], user_input: str, confi
     messages.insert(0, SystemMessage(content=build_system_prompt()))
     messages_dict = {"messages": messages}
 
-    if is_stream == 'True':
-        yield f"{assistant_name}:"
-        async for chunk in agent.astream(messages_dict, config=config, stream_mode="messages"):
-            msg_chunk: AIMessageChunk = chunk[0]
-            event_chunk: dict[str, Any] = chunk[1]
+    try:
+        if is_stream == 'True':
+            yield f"{assistant_name}:"
+            async for chunk in agent.astream(messages_dict, config=config, stream_mode="messages"):
+                msg_chunk: AIMessageChunk = chunk[0]
+                event_chunk: dict[str, Any] = chunk[1]
 
-            if (isinstance(msg_chunk, AIMessageChunk)
-                    and event_chunk.get("langgraph_node") == 'model'
-                    and len(msg_chunk.content) > 0):
-                yield msg_chunk.content
-    else:
-        result = await agent.ainvoke(messages_dict, config=config)
-        yield result["messages"][-1].content
+                if (isinstance(msg_chunk, AIMessageChunk)
+                        and event_chunk.get("langgraph_node") == 'model'
+                        and len(msg_chunk.content) > 0):
+                    yield msg_chunk.content
+        else:
+            result = await agent.ainvoke(messages_dict, config=config)
+            yield result["messages"][-1].content
+    except requests.exceptions.HTTPError as e:
+        yield f"请求失败: {e.response.text}"
+    except requests.exceptions.Timeout as e:
+        yield f"请求超时: {e.args[0]}"
+    except GraphRecursionError as e:
+        yield f"工具调用循环、超过限制: {e.args[0]}"
+    except ToolException as e:
+        yield f"调用工具时发生错误: {e.args[0]}"
 
 def _storage_add_chat(chat: dict[str, Any], files: Optional[List[File]] = None):
     if not isinstance(chat["content"], str) or not isinstance(chat["role"], str):

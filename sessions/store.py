@@ -28,7 +28,7 @@ def read_session(session_id: str) -> list[dict[str, Any]]:
         return []
 
     text_lines = path.read_text(encoding="utf-8").splitlines()
-    return [json.loads(line) for line in text_lines if len(line) > 0]
+    return [json.loads(line.strip()) for line in text_lines if len(line) > 0]
 
 
 def append_session_message(session_id: str, message: dict[str, Any]) -> None:
