@@ -32,6 +32,9 @@ def read_session(session_id: str) -> list[dict[str, Any]]:
 
 
 def append_session_message(session_id: str, message: dict[str, Any]) -> None:
+    if not isinstance(message["role"], str) or not isinstance(message["content"], str) or not isinstance(message["timestamp"], str):
+        raise ValueError("Invalid message")
+
     path = Path(_session_path(session_id))
 
     # 总是先确保目录存在
@@ -39,19 +42,3 @@ def append_session_message(session_id: str, message: dict[str, Any]) -> None:
 
     with path.open("a", encoding="utf-8") as f:
         f.write(json.dumps(message, ensure_ascii=False) + "\n")
-
-def list_sessions() -> list[dict[str, Any]]:
-    if not SESSIONS_DIR.exists():
-        return []
-    items: list[dict[str, Any]] = []
-    for path in SESSIONS_DIR.glob("*/full.jsonl"):
-        stat = path.stat()
-        items.append(
-            {
-                "session_id": path.stem,
-                "updated_at": stat.st_mtime,
-            }
-        )
-    items.sort(key=lambda x: x["updated_at"], reverse=True)
-    return items
-

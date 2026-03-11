@@ -1,13 +1,3 @@
-"""
-橘雪莉 聊天机器人 - Streamlit 异步实现
-===============================
-功能：
-    1. 基于 langchain agent 实现多轮对话
-    2. 支持流式回复（astream）和非流式回复（ainvoke）
-    3. 会话状态管理（保存历史聊天记录）
-使用方式：
-    $  python -m streamlit run main.py
-"""
 import os
 import re
 import asyncio
@@ -26,8 +16,9 @@ from langchain.messages import AIMessageChunk
 from models import TTS_Request, fetch_TTS_sound
 from config import COMPRESS_THRESHOLD, MEMORY_DIR
 from workspace.prompt_builder import build_system_prompt
+from sessions.history_index import generate_tsid
 from sessions.store import append_session_message, read_session
-from utils import Chat, File, FileType, ChatStorage as Streamlit_ChatStorage
+from utils import File, FileType, ChatStorage as Streamlit_ChatStorage
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage, SystemMessage, BaseMessage
 
 env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), './.env')
@@ -57,14 +48,14 @@ executor = concurrent.futures.ThreadPoolExecutor(max_workers=3)
 threading.Thread(target= lambda: task_queue.start(), daemon=True).start()
 
 # streamlit最大显示对话数
-streamlit_chatStorage = Streamlit_ChatStorage(session_id = session_id,chats_maxlen = 20)
+streamlit_chatStorage = Streamlit_ChatStorage(session_id = session_id, chats_maxlen = 20)
 
 user_name = "远野汉娜"
 assistant_name = "橘雪莉"
 
 
 
-"""以下是主动记忆功能"""
+#"""以下是主动记忆功能"""
 def _maybe_extract_memory(text: str) -> str | None:
     keywords = ["请记住", "记住这个", "记下来", "保存到记忆", "write to memory"]
     source = text.strip()
@@ -87,11 +78,11 @@ def _append_memory(entry: str) -> None:
     content = path.read_text(encoding="utf-8").rstrip()
     updated = f"{content}\n\n{entry}\n"
     path.write_text(updated, encoding="utf-8")
-"""以上是主动记忆功能"""
+#"""以上是主动记忆功能"""
 
 
 
-"""以下是组织信息列表逻辑"""
+#"""以下是组织信息列表逻辑"""
 def _to_messages(history: list[dict[str, Any]], user_input: str) -> list[BaseMessage]:
     """将历史对话和当前用户输入拼接成消息队列"""
     messages: list[Any] = []
@@ -112,7 +103,6 @@ def _to_messages(history: list[dict[str, Any]], user_input: str) -> list[BaseMes
     return messages
 
 async def _async_generator(history: list[dict[str, Any]], user_input: str, config: dict[str, Any])-> AsyncGenerator[str, None]:
-    """生成回复内容"""
     # 创建消息队列
     messages: list[BaseMessage] = _to_messages(history, user_input)
     # 插入系统提示词
@@ -133,46 +123,55 @@ async def _async_generator(history: list[dict[str, Any]], user_input: str, confi
         result = await agent.ainvoke(messages_dict, config=config)
         yield result["messages"][-1].content
 
-def _storage_add_chat(chat: Chat, files: Optional[List[File]] = None):
-    """持久化消息"""
-    append_session_message(session_id, {"role": chat.role, "content": chat.content})
+def _storage_add_chat(chat: dict[str, Any], files: Optional[List[File]] = None):
+    if not isinstance(chat["content"], str) or not isinstance(chat["role"], str):
+        raise ValueError("Invalid chat")
+
+    # 生成时间戳
+    timestamp = generate_tsid()
+
+    #"""持久化消息"""
+    append_session_message(session_id, {"role": chat["role"], "content": chat["content"], "timestamp": timestamp})
 
     # 增加角色前缀
-    if chat.role == "assistant":
-        chat.content = f"{assistant_name}:{chat.content}"
-    elif chat.role == "user":
-        chat.content = f"{user_name}:{chat.content}"
+    print(chat)
+    if chat["role"] == "assistant":
+        chat["content"] = f"{assistant_name}:{chat['content']}"
+    elif chat["role"] == "user":
+        chat["content"] = f"{user_name}:{chat['content']}"
+
+    chat["timestamp"] = timestamp
 
     streamlit_chatStorage.add_chat(chat, files)
-"""以上是组织信息列表逻辑"""
+#"""以上是组织信息列表逻辑"""
 
 
-"""以下是工具函数"""
+#"""以下是工具函数"""
 def filter_content_for_tts(content: str) -> str:
-    """
-    去除多余字符
-    """
+    #"""
+    #去除多余字符
+    #"""
     res = re.sub(r'[（\\(].*?[）\\)]', ' ', content)
     return res
-"""以上是工具函数"""
+#"""以上是工具函数"""
 
 # streamlit主程序
 if __name__ == "__main__":
     _config: dict[str, Any] = {"configurable": {"thread_id": thread_id }}
     _history = read_session(session_id)
 
-    chat_list: list[Chat] = streamlit_chatStorage.get_chats()
+    chat_list: list[dict[str, Any]] = streamlit_chatStorage.get_chats()
     if len(chat_list) == 0:
-        hello_chat = Chat(role="assistant", content = f"汉娜さん，来茶间聊天吧！")
+        hello_chat = dict(role="assistant", content = f"汉娜さん，来茶间聊天吧！")
         chat_list.append(hello_chat)
         _storage_add_chat(hello_chat)
 
     # 创建历史聊天消息UI列表
     for _chat in chat_list:
-        with st.chat_message(_chat.role, avatar=f"./src/avatar/{_chat.role}.jpg"):
-            st.markdown(_chat.content)
-            if _chat.audio_path_list:
-                for file_path in _chat.audio_path_list:
+        with st.chat_message(_chat["role"], avatar=f"./src/avatar/{_chat["role"]}.jpg"):
+            st.markdown(_chat["content"])
+            if _chat["audio_path_list"]:
+                for file_path in _chat["audio_path_list"]:
                     if Path(file_path).exists():
                         with open(file_path, "rb") as f:
                             st.audio(data=f.read(), format="audio/ogg")
@@ -195,7 +194,7 @@ if __name__ == "__main__":
             for _file in _files:
                 st.image(_file)
 
-            _storage_add_chat(Chat(role="user", content=_user_input))
+            _storage_add_chat(dict(role="user", content=_user_input))
 
         # 将用户要求的知识存入到MEMORY.MD
         memory_entry = _maybe_extract_memory(_user_input)
@@ -233,4 +232,4 @@ if __name__ == "__main__":
                     pass
 
             # 将消息持久化
-            _storage_add_chat(Chat(role = "assistant", content = _content), files = [file] if file is not None else None)
+            _storage_add_chat(dict(role = "assistant", content = _content), files = [file] if file is not None else None)

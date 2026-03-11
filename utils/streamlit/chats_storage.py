@@ -4,7 +4,7 @@ from enum import Enum
 from pathlib import Path
 from collections import deque
 from pydantic import BaseModel
-from typing import List, Optional, TypedDict, Deque
+from typing import List, Optional, TypedDict, Deque, Any
 
 current_dir = Path(__file__).parent.resolve()
 SESSION_FOLDER = (current_dir / '../../src/session').resolve()
@@ -16,9 +16,9 @@ class FileType(Enum):
 class Chat(BaseModel):
     role: str
     content: str
+    timestamp: str
     audio_path_list: Optional[List[str]] =  None
     image_path_list: Optional[List[str]] =  None
-    timestamp: float = time.time_ns()
 
 class File(TypedDict):
     content: bytes
@@ -52,15 +52,15 @@ class ChatStorage:
         self._chats_deque = deque(chats_list[-chats_maxlen:], maxlen=chats_maxlen)
 
         # 将聊天记录对应的文件删除
-        self.__delete_file(self._chats_deque)
+        self._delete_file(self._chats_deque)
 
         # 将新聊天记录列表写回文件
         self.__storage_chats_deque(self._chats_deque)
 
-    def get_chats(self) -> List[Chat]:
-        return list(self._chats_deque)
+    def get_chats(self) -> List[dict[str, Any]]:
+        return list([chat.model_dump() for chat in self._chats_deque])
 
-    def __delete_file(self, new_chat_deque: Deque[Chat]):
+    def _delete_file(self, new_chat_deque: Deque[Chat]):
         # 获取所有多媒体文件夹
         file_type_list:List[str] = [member.value for member in FileType.__members__.values()]
 
@@ -96,9 +96,11 @@ class ChatStorage:
             for chat in _chats_deque:
                 f.write(json.dumps(chat.model_dump(), ensure_ascii=False) + "\n")
 
-    def add_chat(self, new_chat: Chat, files: Optional[List[File]] = None):
+    def add_chat(self, new_chat: dict[str, Any], files: Optional[List[File]] = None):
+        _new_chat = Chat(**new_chat)
+        
         # 将新聊天记录装入双向列表
-        self._chats_deque.append(new_chat)
+        self._chats_deque.append(_new_chat)
 
         # 将文件写入文件夹
         file_path_list = []
@@ -129,9 +131,9 @@ class ChatStorage:
                     file_path_list.append(file_path)
 
         # 将文件路径写入新聊天记录
-        new_chat.audio_path_list = audio_path_list
-        new_chat.image_path_list = image_path_list
+        _new_chat.audio_path_list = audio_path_list
+        _new_chat.image_path_list = image_path_list
 
         # 将聊天记录追加到文件末尾
         with open(self._chats_storage_file, 'a', encoding='utf-8') as f:
-            f.write(json.dumps(new_chat.model_dump(), ensure_ascii=False) + "\n")
+            f.write(json.dumps(_new_chat.model_dump(), ensure_ascii=False) + "\n")
