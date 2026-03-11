@@ -8,7 +8,7 @@ from pathlib import Path
 from config import SESSIONS_DIR
 
 def _session_path(session_id: str) -> str:
-    return (Path(SESSIONS_DIR) / f"{session_id}/L2.json").as_posix()
+    return (Path(SESSIONS_DIR) / f"{session_id}/full.jsonl").as_posix()
 
 
 def delete_session(session_id: str) -> None:
@@ -27,7 +27,8 @@ def read_session(session_id: str) -> list[dict[str, Any]]:
     if path.stat().st_size == 0:
         return []
 
-    return json.loads(path.read_text(encoding="utf-8"))
+    text_lines = path.read_text(encoding="utf-8").splitlines()
+    return [json.loads(line) for line in text_lines if len(line) > 0]
 
 
 def append_session_message(session_id: str, message: dict[str, Any]) -> None:
@@ -36,23 +37,14 @@ def append_session_message(session_id: str, message: dict[str, Any]) -> None:
     # 总是先确保目录存在
     path.parent.mkdir(parents=True, exist_ok=True)
 
-    if path.exists():
-        if path.stat().st_size == 0:
-            data = []
-        else:
-            data = json.loads(path.read_text(encoding="utf-8"))
-    else:
-        data = []
-
-    data.append(message)
-    path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
-
+    with path.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(message, ensure_ascii=False) + "\n")
 
 def list_sessions() -> list[dict[str, Any]]:
     if not SESSIONS_DIR.exists():
         return []
     items: list[dict[str, Any]] = []
-    for path in SESSIONS_DIR.glob("*/L2.json"):
+    for path in SESSIONS_DIR.glob("*/full.jsonl"):
         stat = path.stat()
         items.append(
             {
