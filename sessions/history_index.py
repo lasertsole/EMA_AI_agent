@@ -93,7 +93,7 @@ def get_tsid_map_path(agent_dir: str)-> str:
 
 
 def _session_path(session_id: str) -> str:
-    return (Path(SESSIONS_DIR) / f"{session_id}/full.jsonl").as_posix()
+    return (Path(SESSIONS_DIR) / f"{session_id}/current.jsonl").as_posix()
 
 def format_date()->str:
     now = datetime.now()
@@ -105,7 +105,7 @@ def format_date()->str:
 def read_session_messages(sessions_dir: str, session_id: str)-> str:
     """L2: 读取完整对话（内部使用）"""
     session_dir: Path = Path(sessions_dir) / f"{session_id}"
-    json_path: Path = session_dir / "full.jsonl"
+    json_path: Path = session_dir / "current.jsonl"
 
     if not json_path.exists():
         return ""

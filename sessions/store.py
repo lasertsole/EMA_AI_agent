@@ -8,7 +8,7 @@ from pathlib import Path
 from config import SESSIONS_DIR
 
 def _session_path(session_id: str) -> str:
-    return (Path(SESSIONS_DIR) / f"{session_id}/full.jsonl").as_posix()
+    return (Path(SESSIONS_DIR) / f"{session_id}/current.jsonl").as_posix()
 
 
 def delete_session(session_id: str) -> None:
