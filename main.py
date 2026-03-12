@@ -10,11 +10,9 @@ from langgraph.errors import GraphRecursionError
 
 from agent import agent
 from pathlib import Path
-import concurrent.futures
 from dotenv import load_dotenv
 from typing import List, Optional
 from typing import AsyncGenerator
-from asyncio import AbstractEventLoop
 from tasks.queue import BackgroundTaskQueue
 from langchain.messages import AIMessageChunk
 from models import TTS_Request, fetch_TTS_sound

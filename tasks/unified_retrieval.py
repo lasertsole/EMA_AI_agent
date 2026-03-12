@@ -27,7 +27,7 @@ def _load_knowledge_index() -> Any:
     if not KNOWLEDGE_INDEX_DIR.exists() or not any(KNOWLEDGE_INDEX_DIR.iterdir()):
         docs = []
         if KNOWLEDGE_DIR.exists():
-            docs = SimpleDirectoryReader(str(KNOWLEDGE_DIR)).load_data()
+            docs = SimpleDirectoryReader(input_dir = str(KNOWLEDGE_DIR), exclude=["**/index/**"]).load_data()
         index = VectorStoreIndex.from_documents(docs)
         KNOWLEDGE_INDEX_DIR.mkdir(parents=True, exist_ok=True)
         index.storage_context.persist(persist_dir=str(KNOWLEDGE_INDEX_DIR))
