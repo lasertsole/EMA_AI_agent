@@ -1,10 +1,9 @@
-from .web_search import web_search
+from .web_search import web_search_tool
 from .fetch_url import build_fetch_tool
 from .python_repl import build_python_repl_tool
-from .rag import search_knowledge_base
+from .rag import search_knowledge_tool
 from .read_file import build_read_file_tool
 from .terminal import build_terminal_tool
-from langchain_core.tools import Tool
 
 # 核心工具
 CORE_TOOLS = [
@@ -15,12 +14,8 @@ CORE_TOOLS = [
 # 全部工具
 ALL_TOOLS = [
     *CORE_TOOLS,
-    web_search,
+    search_knowledge_tool,
+    web_search_tool,
     build_terminal_tool(),
     build_fetch_tool(),
-    Tool.from_function(
-        name="search_knowledge_base",
-        description="Hybrid retrieval over local knowledge base.",
-        func=search_knowledge_base,
-    ),
 ]
