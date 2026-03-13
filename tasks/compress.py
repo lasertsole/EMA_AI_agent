@@ -7,10 +7,12 @@ from datetime import datetime
 import json
 import logging
 from typing import Any
+from pathlib import Path
+
 
 from config import (
     COMPRESS_THRESHOLD,
-    COMPRESSED_SESSIONS_DIR,
+    MEMORY_INDEX_DIR,
     SESSIONS_DIR,
 )
 from sessions.store import read_session
@@ -24,7 +26,7 @@ def _calculate_total_chars(messages: list[dict[str, Any]]) -> int:
 
 
 def _split_messages(
-    messages: list[dict[str, Any]], ratio: float = 0.5
+    messages: list[dict[str, Any]], ratio: float = 0.5  # ratio 值越大，旧消息数组（要被压缩的部分）就越大。
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     """Split messages into old (to compress) and new (to keep)."""
     total_chars = _calculate_total_chars(messages)
@@ -99,9 +101,13 @@ async def compress_session(session_id: str) -> None:
         logger.exception("Failed to summarize session %s", session_id)
         return
 
-    COMPRESSED_SESSIONS_DIR.mkdir(parents=True, exist_ok=True)
-    output_path = COMPRESSED_SESSIONS_DIR / f"{session_id}.md"
-    output_path.write_text(
+    tar_folder = Path(SESSIONS_DIR) / session_id
+
+    # 确保目录存在
+    tar_folder.parent.mkdir(parents=True, exist_ok=True)
+
+    summary_path = tar_folder / "summary.md"
+    summary_path.write_text(
         f"""# Compressed Session: {session_id}
 
 {summary}
@@ -112,8 +118,12 @@ async def compress_session(session_id: str) -> None:
         encoding="utf-8",
     )
 
-    session_path = SESSIONS_DIR / f"{session_id}/L2.json"
-    session_path.write_text(
-        json.dumps(new_messages, ensure_ascii=False, indent=2),
-        encoding="utf-8",
-    )
+    # 将要保留下来的新数据覆盖回current.jsonl
+    current_path = tar_folder / "current.jsonl"
+    current_path.write_text("\n".join(json.dumps(m, ensure_ascii=False) for m in new_messages) + "\n", encoding="utf-8")
+
+    # 将要旧数据追加到history.jsonl
+    history_path = tar_folder / "history.jsonl"
+    with history_path.open("a", encoding="utf-8") as f:
+        for m in old_messages:
+            f.write(json.dumps(m, ensure_ascii=False) + "\n")

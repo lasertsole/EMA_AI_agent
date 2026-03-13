@@ -204,11 +204,6 @@ if __name__ == "__main__":
             if task_queue:
                 threading.Thread(target=lambda: task_queue.enqueue_memory_index(memory_entry)).start()
 
-        # 如果达到压缩阈值，则压缩历史会话
-        total_chars = sum(len(m.get("content", "")) for m in _history) + len(_user_input)
-        if total_chars > COMPRESS_THRESHOLD and task_queue:
-            threading.Thread(target=lambda: task_queue.enqueue_compress(session_id)).start()
-
         # 添加AI消息框UI
         with st.chat_message("assistant", avatar="./src/avatar/assistant.jpg"):
             stream = _async_generator(_history, _user_input, _config)
@@ -234,3 +229,8 @@ if __name__ == "__main__":
 
             # 将消息持久化
             _storage_add_chat(dict(role = "assistant", content = _content), files = [file] if file is not None else None)
+
+            # 如果达到压缩阈值，则压缩历史会话
+            total_chars = sum(len(m.get("content", "")) for m in _history) + len(_user_input)
+            if total_chars > COMPRESS_THRESHOLD and task_queue:
+                task_queue.enqueue_compress(session_id)

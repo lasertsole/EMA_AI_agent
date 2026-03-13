@@ -2,8 +2,8 @@
 
 import asyncio
 import logging
+from time import sleep
 from typing import Any, Literal
-from asyncio import AbstractEventLoop
 
 logger = logging.getLogger(__name__)
 
@@ -16,6 +16,7 @@ class BackgroundTaskQueue:
     def __init__(self) -> None:
         self.queue: asyncio.Queue[tuple[TaskType, dict[str, Any]]] = asyncio.Queue()
         self._event_loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self._event_loop)
 
     def start(self) -> None:
         """Start the background worker."""
@@ -42,10 +43,11 @@ class BackgroundTaskQueue:
             finally:
                 self.queue.task_done()
 
-    async def enqueue_compress(self, session_id: str) -> None:
-        """Enqueue a session compression task."""
-        await self.queue.put(("compress_session", {"session_id": session_id}))
+    def enqueue_compress(self, session_id: str) -> None:
+        coro = self.queue.put(("compress_session", {"session_id": session_id}))
+        asyncio.run_coroutine_threadsafe(coro, self._event_loop)
 
-    async def enqueue_memory_index(self, new_content: str) -> None:
+    def enqueue_memory_index(self, new_content: str) -> None:
         """Enqueue a memory index update task."""
-        await self.queue.put(("update_memory_index", {"new_content": new_content}))
+        coro = self.queue.put(("update_memory_index", {"new_content": new_content}))
+        asyncio.run_coroutine_threadsafe(coro, self._event_loop)
