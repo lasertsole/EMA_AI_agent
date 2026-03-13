@@ -42,7 +42,6 @@ DEFAULT_RECENT_TURNS = 5
 
 TIMELINE_FILE = "timeline.md"
 DECISIONS_FILE = "decisions.md"
-TSID_MAP_FILE = "tsid-session-map.json"
 
 # ========================
 #  类和字典
@@ -86,11 +85,7 @@ def get_decisions_path(agent_dir: str, session_id: str)-> str:
     return (Path(get_sessions_dir(agent_dir)) / session_id / DECISIONS_FILE).as_posix()
 
 def get_timeline_path(agent_dir: str, session_id: str)-> str:
-    return (Path(get_sessions_dir(agent_dir)) / session_id / TIMELINE_FILE).as_posix()
-
-def get_tsid_map_path(agent_dir: str)-> str:
-    return (Path(get_sessions_dir(agent_dir)) / TSID_MAP_FILE).as_posix()
-
+        return (Path(get_sessions_dir(agent_dir)) / session_id / TIMELINE_FILE).as_posix()
 
 def _session_path(session_id: str) -> str:
     return (Path(SESSIONS_DIR) / f"{session_id}/current.jsonl").as_posix()
@@ -289,33 +284,6 @@ def generate_tsid()->str:
     return f"{year}{month}{day}{hour}{minute}{second}"
 
 """
-读取 tsid→sessionId 映射表
-文件: history/tsid-session-map.json
-格式: { "202602260705": "640b4847-...", ... }
-"""
-def load_tsid_session_map(agent_dir: str)-> dict[str, str]:
-    map_path = Path(get_tsid_map_path(agent_dir))
-
-    try:
-        raw = map_path.read_text(encoding="utf-8")
-        return json.loads(raw)
-    except Exception:
-        return {}
-
-"""
-保存 tsid→sessionId 映射（追加写入）
-"""
-def save_tsid_mapping(agent_dir: str, tsid: str, sessionId: str)-> None:
-    map_path = Path(get_tsid_map_path(agent_dir))
-    existing = load_tsid_session_map(agent_dir)
-    existing[tsid] = sessionId
-    map_path.parent.mkdir(parents=True, exist_ok=True)
-
-    with map_path.open("w", encoding="utf-8") as f:
-        json.dump(existing, f, ensure_ascii=False, indent=2)
-
-
-"""
 写入：每轮结束后从 L2 生成 L0 + L1
 """
 async def append_timeline_entry(
@@ -330,9 +298,6 @@ async def append_timeline_entry(
 
         tsid = generate_tsid()
         date_str = format_date()
-
-        # 保存 tsid→sessionId 映射
-        save_tsid_mapping(agent_dir, tsid, session_id)
 
         sessions_dir = get_sessions_dir(agent_dir)
         full_conversation = read_session_messages(sessions_dir, session_id)
@@ -505,12 +470,10 @@ async def load_l0_timeline(agent_dir: str, session_id: str) -> dict[str, Any]:
             "prompt": "",
             "raw_timeline": "",
             "recent_turns": DEFAULT_RECENT_TURNS,
-            "date_tsid_map": {},
-            "tsid_session_map": {},
+            "date_tsid_map": {}
         }
 
     date_tsid_map = build_date_tsid_map(timeline)
-    tsid_session_map = load_tsid_session_map(agent_dir)
 
     prompt = f"<conversation_timeline>\n以下是历史对话的时间线索引：\n{timeline}\n </conversation_timeline>"
 
@@ -519,8 +482,7 @@ async def load_l0_timeline(agent_dir: str, session_id: str) -> dict[str, Any]:
         "prompt": prompt,
         "raw_timeline": timeline,
         "recent_turns": DEFAULT_RECENT_TURNS,
-        "date_tsid_map": date_tsid_map,
-        "tsid_session_map": tsid_session_map,
+        "date_tsid_map": date_tsid_map
     }
 
 async def load_layered_history(
