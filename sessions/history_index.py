@@ -113,7 +113,7 @@ def read_session_messages(sessions_dir: str, session_id: str)-> str:
         text_lines = json_path.read_text(encoding="utf-8").splitlines()
         messages = [json.loads(line.strip()) for line in text_lines if len(line) > 0]
         recent = messages[-MAX_MESSAGES_TO_READ:]
-        return "\n\n".join([f"{r["role"]}: {r["content"]}" for r in recent])
+        return "\n\n".join([f"{r['role']}: {r['content']}" for r in recent])
     except Exception:
         return ""
 
@@ -518,7 +518,7 @@ async def load_l0_timeline(agent_dir: str, session_id: str) -> dict[str, Any]:
         "available": True,
         "prompt": prompt,
         "raw_timeline": timeline,
-        "recentTurns": DEFAULT_RECENT_TURNS,
+        "recent_turns": DEFAULT_RECENT_TURNS,
         "date_tsid_map": date_tsid_map,
         "tsid_session_map": tsid_session_map,
     }
