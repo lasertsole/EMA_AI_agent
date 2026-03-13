@@ -2,7 +2,6 @@
 
 import asyncio
 import logging
-from time import sleep
 from typing import Any, Literal
 
 logger = logging.getLogger(__name__)
@@ -16,7 +15,6 @@ class BackgroundTaskQueue:
     def __init__(self) -> None:
         self.queue: asyncio.Queue[tuple[TaskType, dict[str, Any]]] = asyncio.Queue()
         self._event_loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self._event_loop)
 
     def start(self) -> None:
         """Start the background worker."""

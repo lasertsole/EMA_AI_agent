@@ -1,13 +1,9 @@
 import os
 import re
+import requests
 import threading
 from typing import Any
-
-import requests
 import streamlit as st
-from langchain_core.tools import ToolException
-from langgraph.errors import GraphRecursionError
-
 from agent import agent
 from pathlib import Path
 from dotenv import load_dotenv
@@ -15,13 +11,13 @@ from typing import List, Optional
 from typing import AsyncGenerator
 from tasks.queue import BackgroundTaskQueue
 from langchain.messages import AIMessageChunk
+from langchain_core.tools import ToolException
+from langchain_core.messages import BaseMessage
+from langgraph.errors import GraphRecursionError
 from models import TTS_Request, fetch_TTS_sound
 from config import COMPRESS_THRESHOLD, MEMORY_DIR
-from workspace.prompt_builder import build_system_prompt
-from sessions.history_index import generate_tsid
-from sessions.store import append_session_message, read_session
 from utils import File, FileType, ChatStorage as Streamlit_ChatStorage
-from langchain_core.messages import AIMessage, HumanMessage, ToolMessage, SystemMessage, BaseMessage
+from sessions import to_messages, generate_tsid, append_session_message, read_session
 
 env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), './.env')
 load_dotenv(env_path, override=True)
@@ -76,30 +72,9 @@ def _append_memory(entry: str) -> None:
 
 
 #"""以下是组织信息列表逻辑"""
-def _to_messages(history: list[dict[str, Any]], user_input: str) -> list[BaseMessage]:
-    """将历史对话和当前用户输入拼接成消息队列"""
-    messages: list[Any] = []
-    for m in history:
-        role = m.get("role")
-        if role == "user":
-            messages.append(HumanMessage(content=m.get("content", "")))
-        elif role == "assistant":
-            messages.append(AIMessage(content=m.get("content", "")))
-        elif role == "tool":
-            messages.append(
-                ToolMessage(
-                    content=m.get("content", ""),
-                    tool_call_id=m.get("tool_call_id", ""),
-                )
-            )
-    messages.append(HumanMessage(content = user_input))
-    return messages
-
 async def _async_generator(history: list[dict[str, Any]], user_input: str, config: dict[str, Any])-> AsyncGenerator[str, None]:
     # 创建消息队列
-    messages: list[BaseMessage] = _to_messages(history, user_input)
-    # 插入系统提示词
-    messages.insert(0, SystemMessage(content=build_system_prompt()))
+    messages: list[BaseMessage] = to_messages(history, user_input)
     messages_dict = {"messages": messages}
 
     try:
@@ -169,7 +144,7 @@ if __name__ == "__main__":
 
     # 创建历史聊天消息UI列表
     for _chat in chat_list:
-        with st.chat_message(_chat["role"], avatar=f"./src/avatar/{_chat["role"]}.jpg"):
+        with st.chat_message(_chat["role"], avatar=f"./src/avatar/{_chat['role']}.jpg"):
             st.markdown(_chat["content"])
             if _chat["audio_path_list"]:
                 for file_path in _chat["audio_path_list"]:

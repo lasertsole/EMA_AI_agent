@@ -12,7 +12,6 @@ from pathlib import Path
 
 from config import (
     COMPRESS_THRESHOLD,
-    MEMORY_INDEX_DIR,
     SESSIONS_DIR,
 )
 from sessions.store import read_session
