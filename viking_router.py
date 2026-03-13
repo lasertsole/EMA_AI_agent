@@ -195,7 +195,7 @@ def build_skill_names_only_prompt(skills: List[SkillIndexEntry])-> str:
     TODO 主入口
 """
 async def viking_route(
-  prompt: str,
+  user_message: str,
   tools: List[str],
   file_names: List[str],
   skills: List[SkillIndexEntry],
@@ -216,7 +216,7 @@ async def viking_route(
             "needsL2": False,
         }
                     
-    if not prompt or len(prompt.strip()) == 0:
+    if not user_message or len(user_message.strip()) == 0:
         return {
             "tools": set(CORE_TOOL_NAMES),
             "files": set(),
@@ -228,7 +228,7 @@ async def viking_route(
             "needsL2": False,
         }
 
-    routing_prompt = build_routing_prompt(user_message= prompt, file_names= file_names, skills= skills, timeline= timeline)
+    routing_prompt = build_routing_prompt(user_message = user_message, file_names = file_names, skills = skills, timeline = timeline)
     result = call_routing_model(system = routing_prompt["system"], user = routing_prompt["user"])
 
     if result is None:

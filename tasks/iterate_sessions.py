@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
-from models import base_model
-from datetime import datetime
 import json
 import logging
 from typing import Any
 from pathlib import Path
+from tools import ALL_TOOLS
+from config import ROOT_DIR
+from models import base_model
+from datetime import datetime
+from sessions import append_timeline_entry
 
 
 from config import (
@@ -83,8 +86,8 @@ Output format:
     return str(content)
 
 
-async def compress_session(session_id: str) -> None:
-    """Compress old session messages to knowledge base."""
+async def iterate_session(session_id: str) -> None:
+    """iterate session messages."""
     messages = read_session(session_id)
 
     if _calculate_total_chars(messages) < COMPRESS_THRESHOLD:
@@ -95,7 +98,7 @@ async def compress_session(session_id: str) -> None:
         return
 
     try:
-        summary = _generate_summary(old_messages)
+        await append_timeline_entry(agent_dir = ROOT_DIR, session_id = session_id, tool_metas = [t["name"] for t in ALL_TOOLS])
     except Exception:
         logger.exception("Failed to summarize session %s", session_id)
         return
@@ -104,18 +107,6 @@ async def compress_session(session_id: str) -> None:
 
     # 确保目录存在
     tar_folder.parent.mkdir(parents=True, exist_ok=True)
-
-    summary_path = tar_folder / "summary.md"
-    summary_path.write_text(
-        f"""# Compressed Session: {session_id}
-
-{summary}
-
----
-*Compressed at: {datetime.now().isoformat()}*
-""",
-        encoding="utf-8",
-    )
 
     # 将要保留下来的新数据覆盖回current.jsonl
     current_path = tar_folder / "current.jsonl"

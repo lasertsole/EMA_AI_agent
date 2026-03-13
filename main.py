@@ -12,12 +12,13 @@ from typing import AsyncGenerator
 from tasks.queue import BackgroundTaskQueue
 from langchain.messages import AIMessageChunk
 from langchain_core.tools import ToolException
-from langchain_core.messages import BaseMessage
 from langgraph.errors import GraphRecursionError
 from models import TTS_Request, fetch_TTS_sound
 from config import COMPRESS_THRESHOLD, MEMORY_DIR
+from workspace.prompt_builder import build_system_prompt
 from utils import File, FileType, ChatStorage as Streamlit_ChatStorage
-from sessions import to_messages, generate_tsid, append_session_message, read_session
+from sessions import generate_tsid, append_session_message, read_session
+from langchain_core.messages import AIMessage, HumanMessage, ToolMessage, SystemMessage, BaseMessage
 
 env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), './.env')
 load_dotenv(env_path, override=True)
@@ -69,12 +70,30 @@ def _append_memory(entry: str) -> None:
     path.write_text(updated, encoding="utf-8")
 #"""以上是主动记忆功能"""
 
-
+#"""以下是组织信息列表逻辑"""
+def _to_messages(history: list[dict[str, Any]], user_input: str) -> list[BaseMessage]:
+    """将历史对话和当前用户输入拼接成消息队列"""
+    messages: list[Any] = [SystemMessage(content=build_system_prompt())]
+    for m in history:
+        role = m.get("role")
+        if role == "user":
+            messages.append(HumanMessage(content=m.get("content", "")))
+        elif role == "assistant":
+            messages.append(AIMessage(content=m.get("content", "")))
+        elif role == "tool":
+            messages.append(
+                ToolMessage(
+                    content=m.get("content", ""),
+                    tool_call_id=m.get("tool_call_id", ""),
+                )
+            )
+    messages.append(HumanMessage(content = user_input))
+    return messages
 
 #"""以下是组织信息列表逻辑"""
 async def _async_generator(history: list[dict[str, Any]], user_input: str, config: dict[str, Any])-> AsyncGenerator[str, None]:
     # 创建消息队列
-    messages: list[BaseMessage] = to_messages(history, user_input)
+    messages: list[BaseMessage] = _to_messages(history, user_input)
     messages_dict = {"messages": messages}
 
     try:
@@ -158,11 +177,11 @@ if __name__ == "__main__":
         accept_file=True,
         file_type=["png", "jpg", "jpeg"],
     )
-    
+
     if user_input_obj:
         _user_input = user_input_obj.text
         _files = user_input_obj.files
-        
+
         # 添加用户消息框UI
         with st.chat_message("user", avatar="./src/avatar/user.jpg"):
             st.markdown(f"{user_name}:{_user_input}")
