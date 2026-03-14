@@ -165,7 +165,7 @@ if __name__ == "__main__":
     for _chat in chat_list:
         with st.chat_message(_chat["role"], avatar=f"./src/avatar/{_chat['role']}.jpg"):
             st.markdown(_chat["content"])
-            if _chat["audio_path_list"]:
+            if "audio_path_list" in _chat and _chat["audio_path_list"] is not None:
                 for file_path in _chat["audio_path_list"]:
                     if Path(file_path).exists():
                         with open(file_path, "rb") as f:
