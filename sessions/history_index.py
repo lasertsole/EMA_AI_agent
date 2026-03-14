@@ -4,9 +4,10 @@ import json
 from pathlib import Path
 from datetime import datetime
 from dotenv import load_dotenv
-from langchain_core.messages import SystemMessage, HumanMessage
+from langchain_core.messages import SystemMessage, HumanMessage, BaseMessage
+from langchain_core.prompts import SystemMessagePromptTemplate, ChatPromptTemplate
 from pydantic import BaseModel, Field
-from config import SESSIONS_DIR
+from config import SESSIONS_DIR, ROOT_DIR
 from typing import Any, List, Optional
 from langchain.chat_models import init_chat_model
 
@@ -59,7 +60,12 @@ class Message:
 
 class Summary(BaseModel):
     l0: str = Field(description="一句话极简概括，10-20字，只说做了什么事，不要带任何前缀符号")
-    l1: str = Field(description="如果本轮有关键技术内容，列出具体细节；如果只是闲聊/问候，输出'无'")
+    l1: List[str] = Field(description="如果本轮有关键步骤内容，列出具体细节.如果没有步骤信息，则不输出", examples= [[
+        "- 具体步骤：第一步寻找彩叶本人或手镯，第二步获取手镯，第三步激活手镯连接月读世界",
+        "- 搜索策略：先询问相关人员，搜索实验室位置，寻找活动痕迹，重点搜索东京科技园区、大学机械工程系、义体技术研究中心",
+        "- 时间线分析：发现辉夜等待八千年与彩叶是现代人的矛盾，推测月读世界时间流速不同或手镯有时空功能",
+        "- 备用方案：寻找月读世界其他入口，联系其他知道月读世界的人，使用魔法少女特殊能力",
+    ]])
 
 # L1 加载结果（按日期按需加载）
 class L1DecisionsResult(BaseModel):
@@ -246,10 +252,9 @@ def extract_tsids_from_L0(
 输入: "- 决策1\n- 决策2"
 输出: "- [202602260705] 决策1\n- [202602260705] 决策2"
 """
-def add_tsid_to_l1(l1_text: str, tsid: str)-> str:
-    lines = "\n".split(l1_text)
+def add_tsid_to_l1(l1_text: List[str], tsid: str)-> str:
     tagged = []
-    for line in lines:
+    for line in l1_text:
         trimmed = line.strip()
         if trimmed.startswith("- "):
             # 检查是否已经有 [12 位数字]
@@ -286,22 +291,16 @@ def generate_tsid()->str:
 """
 写入：每轮结束后从 L2 生成 L0 + L1
 """
-async def append_timeline_entry(
-    agent_dir: str,
+def append_timeline_entry(
+    messages: List[BaseMessage],
     session_id: str,
     tool_metas: List[str],
 )-> None:
     try:
-        # 总是先确保目录存在
-        path = Path(_session_path(session_id))
-        path.parent.mkdir(parents=True, exist_ok=True)
-
         tsid = generate_tsid()
         date_str = format_date()
 
-        sessions_dir = get_sessions_dir(agent_dir)
-        full_conversation = read_session_messages(sessions_dir, session_id)
-        if not full_conversation:
+        if not messages:
             return
 
         tool_list = ", ".join(tool_metas) or "无"
@@ -311,23 +310,28 @@ async def append_timeline_entry(
             "严格按以下格式输出，不要输出任何其他内容：\n"
             "L0 是时间线目录，要极度精简，像书的章节标题。注意：只输出摘要文本本身，不要输出时间戳、不要输出\"- \"前缀，这些由系统自动添加。\n\n"
             "L1 是详细摘要，要包含具体的：\n"
-            " - 技术方案（用了什么库、什么方法）\n"
-            " - 文件路径、配置参数的具体值\n"
-            " - 代码改动（改了哪个文件、具体改了什么逻辑、为什么改）\n"
-            " - bug 根因和修复方式\n"
+            " - 技术方案（用了什么步骤、什么方法）\n"
+            " - 程序配置类：文件路径、配置参数的具体值 其他类：具体材料、参数等\n"
+            " - 程序配置类：代码改动（改了哪个文件、具体改了什么逻辑、为什么改） 其他类：做了什么 遵循什么逻辑 为什么这么做 等\n"
+            " - 程序配置类：bug 根因和修复方式 其他类： 事件归因和解决方法\n"
             " - 确认的结论和共识\n\n"
             "L1 每条要有足够的细节，让人不看原文也能知道具体怎么做的。每条决策用 \"- \" 开头，一行一条。"
         )
-        user = f"""===== 完整对话 =====
-{full_conversation}
+        user = """===== 对话内容 =====
+{messages_str}
 
 ===== 使用的工具 =====
 {tool_list}
 
 请按格式生成 [L0] 和 [L1]。"""
 
-        summary: BaseModel = summary_LLM.with_structured_output(Summary).invoke(
-            [SystemMessage(content = system), HumanMessage(content = user)],
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", system),
+            ("human", user)
+        ])
+
+        summary: BaseModel = (prompt | summary_LLM.with_structured_output(Summary)).invoke(
+            {"messages_str": "\n".join([f"**{m.type}**:{m.content}\n\n" for m in messages]), "tool_list": tool_list},
             max_tokens = 800
         )
 
@@ -342,19 +346,20 @@ async def append_timeline_entry(
             l0_summary = re.sub(r'^\d{12}\s*\|\s*', '', l0_summary)
 
             l0_line = f"- {tsid} | {l0_summary}"
-            timeline_path = get_timeline_path(agent_dir, session_id)
+            timeline_path = get_timeline_path(ROOT_DIR, session_id)
             Path(timeline_path).parent.mkdir(parents=True, exist_ok=True)
 
             with open(timeline_path, "a", encoding="utf-8") as f:
                 f.write(l0_line + "\n")
 
         # 写入 L1（每条决策添加 [tsid] 前缀）
-        if summary.l1:
+        if summary.l1 is not None and len(summary.l1) > 0:
             l1_with_tsid = add_tsid_to_l1(summary.l1, tsid)
-            decisions_path = get_decisions_path(agent_dir, session_id)
+            decisions_path = get_decisions_path(ROOT_DIR, session_id)
             existing = safe_read_file(decisions_path).strip()
 
             today_header = f"## {date_str}"
+            print(f"existing: {today_header}")
 
             if today_header in existing:
                 with open(decisions_path, "a", encoding="utf-8") as f:
@@ -362,7 +367,7 @@ async def append_timeline_entry(
             else:
                 separator = "\n\n" if len(existing) > 0 else ""
                 with open(decisions_path, "a", encoding="utf-8") as f:
-                    f.write(separator + today_header + "\n\n" + l1_with_tsid + "\n")
+                    f.write(separator + today_header + "\n" + l1_with_tsid)
 
     except Exception as e:
         print(e)

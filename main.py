@@ -15,6 +15,7 @@ from langchain_core.tools import ToolException
 from langgraph.errors import GraphRecursionError
 from models import TTS_Request, fetch_TTS_sound
 from config import COMPRESS_THRESHOLD, MEMORY_DIR
+from sessions.history_index import append_timeline_entry
 from workspace.prompt_builder import build_system_prompt
 from utils import File, FileType, ChatStorage as Streamlit_ChatStorage
 from sessions import generate_tsid, append_session_message, read_session
@@ -223,6 +224,8 @@ if __name__ == "__main__":
 
             # 将消息持久化
             _storage_add_chat(dict(role = "assistant", content = _content), files = [file] if file is not None else None)
+
+            append_timeline_entry(messages = [HumanMessage(content=_user_input), AIMessage(content=_content)], session_id = session_id, tool_metas = [])
 
             # 如果达到压缩阈值，则压缩历史会话
             total_chars = sum(len(m.get("content", "")) for m in _history) + len(_user_input)

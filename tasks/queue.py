@@ -6,7 +6,7 @@ from typing import Any, Literal
 
 logger = logging.getLogger(__name__)
 
-TaskType = Literal["iterate_session", "update_memory_index"]
+TaskType = Literal["compress_session", "update_memory_index"]
 
 
 class BackgroundTaskQueue:
@@ -27,10 +27,10 @@ class BackgroundTaskQueue:
         while True:
             task_type, data = await self.queue.get()
             try:
-                if task_type == "iterate_session":
+                if task_type == "compress_session":
                     # Import here to avoid circular dependency
-                    from tasks.iterate_sessions import iterate_session
-                    await iterate_session(data["session_id"])
+                    from tasks.compress_sessions import compress_session
+                    await compress_session(data["session_id"])
                 elif task_type == "update_memory_index":
                     from tasks.memory_index import update_memory_index_incremental
                     await update_memory_index_incremental(data["new_content"])
@@ -42,7 +42,7 @@ class BackgroundTaskQueue:
                 self.queue.task_done()
 
     def enqueue_compress(self, session_id: str) -> None:
-        coro = self.queue.put(("iterate_session", {"session_id": session_id}))
+        coro = self.queue.put(("compress_session", {"session_id": session_id}))
         asyncio.run_coroutine_threadsafe(coro, self._event_loop)
 
     def enqueue_memory_index(self, new_content: str) -> None:

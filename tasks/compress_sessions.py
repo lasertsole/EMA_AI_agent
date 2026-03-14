@@ -86,8 +86,8 @@ Output format:
     return str(content)
 
 
-async def iterate_session(session_id: str) -> None:
-    """iterate session messages."""
+async def compress_session(session_id: str) -> None:
+    """Compress old session messages to knowledge base."""
     messages = read_session(session_id)
 
     if _calculate_total_chars(messages) < COMPRESS_THRESHOLD:
@@ -98,7 +98,7 @@ async def iterate_session(session_id: str) -> None:
         return
 
     try:
-        await append_timeline_entry(agent_dir = ROOT_DIR, session_id = session_id, tool_metas = [t["name"] for t in ALL_TOOLS])
+        summary = _generate_summary(old_messages)
     except Exception:
         logger.exception("Failed to summarize session %s", session_id)
         return
@@ -107,6 +107,18 @@ async def iterate_session(session_id: str) -> None:
 
     # 确保目录存在
     tar_folder.parent.mkdir(parents=True, exist_ok=True)
+
+    summary_path = tar_folder / "summary.md"
+    summary_path.write_text(
+        f"""# Compressed Session: {session_id}
+
+{summary}
+
+---
+*Compressed at: {datetime.now().isoformat()}*
+""",
+        encoding="utf-8",
+    )
 
     # 将要保留下来的新数据覆盖回current.jsonl
     current_path = tar_folder / "current.jsonl"
