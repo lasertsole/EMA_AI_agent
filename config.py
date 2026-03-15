@@ -9,7 +9,7 @@ WORKSPACE_DIR = ROOT_DIR / "workspace"
 KNOWLEDGE_DIR = ROOT_DIR / "knowledge"
 
 # Compression and RAG thresholds
-COMPRESS_THRESHOLD = 20_0
+COMPRESS_THRESHOLD = 10_0
 MEMORY_THRESHOLD = 10_0
 
 # Additional directories

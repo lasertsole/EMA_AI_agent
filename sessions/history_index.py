@@ -4,8 +4,8 @@ import json
 from pathlib import Path
 from datetime import datetime
 from dotenv import load_dotenv
-from langchain_core.messages import SystemMessage, HumanMessage, BaseMessage
-from langchain_core.prompts import SystemMessagePromptTemplate, ChatPromptTemplate
+from langchain_core.messages import BaseMessage
+from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
 from config import SESSIONS_DIR, ROOT_DIR
 from typing import Any, List, Optional
@@ -44,6 +44,12 @@ DEFAULT_RECENT_TURNS = 5
 TIMELINE_FILE = "timeline.md"
 DECISIONS_FILE = "decisions.md"
 
+
+L2_MAX_MESSAGES_PER_SESSION = 30 # L2 加载限制：每个 session 最多读取的消息数
+L2_MAX_CHARS_PER_MESSAGE = 2000 # L2 加载限制：每条消息最大字符数
+L2_MAX_SESSIONS = 2 # L2 加载限制：最多加载的 session 数
+L2_MAX_TOTAL_CHARS = 12000 # L2 加载限制：总输出最大字符数（约 4000 tok）
+
 # ========================
 #  类和字典
 # ========================
@@ -67,11 +73,7 @@ class Summary(BaseModel):
         "- 备用方案：寻找月读世界其他入口，联系其他知道月读世界的人，使用魔法少女特殊能力",
     ]])
 
-# L1 加载结果（按日期按需加载）
-class L1DecisionsResult(BaseModel):
-  available: bool
-  prompt: str # L1 关键决策文本
-
+# L0 加载结果
 class L0TimelineResult(BaseModel):
     available: bool
     prompt: str #L0 时间线文本，直接注入 system prompt
@@ -79,6 +81,17 @@ class L0TimelineResult(BaseModel):
     recentTurns: int # 分层模式下保留的最近对话轮数
     dateTsidMap: dict[str, List[str]] # 日期(YYYY-MM-DD) → 时间戳ID[] 映射
     tsidSessionMap: dict[str, str] # 时间戳ID → sessionId 映射（用于 L2 加载）
+
+# L1 加载结果（按日期按需加载）
+class L1DecisionsResult(BaseModel):
+  available: bool
+  prompt: str # L1 关键决策文本
+
+# L2 加载结果（按需加载）
+class L2SessionResult(BaseModel):
+  available: bool
+  prompt: str # L2 完整对话文本
+  loadedSessionIds: List[str] # 实际加载的 sessionId 列表
 
 
 # ========================
@@ -211,12 +224,11 @@ def build_date_tsid_map(timeline: str) -> dict[str, list[str]]:
 # ========================
 # L1 解析：从 decisions 文本中提取时间戳 ID
 # ========================
-
-"""
-从 L1 文本中提取所有时间戳 ID
-匹配格式: [202602260705]
-"""
 def extract_tsids(l1Text: str) -> List[str]:
+    """
+    从 L1 文本中提取所有时间戳 ID
+    匹配格式: [202602260705]
+    """
     ids: List[str] = []
     regex = re.compile(r'\[(\d{12})\]')
 
@@ -227,13 +239,14 @@ def extract_tsids(l1Text: str) -> List[str]:
 
     return ids
 
-"""
-从 L0 的 dateTsidMap 中根据日期提取时间戳 ID 列表
-"""
-def extract_tsids_from_L0(
+
+def extract_tsids_from_l0(
         l0_result: L0TimelineResult,
         dates: Optional[List[str]] = None,
 ) -> List[str]:
+    """
+    从 L0 的 dateTsidMap 中根据日期提取时间戳 ID 列表
+    """
     if not dates or len(dates) == 0:
         return []
 
@@ -247,12 +260,12 @@ def extract_tsids_from_L0(
 
     return ids
 
-"""
-给 L1 的每条决策添加 [tsid] 前缀
-输入: "- 决策1\n- 决策2"
-输出: "- [202602260705] 决策1\n- [202602260705] 决策2"
-"""
 def add_tsid_to_l1(l1_text: List[str], tsid: str)-> str:
+    """
+    给 L1 的每条决策添加 [tsid] 前缀
+    输入: "- 决策1\n- 决策2"
+    输出: "- [202602260705] 决策1\n- [202602260705] 决策2"
+    """
     tagged = []
     for line in l1_text:
         trimmed = line.strip()
@@ -273,11 +286,11 @@ def safe_read_file(file_path: str)-> str:
     except Exception:
         return ""
 
-"""
-生成时间戳 ID: YYYYMMDDHHmmss（如 202602260705）
-同时作为可读时间和唯一标识
-"""
 def generate_tsid()->str:
+    """
+    生成时间戳 ID: YYYYMMDDHHmmss（如 202602260705）
+    同时作为可读时间和唯一标识
+    """
     now = datetime.now()
     year = now.year
     month = str(now.month).zfill(2)
@@ -288,19 +301,19 @@ def generate_tsid()->str:
 
     return f"{year}{month}{day}{hour}{minute}{second}"
 
-"""
-写入：每轮结束后从 L2 生成 L0 + L1
-"""
 def append_timeline_entry(
     messages: List[BaseMessage],
     session_id: str,
     tool_metas: List[str],
 )-> None:
+    """
+    写入：每轮结束后从 L2 生成 L0 + L1
+    """
     try:
         tsid = generate_tsid()
         date_str = format_date()
 
-        if not messages:
+        if not messages or len(messages) == 0:
             return
 
         tool_list = ", ".join(tool_metas) or "无"
@@ -359,7 +372,6 @@ def append_timeline_entry(
             existing = safe_read_file(decisions_path).strip()
 
             today_header = f"## {date_str}"
-            print(f"existing: {today_header}")
 
             if today_header in existing:
                 with open(decisions_path, "a", encoding="utf-8") as f:
@@ -372,28 +384,49 @@ def append_timeline_entry(
     except Exception as e:
         print(e)
 
-"""
-读取 L1（按日期/时间戳ID 按需加载）
-"""
+# ========================
+# 读取 L0（始终加载）
+# ========================
+async def load_l0_timeline(session_id: str) -> dict[str, Any]:
+    """读取 L0（始终加载）"""
+    timeline_path = get_timeline_path(ROOT_DIR, session_id)
+    timeline = safe_read_file(timeline_path).strip()
 
-"""
-从 decisions.md 中提取指定日期和/或时间戳 ID 的决策内容
+    if not timeline:
+        return {
+            "available": False,
+            "prompt": "",
+            "raw_timeline": "",
+            "recent_turns": DEFAULT_RECENT_TURNS,
+            "date_tsid_map": {}
+        }
 
-decisions.md 格式：
-## 2026-02-24
-- [202602241600] 决策1
-- [202602241600] 决策2
+    date_tsid_map = build_date_tsid_map(timeline)
 
-## 2026-02-26
-- [202602260705] 决策3
+    prompt = f"<conversation_timeline>\n以下是历史对话的时间线索引：\n{timeline}\n </conversation_timeline>"
 
-过滤优先级：
-1. 如果指定了 tsids，精确匹配包含这些时间戳 ID 的条目
-2. 如果指定了 dates，加载整个日期段
-3. 都不指定则加载全部
-"""
-async def load_l1_decisions(
+    return {
+        "available": True,
+        "prompt": prompt,
+        "raw_timeline": timeline,
+        "recent_turns": DEFAULT_RECENT_TURNS,
+        "date_tsid_map": date_tsid_map
+    }
+
+async def load_layered_history(
     agent_dir: str,
+) -> dict[str, Any]:
+    l0 = await load_l0_timeline(agent_dir=agent_dir)
+    return {
+        "enabled": l0["available"],
+        "prompt": l0["prompt"],
+        "recent_turns": l0["recent_turns"],
+    }
+
+# ========================
+# 读取 L1（按日期/时间戳ID 按需加载）
+# ========================
+async def load_l1_decisions(
     # 会话 ID
     session_id: str,
     # 指定要加载的日期列表
@@ -401,7 +434,24 @@ async def load_l1_decisions(
     # 指定要加载的时间戳 ID 列表（更精确的过滤）
     tsids: Optional[List[str]] = None,
 )-> L1DecisionsResult:
-    decisions_path = get_decisions_path(agent_dir, session_id)
+    """
+    从 decisions.md 中提取指定日期和/或时间戳 ID 的决策内容
+
+    decisions.md 格式：
+    ## 2026-02-24
+    - [202602241600] 决策1
+    - [202602241600] 决策2
+
+    ## 2026-02-26
+    - [202602260705] 决策3
+
+    过滤优先级：
+    1. 如果指定了 tsids，精确匹配包含这些时间戳 ID 的条目
+    2. 如果指定了 dates，加载整个日期段
+    3. 都不指定则加载全部
+    """
+
+    decisions_path = get_decisions_path(ROOT_DIR, session_id)
     full_content = safe_read_file(decisions_path).strip()
 
     if full_content is None:
@@ -421,7 +471,7 @@ async def load_l1_decisions(
                 continue
 
 
-            tsid_match = re.search(r'\[(\d{12})\]', trimmed)
+            tsid_match = re.search(r'\[(\d{14})\]', trimmed)
             if tsid_match and tsid_match.group(1) in tsid_set:
                 if current_date_header and current_date_header not in filtered_lines:
                     if len(filtered_lines) > 0:
@@ -459,43 +509,106 @@ async def load_l1_decisions(
     # 无过滤，加载全部
     prompt = f"<key_decisions>\n以下是历史对话中提取的关键决策和技术细节：\n{full_content}\n</key_decisions>"
     return {"available": True, "prompt": prompt}
+
 # ========================
-# 读取 L0（始终加载）
+# L2: 按需加载（导出接口）
 # ========================
+def load_l2_session(session_ids: List[str], max_total_chars: Optional[int] = None) -> L2SessionResult:
+    """
+    按 sessionId 加载完整对话内容（L2）
 
+    触发条件：Viking 路由判断 needsL2: true
+    来源：从 L1/L0 提取时间戳 ID → 通过 tsidSessionMap 转换为 sessionId → 读取 JSONL
+    """
+    if not session_ids or len(session_ids) == 0:
+        return L2SessionResult(available=False, prompt="", loadedSessionIds=[])
 
-async def load_l0_timeline(agent_dir: str, session_id: str) -> dict[str, Any]:
-    """读取 L0（始终加载）"""
-    timeline_path = get_timeline_path(agent_dir, session_id)
-    timeline = safe_read_file(timeline_path).strip()
+    sessions_dir = get_sessions_dir(ROOT_DIR)
+    max_total = max_total_chars if max_total_chars is not None else L2_MAX_TOTAL_CHARS
 
-    if not timeline:
-        return {
-            "available": False,
-            "prompt": "",
-            "raw_timeline": "",
-            "recent_turns": DEFAULT_RECENT_TURNS,
-            "date_tsid_map": {}
-        }
+    # 限制最大会话数
+    target_ids = session_ids[:L2_MAX_SESSIONS]
+    loaded_parts: List[str] = []
+    loaded_ids: List[str] = []
+    total_chars = 0
 
-    date_tsid_map = build_date_tsid_map(timeline)
+    for sid in target_ids:
+        if total_chars >= max_total:
+            break
 
-    prompt = f"<conversation_timeline>\n以下是历史对话的时间线索引：\n{timeline}\n </conversation_timeline>"
+        jsonl_path = Path(sessions_dir) / f"{sid}.jsonl"
+        if not jsonl_path.exists():
+            print(f"[history] L2 session not found: {jsonl_path}")
+            continue
 
-    return {
-        "available": True,
-        "prompt": prompt,
-        "raw_timeline": timeline,
-        "recent_turns": DEFAULT_RECENT_TURNS,
-        "date_tsid_map": date_tsid_map
-    }
+        try:
+            raw = jsonl_path.read_text(encoding="utf-8")
+            lines = [line for line in raw.split("\n") if line.strip()]
 
-async def load_layered_history(
-    agent_dir: str,
-) -> dict[str, Any]:
-    l0 = await load_l0_timeline(agent_dir=agent_dir)
-    return {
-        "enabled": l0["available"],
-        "prompt": l0["prompt"],
-        "recent_turns": l0["recent_turns"],
-    }
+            messages: List[dict] = []
+
+            for line in lines:
+                try:
+                    entry = json.loads(line)
+                    if entry.get("type") != "message" or not entry.get("message"):
+                        continue
+
+                    role = entry["message"].get("role")
+                    if role not in ("user", "assistant"):
+                        continue
+
+                    content = entry["message"].get("content", "")
+
+                    # 处理 content 可能是字符串或数组
+                    text = ""
+                    if isinstance(content, str):
+                        text = content
+                    elif isinstance(content, list):
+                        text_blocks = [
+                            block.get("text", "")
+                            for block in content
+                            if block.get("type") == "text" and block.get("text")
+                        ]
+                        text = "\n".join(text_blocks)
+
+                    if text.strip():
+                        messages.append({
+                            "role": role,
+                            "text": text[:L2_MAX_CHARS_PER_MESSAGE]
+                        })
+                except:
+                    # skip invalid JSON lines
+                    pass
+
+            # 只保留最近的消息
+            recent = messages[-L2_MAX_MESSAGES_PER_SESSION:]
+            session_text = "\n\n".join([f"[{m['role']}]: {m['text']}" for m in recent])
+
+            if session_text:
+                remaining = max_total - total_chars
+                if len(session_text) > remaining:
+                    truncated = session_text[:remaining] + "\n...(truncated)"
+                else:
+                    truncated = session_text
+
+                loaded_parts.append(f"### Session: {sid}\n\n{truncated}")
+                loaded_ids.append(sid)
+                total_chars += len(truncated)
+        except Exception as err:
+            print(f"[history] L2 failed to read session {sid}: {err}")
+
+    if len(loaded_parts) == 0:
+        ids_str = ", ".join(target_ids)
+        print(f"[history] L2: no sessions loaded from [{ids_str}]")
+        return L2SessionResult(available=False, prompt="", loadedSessionIds=[])
+
+    content = "\n\n---\n\n".join(loaded_parts)
+    prompt = f"<full_conversation>\n以下是相关的完整对话记录：\n\n{content}\n</full_conversation>"
+
+    print(f"[history] L2 loaded: {len(loaded_ids)} sessions, {total_chars} chars")
+
+    return L2SessionResult(
+        available=True,
+        prompt=prompt,
+        loadedSessionIds=loaded_ids
+    )

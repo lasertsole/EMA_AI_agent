@@ -17,7 +17,7 @@ from typing import List, TypedDict, Optional, Literal
 from langchain.messages import SystemMessage, HumanMessage
 from pydantic import BaseModel, Field
 from tools import CORE_TOOLS, ALL_TOOLS
-from workspace import CORE_FILE_NAMES
+from workspace import CORE_FILE_NAMES, FILE_DESCRIPTIONS
 
 current_dir = Path(__file__).parent.resolve()
 env_path = current_dir / '../.env'
@@ -30,9 +30,10 @@ model_provider = os.getenv("CHAT_MODEL_PROVIDER")
 class RoutingModelResult(BaseModel):
     tools: List[str] = Field(description="List of capability tool names to load.")
     files: List[str] = Field(description="List of workspace files to load.")
-    needsL1: Optional[bool] = Field(description="Whether to load L1 layer index (historical key decisions). Set to true when user's question references previous work or requires context from past conversations")
-    l1Dates: Optional[List[str]] = Field(description="List of dates for L1 decisions to load, format: ['YYYY-MM-DD']. Empty array means no specific L1 dates needed")
-    needsL2: Optional[bool] = Field(description="Whether to load L2 layer full conversation history. Set to true when complete conversation context is required")
+    needs_l1: Optional[bool] = Field(description="Whether to load L1 layer index (historical key decisions). Set to true when user's question references previous work or requires context from past conversations")
+    l1_dates: Optional[List[str]] = Field(description="List of dates for L1 decisions to load, Empty array means no specific L1 dates needed", examples=[[], ["2026-03-14"], ["2026-03-14", "2026-03-11"]])
+    l1_tsids: Optional[List[str]] = Field(description="List of tsids for L1 decisions to load, Empty array means no specific L1 tsids needed", examples=[[], ["20260309232555"], ["20260309232555", "20260309232745"]])
+    needs_l2: Optional[bool] = Field(description="Whether to load L2 layer full conversation history. Set to true when complete conversation context is required")
 
 routing_model = init_chat_model(
     model_provider = model_provider,
@@ -67,12 +68,13 @@ VIKING_ENABLED:bool = True
 class VikingRouteResult(TypedDict):
   tools: set[str]
   files: set[str]
-  promptLayer: PromptMode
-  skillsMode: Literal["names", "summaries"]
+  prompt_layer: PromptMode
+  skills_mode: Literal["names", "summaries"]
   skipped: bool
-  needsL1: bool # 是否需要加载 L1 关键决策
-  l1Dates: List[str] # 需要加载哪些日期的 L1 决策（空数组 = 不需要）
-  needsL2: bool # 是否需要加载 L2 完整对话
+  needs_l1: bool # 是否需要加载 L1 关键决策
+  l1_dates: List[str] # 需要加载哪些日期的 L1 决策（空数组 = 不需要）
+  l1_tsids: List[str] # 需要加载哪些具体时间的 L1 决策（空数组 = 不需要）
+  needs_l2: bool # 是否需要加载 L2 完整对话
 
 """判断是否跳过路由"""
 def should_skip_routing()-> bool:
@@ -102,15 +104,6 @@ def build_skill_index(skills: List[SkillIndexEntry])-> str:
 
     return "\n".join(lines)
 
-FILE_DESCRIPTIONS: dict[str, str] = {
-  "AGENTS.md": "Agent核心规则：会话流程、安全、模块索引",
-  "SOUL.md": "Agent人格、语气、性格（任何对话都需要）",
-  "TOOLS.md": "本地环境备注（SSH、摄像头、TTS语音等）",
-  "IDENTITY.md": "Agent身份：名字、emoji、头像（任何对话都需要）",
-  "USER.md": "用户信息和偏好（个性化回复需要）",
-  "HEARTBEAT.md": "心跳任务清单",
-  "BOOTSTRAP.md": "首次运行引导（仅首次需要）",
-}
 def build_file_index(file_names: List[str])-> str:
     lines = [
         f"  - {name}: {FILE_DESCRIPTIONS.get(name, 'workspace文件')}"
@@ -131,7 +124,7 @@ def build_routing_prompt(user_message: str, file_names: List[str], skills: List[
 
     time_line_section: str = (
         f"===== Conversation Timeline (L0) =====\n"
-        f"This is a brief timeline of previous conversations. Each line has a date. "
+        f"This is a brief timeline of previous conversations. Each line has a timestamp."
         f"Use it to determine if the user is referencing past work, and which dates are relevant.\n"
         f"{timeline}"
         if timeline else ""
@@ -151,11 +144,8 @@ def build_routing_prompt(user_message: str, file_names: List[str], skills: List[
         "1. SKILLS: If the task matches any skill above, no extra tool needed (exec is always loaded). But if the skill also needs web/message/etc, include those tools.\n"
         "2. For ANY conversation: include SOUL.md, IDENTITY.md, USER.md.\n"
         "3. File editing/coding: include \"base-ext\".\n"
-        "4. Web search: include \"web\".\n"
-        "5. Send messages/notifications: include \"message\".\n"
-        "6. Scheduled tasks/reminders: include \"infra\".\n"
-        "7. Simple chat: tools=[], files=[\"SOUL.md\",\"IDENTITY.md\",\"USER.md\"].\n"
-        "8. When unsure: include more tools (cheap). Do NOT leave tools empty if the task needs"
+        "4. Simple chat: tools=[], files=[\"SOUL.md\",\"IDENTITY.md\",\"USER.md\"].\n"
+        "5. When unsure: include more tools (cheap). Do NOT leave tools empty if the task needs"
     )
 
     return {"system": system, "user": user}
@@ -208,24 +198,26 @@ async def viking_route(
         return {
             "tools": all_tool_names,
             "files": all_file_names,
-            "promptLayer": PromptMode.FULL,
-            "skillsMode": "summaries",
+            "prompt_layer": PromptMode.FULL,
+            "skills_mode": "summaries",
             "skipped": True,
-            "needsL1": False,
-            "l1Dates": [],
-            "needsL2": False,
+            "needs_l1": False,
+            "l1_dates": [],
+            "l1_tsids": [],
+            "needs_l2": False,
         }
                     
     if not user_message or len(user_message.strip()) == 0:
         return {
             "tools": set(CORE_TOOL_NAMES),
             "files": set(),
-            "promptLayer": PromptMode.L0,
-            "skillsMode": "names",
+            "prompt_layer": PromptMode.L0,
+            "skills_mode": "names",
             "skipped": False,
-            "needsL1": False,
-            "l1Dates": [],
-            "needsL2": False,
+            "needs_l1": False,
+            "l1_dates": [],
+            "l1_tsids": [],
+            "needs_l2": False,
         }
 
     routing_prompt = build_routing_prompt(user_message = user_message, file_names = file_names, skills = skills, timeline = timeline)
@@ -235,12 +227,13 @@ async def viking_route(
         return {
             "tools": all_tool_names,
             "files": all_file_names,
-            "promptLayer": PromptMode.FULL,
-            "skillsMode": "summaries",
+            "prompt_layer": PromptMode.FULL,
+            "skills_mode": "summaries",
             "skipped": False,
-            "needsL1": False,
-            "l1Dates": [],
-            "needsL2": False,
+            "needs_l1": False,
+            "l1_dates": [],
+            "l1_tsids": [],
+            "needs_l2": False,
         }
 
     selected_tools:set[str] = set()
@@ -272,17 +265,20 @@ async def viking_route(
        PromptMode.L1 if tools_count <= len(ALL_TOOLS) else
        PromptMode.FULL
     )
-    
-    needs_l1:bool = result.get("needsL1") if result.get("needsL1") is not None else False
-    l1_dates: List[str] = result.get("l1Dates") if result.get("l1Dates") is not None else []
-    needs_l2: bool = result.get("needsL2") if result.get("needsL2") is not None else False
+
+    needs_l1:bool = result.get("needs_l1") if result.get("needs_l1") is not None else False
+    l1_dates: List[str] = result.get("l1_dates") if result.get("l1_dates") is not None else []
+    l1_tsids: List[str] = result.get("l1_tsids") if result.get("l1_tsids") is not None else []
+    needs_l2: bool = result.get("needs_l2") if result.get("needs_l2") is not None else False
+
     return {
-       "tools": selected_tools,
-       "files": selected_files,
-       "promptLayer": prompt_layer,
-       "skillsMode": "names",
-       "skipped": False,
-       "needsL1": needs_l1,
-       "l1Dates": l1_dates,
-       "needsL2": needs_l2,
+        "tools": selected_tools,
+        "files": selected_files,
+        "prompt_layer": prompt_layer,
+        "skills_mode": "names",
+        "skipped": False,
+        "needs_l1": needs_l1,
+        "l1_dates": l1_dates,
+        "l1_tsids": l1_tsids,
+        "needs_l2": needs_l2,
     }
