@@ -3,36 +3,51 @@ from pathlib import Path
 from tools import ALL_TOOLS
 from workspace import ALL_FILE_NAMES
 from skills.loader import scan_skills
-from viking_router import viking_route
+from viking_router import viking_route, build_skill_names_only_prompt
 from sessions.history_index import load_l0_timeline, load_l1_decisions, load_l2_session
 
 current_dir = Path(__file__).parent.resolve()
 
 async def main():
-    l0_result = await load_l0_timeline(agent_dir=current_dir.as_posix(), session_id='1')
-    route_result = await viking_route(
-        user_message="雪莉嫁给我如何？",
-        tools=[t.name for t in ALL_TOOLS],
-        file_names=ALL_FILE_NAMES,
-        timeline=l0_result['raw_timeline'],
-        skills=scan_skills()
-    )
-
     # ===== L0 时间线加载（始终） start =====
     l0_result = await load_l0_timeline(session_id='1')
-    print(l0_result["date_tsid_map"])
+    print(l0_result)
     # ===== L0 时间线加载（始终） end =====
 
+    # ===== viking routing start =====
+    route_result = await viking_route(
+        user_message = "雪莉嫁给我如何？",
+        tools = [t.name for t in ALL_TOOLS],
+        file_names = ALL_FILE_NAMES,
+        timeline = l0_result['raw_timeline'],
+        skills = scan_skills()
+    )
+    print(route_result)
+    # ===== viking routing end =====
+
+    if route_result["skipped"]:
+        return ""
+
+    result:str = ""
     # ===== L1 按日期按需加载 start =====
     if route_result["needs_l1"]:
-        l1_prompt = await load_l1_decisions(session_id='1', dates=route_result["l1_dates"], tsids=route_result["l1_tsids"])
+        l1_prompt = load_l1_decisions(session_id='1', dates=route_result["l1_dates"], tsids=route_result["l1_tsids"])
+        print(l1_prompt)
+
+        if l1_prompt is not None and l1_prompt.available and len(l1_prompt.prompt)> 0:
+            result += "\n\n" + l1_prompt.prompt
     # ===== L1 按日期按需加载 end =====
 
     # ===== L2 按需加载 start =====
-    if route_result["needs_l2"]:
-        l2_prompt = await load_l2_session(l0_result["date_tsid_map"])
-        print(l2_prompt)
+    # if True:
+    #     l2_prompt = load_l2_session(l0_result["date_tsid_map"])
+    #     print(l2_prompt)
+    #
+    #     if l2_prompt is not None and l2_prompt.available and len(l2_prompt.prompt)> 0:
+    #         result += "\n\n" + l2_prompt.prompt
     # ===== L2 按需加载 end =====
+
+    return result
 
 if __name__ == "__main__":
     asyncio.run(main())

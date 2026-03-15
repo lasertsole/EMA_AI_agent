@@ -185,42 +185,6 @@ def parse_decisions_by_date(content: str) -> dict[str, str]:
 
     return sections
 
-
-
-# ========================
-# L0 解析
-# ========================
-def parse_tsid_from_timeline_line(line: str) -> str | None:
-    """从 L0 单行中提取时间戳 ID，格式：- 202602260705 | 摘要"""
-    match = re.match(r'^-\s*(\d{12})\s*\|', line)
-    return match.group(1) if match else None
-
-def date_from_tsid(tsid: str) -> str | None:
-    """从时间戳 ID 中提取日期（YYYY-MM-DD 格式）"""
-    if len(tsid) < 8:
-        return None
-    year = tsid[0:4]
-    month = tsid[4:6]
-    day = tsid[6:8]
-    return f"{year}-{month}-{day}"
-
-def build_date_tsid_map(timeline: str) -> dict[str, list[str]]:
-    """构建 dateTsidMap：从 timeline 文本解析出日期→tsid[] 映射"""
-    tsid_map = {}
-    lines = [line for line in timeline.split("\n") if line.strip().startswith("-")]
-
-    for line in lines:
-        tsid = parse_tsid_from_timeline_line(line)
-        if tsid:
-            date = date_from_tsid(tsid)
-            if date:
-                if date not in tsid_map:
-                    tsid_map[date] = []
-                if tsid not in tsid_map[date]:
-                    tsid_map[date].append(tsid)
-
-    return tsid_map
-
 # ========================
 # L1 解析：从 decisions 文本中提取时间戳 ID
 # ========================
@@ -398,10 +362,7 @@ async def load_l0_timeline(session_id: str) -> dict[str, Any]:
             "prompt": "",
             "raw_timeline": "",
             "recent_turns": DEFAULT_RECENT_TURNS,
-            "date_tsid_map": {}
         }
-
-    date_tsid_map = build_date_tsid_map(timeline)
 
     prompt = f"<conversation_timeline>\n以下是历史对话的时间线索引：\n{timeline}\n </conversation_timeline>"
 
@@ -410,7 +371,6 @@ async def load_l0_timeline(session_id: str) -> dict[str, Any]:
         "prompt": prompt,
         "raw_timeline": timeline,
         "recent_turns": DEFAULT_RECENT_TURNS,
-        "date_tsid_map": date_tsid_map
     }
 
 async def load_layered_history(
@@ -426,7 +386,7 @@ async def load_layered_history(
 # ========================
 # 读取 L1（按日期/时间戳ID 按需加载）
 # ========================
-async def load_l1_decisions(
+def load_l1_decisions(
     # 会话 ID
     session_id: str,
     # 指定要加载的日期列表

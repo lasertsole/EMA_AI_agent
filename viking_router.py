@@ -69,7 +69,6 @@ class VikingRouteResult(TypedDict):
   tools: set[str]
   files: set[str]
   prompt_layer: PromptMode
-  skills_mode: Literal["names", "summaries"]
   skipped: bool
   needs_l1: bool # 是否需要加载 L1 关键决策
   l1_dates: List[str] # 需要加载哪些日期的 L1 决策（空数组 = 不需要）
@@ -199,7 +198,6 @@ async def viking_route(
             "tools": all_tool_names,
             "files": all_file_names,
             "prompt_layer": PromptMode.FULL,
-            "skills_mode": "summaries",
             "skipped": True,
             "needs_l1": False,
             "l1_dates": [],
@@ -212,7 +210,6 @@ async def viking_route(
             "tools": set(CORE_TOOL_NAMES),
             "files": set(),
             "prompt_layer": PromptMode.L0,
-            "skills_mode": "names",
             "skipped": False,
             "needs_l1": False,
             "l1_dates": [],
@@ -228,7 +225,6 @@ async def viking_route(
             "tools": all_tool_names,
             "files": all_file_names,
             "prompt_layer": PromptMode.FULL,
-            "skills_mode": "summaries",
             "skipped": False,
             "needs_l1": False,
             "l1_dates": [],
@@ -275,7 +271,6 @@ async def viking_route(
         "tools": selected_tools,
         "files": selected_files,
         "prompt_layer": prompt_layer,
-        "skills_mode": "names",
         "skipped": False,
         "needs_l1": needs_l1,
         "l1_dates": l1_dates,

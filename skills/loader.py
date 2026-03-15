@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, List, Optional
 
 import yaml
 
@@ -37,8 +37,12 @@ def scan_skills() -> list[dict[str, str]]:
     return skills
 
 
-def get_skills_text() -> str:
+def get_skills_text(selected_skill_names: Optional[List[str]]=None) -> str:
     skills = scan_skills()
+
+    if selected_skill_names is not None and len(selected_skill_names) > 0:
+        skills = [s for s in skills if s["name"] in selected_skill_names]
+
     lines = ["<available_skills>"]
     for s in skills:
         lines.append("  <skill>")
