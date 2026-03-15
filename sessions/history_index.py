@@ -41,6 +41,7 @@ MAX_MESSAGE_CHARS = 1000
 MAX_MESSAGES_TO_READ = 20
 DEFAULT_RECENT_TURNS = 5
 
+HISTORY_FILE = "history.jsonl"
 TIMELINE_FILE = "timeline.md"
 DECISIONS_FILE = "decisions.md"
 
@@ -91,7 +92,6 @@ class L1DecisionsResult(BaseModel):
 class L2SessionResult(BaseModel):
   available: bool
   prompt: str # L2 完整对话文本
-  loadedSessionIds: List[str] # 实际加载的 sessionId 列表
 
 
 # ========================
@@ -99,6 +99,9 @@ class L2SessionResult(BaseModel):
 # ========================
 def get_sessions_dir(agent_dir: str)-> str:
     return (Path(agent_dir) / "sessions").as_posix()
+
+def get_history_path(agent_dir: str, session_id: str)-> str:
+    return (Path(get_sessions_dir(agent_dir)) / session_id / HISTORY_FILE).as_posix()
 
 def get_decisions_path(agent_dir: str, session_id: str)-> str:
     return (Path(get_sessions_dir(agent_dir)) / session_id / DECISIONS_FILE).as_posix()
@@ -188,39 +191,18 @@ def parse_decisions_by_date(content: str) -> dict[str, str]:
 # ========================
 # L1 解析：从 decisions 文本中提取时间戳 ID
 # ========================
-def extract_tsids(l1Text: str) -> List[str]:
+def extract_tsids(l1_text: str) -> List[str]:
     """
     从 L1 文本中提取所有时间戳 ID
     匹配格式: [202602260705]
     """
     ids: List[str] = []
-    regex = re.compile(r'\[(\d{12})\]')
+    regex = re.compile(r'(\d{12})')
 
-    for match in regex.finditer(l1Text):
+    for match in regex.finditer(l1_text):
         tsid = match.group(1)
         if tsid and tsid not in ids:
             ids.append(tsid)
-
-    return ids
-
-
-def extract_tsids_from_l0(
-        l0_result: L0TimelineResult,
-        dates: Optional[List[str]] = None,
-) -> List[str]:
-    """
-    从 L0 的 dateTsidMap 中根据日期提取时间戳 ID 列表
-    """
-    if not dates or len(dates) == 0:
-        return []
-
-    ids: List[str] = []
-    for date in dates:
-        tsids = l0_result.dateTsidMap.get(date)
-        if tsids:
-            for tsid in tsids:
-                if tsid not in ids:
-                    ids.append(tsid)
 
     return ids
 
@@ -371,6 +353,7 @@ async def load_l0_timeline(session_id: str) -> dict[str, Any]:
         "prompt": prompt,
         "raw_timeline": timeline,
         "recent_turns": DEFAULT_RECENT_TURNS,
+        "tsids": extract_tsids(timeline),
     }
 
 async def load_layered_history(
@@ -473,102 +456,58 @@ def load_l1_decisions(
 # ========================
 # L2: 按需加载（导出接口）
 # ========================
-def load_l2_session(session_ids: List[str], max_total_chars: Optional[int] = None) -> L2SessionResult:
+def load_l2_session(session_id: str, tsids: List[str]) -> L2SessionResult:
     """
     按 sessionId 加载完整对话内容（L2）
 
     触发条件：Viking 路由判断 needsL2: true
     来源：从 L1/L0 提取时间戳 ID → 通过 tsidSessionMap 转换为 sessionId → 读取 JSONL
     """
-    if not session_ids or len(session_ids) == 0:
+    jsonl_path = Path(get_history_path(ROOT_DIR, session_id))
+    if not tsids or len(tsids) == 0 or not jsonl_path.exists():
         return L2SessionResult(available=False, prompt="", loadedSessionIds=[])
 
-    sessions_dir = get_sessions_dir(ROOT_DIR)
-    max_total = max_total_chars if max_total_chars is not None else L2_MAX_TOTAL_CHARS
+    raw = jsonl_path.read_text(encoding="utf-8")
+    lines = [json.loads(line) for line in raw.split("\n") if line.strip()]
 
     # 限制最大会话数
-    target_ids = session_ids[:L2_MAX_SESSIONS]
-    loaded_parts: List[str] = []
-    loaded_ids: List[str] = []
-    total_chars = 0
+    target_ids = tsids[:L2_MAX_SESSIONS]
 
-    for sid in target_ids:
-        if total_chars >= max_total:
-            break
+    session_text=""
+    try:
+        messages: List[dict] = []
 
-        jsonl_path = Path(sessions_dir) / f"{sid}.jsonl"
-        if not jsonl_path.exists():
-            print(f"[history] L2 session not found: {jsonl_path}")
-            continue
+        for line in lines:
+            try:
+                role = line.get("role")
+                if role not in ("user", "assistant"):
+                    continue
 
-        try:
-            raw = jsonl_path.read_text(encoding="utf-8")
-            lines = [line for line in raw.split("\n") if line.strip()]
+                content = line.get("content", "")
+                if content.strip():
+                    messages.append({
+                        "role": role,
+                        "content": content[:L2_MAX_CHARS_PER_MESSAGE]
+                    })
+            except:
+                # skip invalid JSON lines
+                pass
 
-            messages: List[dict] = []
+        # 只保留最近的消息
+        recent = messages[-L2_MAX_MESSAGES_PER_SESSION:]
+        session_text = "\n\n".join([f"[{m['role']}]: {m['content']}" for m in recent])
 
-            for line in lines:
-                try:
-                    entry = json.loads(line)
-                    if entry.get("type") != "message" or not entry.get("message"):
-                        continue
+    except Exception as err:
+        print(err)
 
-                    role = entry["message"].get("role")
-                    if role not in ("user", "assistant"):
-                        continue
-
-                    content = entry["message"].get("content", "")
-
-                    # 处理 content 可能是字符串或数组
-                    text = ""
-                    if isinstance(content, str):
-                        text = content
-                    elif isinstance(content, list):
-                        text_blocks = [
-                            block.get("text", "")
-                            for block in content
-                            if block.get("type") == "text" and block.get("text")
-                        ]
-                        text = "\n".join(text_blocks)
-
-                    if text.strip():
-                        messages.append({
-                            "role": role,
-                            "text": text[:L2_MAX_CHARS_PER_MESSAGE]
-                        })
-                except:
-                    # skip invalid JSON lines
-                    pass
-
-            # 只保留最近的消息
-            recent = messages[-L2_MAX_MESSAGES_PER_SESSION:]
-            session_text = "\n\n".join([f"[{m['role']}]: {m['text']}" for m in recent])
-
-            if session_text:
-                remaining = max_total - total_chars
-                if len(session_text) > remaining:
-                    truncated = session_text[:remaining] + "\n...(truncated)"
-                else:
-                    truncated = session_text
-
-                loaded_parts.append(f"### Session: {sid}\n\n{truncated}")
-                loaded_ids.append(sid)
-                total_chars += len(truncated)
-        except Exception as err:
-            print(f"[history] L2 failed to read session {sid}: {err}")
-
-    if len(loaded_parts) == 0:
+    if len(session_text) == 0:
         ids_str = ", ".join(target_ids)
         print(f"[history] L2: no sessions loaded from [{ids_str}]")
         return L2SessionResult(available=False, prompt="", loadedSessionIds=[])
 
-    content = "\n\n---\n\n".join(loaded_parts)
-    prompt = f"<full_conversation>\n以下是相关的完整对话记录：\n\n{content}\n</full_conversation>"
-
-    print(f"[history] L2 loaded: {len(loaded_ids)} sessions, {total_chars} chars")
+    prompt = f"<full_conversation>\n以下是相关的完整对话记录：\n\n{session_text}\n</full_conversation>"
 
     return L2SessionResult(
         available=True,
-        prompt=prompt,
-        loadedSessionIds=loaded_ids
+        prompt=prompt
     )

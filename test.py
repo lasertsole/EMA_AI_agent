@@ -11,7 +11,6 @@ current_dir = Path(__file__).parent.resolve()
 async def main():
     # ===== L0 时间线加载（始终） start =====
     l0_result = await load_l0_timeline(session_id='1')
-    print(l0_result)
     # ===== L0 时间线加载（始终） end =====
 
     # ===== viking routing start =====
@@ -22,32 +21,35 @@ async def main():
         timeline = l0_result['raw_timeline'],
         skills = scan_skills()
     )
-    print(route_result)
     # ===== viking routing end =====
 
     if route_result["skipped"]:
-        return ""
+        return None
 
-    result:str = ""
+    context:str = ""
     # ===== L1 按日期按需加载 start =====
     if route_result["needs_l1"]:
         l1_prompt = load_l1_decisions(session_id='1', dates=route_result["l1_dates"], tsids=route_result["l1_tsids"])
-        print(l1_prompt)
 
         if l1_prompt is not None and l1_prompt.available and len(l1_prompt.prompt)> 0:
-            result += "\n\n" + l1_prompt.prompt
+            context += "\n\n" + l1_prompt.prompt
     # ===== L1 按日期按需加载 end =====
 
     # ===== L2 按需加载 start =====
-    # if True:
-    #     l2_prompt = load_l2_session(l0_result["date_tsid_map"])
-    #     print(l2_prompt)
-    #
-    #     if l2_prompt is not None and l2_prompt.available and len(l2_prompt.prompt)> 0:
-    #         result += "\n\n" + l2_prompt.prompt
+    if route_result["needs_l2"]:
+        l2_prompt = load_l2_session(session_id='1', tsids = route_result["l1_tsids"])
+
+        if l2_prompt is not None and l2_prompt.available and len(l2_prompt.prompt)> 0:
+            context += "\n\n" + l2_prompt.prompt
     # ===== L2 按需加载 end =====
 
-    return result
+    print(route_result)
+    print({
+        "tools": route_result["tools"],
+        "files": route_result["files"],
+        "context": context,
+    })
+    return context
 
 if __name__ == "__main__":
     asyncio.run(main())
