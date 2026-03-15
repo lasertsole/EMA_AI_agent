@@ -1,12 +1,5 @@
 """
 OpenViking 分层路由器 v4
-
-设计原则：大道至简
-- 工具按"能力包"分类，路由模型做分类选择题
-- core（read + exec）永远加载，保证 Agent 基础能力
-- Skills 只给名称列表，主模型需要时自己 read SKILL.md
-- 路由模型看到 L0 时间线，判断是否需要加载 L1（指定日期）/L2
-- 路由失败自动回退全量
 """
 import os
 from enum import Enum
@@ -23,9 +16,9 @@ current_dir = Path(__file__).parent.resolve()
 env_path = current_dir / '../.env'
 env_path = env_path.resolve()
 load_dotenv(env_path, override = True)
-api_key = os.getenv("CHAT_API_KEY")
-api_name = os.getenv("CHAT_API_NAME")
-model_provider = os.getenv("CHAT_MODEL_PROVIDER")
+api_key = os.getenv("VIKING_API_KEY")
+api_name = os.getenv("VIKING_API_NAME")
+model_provider = os.getenv("VIKING_MODEL_PROVIDER")
 
 class RoutingModelResult(BaseModel):
     tools: List[str] = Field(description="List of capability tool names to load.")
