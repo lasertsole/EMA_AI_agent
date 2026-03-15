@@ -6,11 +6,9 @@ import json
 import logging
 from typing import Any
 from pathlib import Path
-from tools import ALL_TOOLS
-from config import ROOT_DIR
 from models import base_model
 from datetime import datetime
-from sessions import append_timeline_entry
+from config import COMPRESS_RATIO
 
 
 from config import (
@@ -28,7 +26,7 @@ def _calculate_total_chars(messages: list[dict[str, Any]]) -> int:
 
 
 def _split_messages(
-    messages: list[dict[str, Any]], ratio: float = 0.5  # ratio 值越大，旧消息数组（要被压缩的部分）就越大。
+    messages: list[dict[str, Any]], ratio: float = COMPRESS_RATIO  # ratio 值越大，旧消息数组（要被压缩的部分）token占比就越大。
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     """Split messages into old (to compress) and new (to keep)."""
     total_chars = _calculate_total_chars(messages)

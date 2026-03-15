@@ -44,7 +44,7 @@ DEFAULT_RECENT_TURNS = 5
 HISTORY_FILE = "history.jsonl"
 TIMELINE_FILE = "timeline.md"
 DECISIONS_FILE = "decisions.md"
-
+SUMMARY_FILE = "summary.md"
 
 L2_MAX_MESSAGES_PER_SESSION = 30 # L2 加载限制：每个 session 最多读取的消息数
 L2_MAX_CHARS_PER_MESSAGE = 2000 # L2 加载限制：每条消息最大字符数
@@ -108,6 +108,9 @@ def get_decisions_path(agent_dir: str, session_id: str)-> str:
 
 def get_timeline_path(agent_dir: str, session_id: str)-> str:
         return (Path(get_sessions_dir(agent_dir)) / session_id / TIMELINE_FILE).as_posix()
+
+def get_summary_path(agent_dir: str, session_id: str)-> str:
+    return (Path(get_sessions_dir(agent_dir)) / session_id / SUMMARY_FILE).as_posix()
 
 def _session_path(session_id: str) -> str:
     return (Path(SESSIONS_DIR) / f"{session_id}/current.jsonl").as_posix()
@@ -333,7 +336,7 @@ def append_timeline_entry(
 # ========================
 # 读取 L0（始终加载）
 # ========================
-async def load_l0_timeline(session_id: str) -> dict[str, Any]:
+def load_l0_timeline(session_id: str) -> dict[str, Any]:
     """读取 L0（始终加载）"""
     timeline_path = get_timeline_path(ROOT_DIR, session_id)
     timeline = safe_read_file(timeline_path).strip()
@@ -511,3 +514,10 @@ def load_l2_session(session_id: str, tsids: List[str]) -> L2SessionResult:
         available=True,
         prompt=prompt
     )
+
+def load_summary(session_id: str) -> str:
+    summary_path = get_summary_path(ROOT_DIR, session_id)
+    if not Path(summary_path).exists():
+        return ""
+
+    return safe_read_file(summary_path)

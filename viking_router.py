@@ -183,7 +183,7 @@ def build_skill_names_only_prompt(skills: List[SkillIndexEntry])-> str:
 """
     TODO 主入口
 """
-async def viking_route(
+def viking_route(
   user_message: str,
   tools: List[str],
   file_names: List[str],
