@@ -108,7 +108,7 @@ class Prompt(TypedDict):
     system: str
     user: str
 
-def build_routing_prompt(user_message: str, file_names: List[str], skills: List[SkillIndexEntry], timeline: Optional[str] = None)-> Prompt:
+def build_routing_prompt(user_input: str, file_names: List[str], skills: List[SkillIndexEntry], timeline: Optional[str] = None)-> Prompt:
     system: str = "You are a resource router. Select capability tools and files needed for the task."
     tool_index: str = build_tool_index()
     skill_index: str = build_skill_index(skills)
@@ -123,7 +123,7 @@ def build_routing_prompt(user_message: str, file_names: List[str], skills: List[
     )
 
     user: str = (
-        f"User message: {user_message}\n"
+        f"User message: {user_input}\n"
         f"{time_line_section}===== Capability Tools (select needed) =====\n"
         f"Always loaded: read + exec (do not select)\n"
         f"{tool_index}\n\n"
@@ -210,7 +210,7 @@ def viking_route(
             "needs_l2": False,
         }
 
-    routing_prompt = build_routing_prompt(user_message = user_message, file_names = file_names, skills = skills, timeline = timeline)
+    routing_prompt = build_routing_prompt(user_input = user_input, file_names = file_names, skills = skills, timeline = timeline)
     result = call_routing_model(system = routing_prompt["system"], user = routing_prompt["user"])
 
     if result is None:
