@@ -5,20 +5,19 @@ import os
 from enum import Enum
 from pathlib import Path
 from dotenv import load_dotenv
-from langchain.chat_models import init_chat_model
-from typing import List, TypedDict, Optional, Literal
-from langchain.messages import SystemMessage, HumanMessage
 from pydantic import BaseModel, Field
 from tools import CORE_TOOLS, ALL_TOOLS
+from typing import List, TypedDict, Optional
+from langchain.chat_models import init_chat_model
+from langchain.messages import SystemMessage, HumanMessage
 from workspace import CORE_FILE_NAMES, FILE_DESCRIPTIONS
 
 current_dir = Path(__file__).parent.resolve()
-env_path = current_dir / '../.env'
+env_path = current_dir / '.env'
 env_path = env_path.resolve()
 load_dotenv(env_path, override = True)
-api_key = os.getenv("VIKING_API_KEY")
-api_name = os.getenv("VIKING_API_NAME")
-model_provider = os.getenv("VIKING_MODEL_PROVIDER")
+api_name = os.getenv("LOCAL_CHAT_API_NAME")
+model_provider = os.getenv("LOCAL_CHAT_MODEL_PROVIDER")
 
 class RoutingModelResult(BaseModel):
     tools: List[str] = Field(description="List of capability tool names to load.")
@@ -31,9 +30,7 @@ class RoutingModelResult(BaseModel):
 routing_model = init_chat_model(
     model_provider = model_provider,
     model = api_name,
-    api_key = api_key,
     temperature = 0,
-    max_retries = 2,
 ).with_structured_output(RoutingModelResult)
 
 """
@@ -150,7 +147,7 @@ def call_routing_model(system: str, user: str)-> RoutingModelResult | None:
     ]
     
     try:
-        return routing_model.invoke(messages, max_tokens = 200).model_dump()
+        return routing_model.invoke(messages).model_dump()
     except Exception as e:
         print(e)
         return None

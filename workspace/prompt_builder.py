@@ -31,7 +31,7 @@ def build_system_prompt(selected_file_names: Optional[List[str]] = None, selecte
             _read_text(MEMORY_DIR / "MEMORY.md"),
         ]
 
-    parts = [*skill_paths, *file_paths]
+    parts = [skill_paths, *file_paths]
 
     return "\n\n".join(p for p in parts if p)
 

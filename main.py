@@ -23,7 +23,7 @@ from workspace.prompt_builder import build_system_prompt
 from utils import File, FileType, ChatStorage as Streamlit_ChatStorage
 from sessions import generate_tsid, append_session_message, read_session
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage, SystemMessage, BaseMessage
-from sessions.history_index import append_timeline_entry, load_l0_timeline, load_l1_decisions, load_l2_session, load_summary
+from sessions.history_index import load_l0_timeline, load_l1_decisions, load_l2_session, load_summary
 
 env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), './.env')
 load_dotenv(env_path, override=True)
@@ -157,8 +157,8 @@ async def _async_generator(history: list[dict[str, Any]], user_input: str, confi
     try:
         if is_stream == 'True':
             yield f"{assistant_name}:"
-            async for chunk in agent.astream(messages_dict, config=config, stream_mode="messages"):
-                msg_chunk: AIMessageChunk = chunk[0]
+            async for chunk in agent.astream(messages_dict, config = config, stream_mode = "messages"):
+                msg_chunk: BaseMessage = chunk[0]
                 event_chunk: dict[str, Any] = chunk[1]
 
                 if (isinstance(msg_chunk, AIMessageChunk)
@@ -166,7 +166,7 @@ async def _async_generator(history: list[dict[str, Any]], user_input: str, confi
                         and len(msg_chunk.content) > 0):
                     yield msg_chunk.content
         else:
-            result = await agent.ainvoke(messages_dict, config=config)
+            result = await agent.ainvoke(messages_dict, config = config)
             yield result["messages"][-1].content
     except requests.exceptions.HTTPError as e:
         yield f"请求失败: {e.response.text}"

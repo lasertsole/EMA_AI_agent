@@ -7,18 +7,18 @@ from typing import Any
 from pathlib import Path
 from config import SESSIONS_DIR
 
-def _session_path(session_id: str) -> str:
+def _current_session_path(session_id: str) -> str:
     return (Path(SESSIONS_DIR) / f"{session_id}/current.jsonl").as_posix()
 
 
 def delete_session(session_id: str) -> None:
-    path = Path(_session_path(session_id))
+    path = Path(_current_session_path(session_id))
     if path.exists():
         path.unlink()
 
 
 def read_session(session_id: str) -> list[dict[str, Any]]:
-    path = Path(_session_path(session_id))
+    path = Path(_current_session_path(session_id))
 
     if not path.exists():
         return []
@@ -35,7 +35,7 @@ def append_session_message(session_id: str, message: dict[str, Any]) -> None:
     if not isinstance(message["role"], str) or not isinstance(message["content"], str) or not isinstance(message["timestamp"], str):
         raise ValueError("Invalid message")
 
-    path = Path(_session_path(session_id))
+    path = Path(_current_session_path(session_id))
 
     # 总是先确保目录存在
     path.parent.mkdir(parents=True, exist_ok=True)
