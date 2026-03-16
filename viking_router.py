@@ -1,5 +1,5 @@
 """
-OpenViking 分层路由器 v4
+OpenViking 分层路由器
 """
 import os
 from enum import Enum

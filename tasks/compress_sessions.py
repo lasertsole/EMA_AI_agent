@@ -55,24 +55,24 @@ def _generate_summary(old_messages: list[dict[str, Any]]) -> str:
     )
 
     prompt = ChatPromptTemplate.from_template(
-        """Summarize the following conversation into a concise structured memo.
+        """根据下面的对话内容编写简短、精确的摘要.
 
-Conversation:
+对话内容:
 {conversation}
 
-Output format:
-# Session Summary {datetime}
+输出格式:
+# 会话摘要 {datetime}
 
-## Topics
-- Topic 1
-- Topic 2
+## 话题
+- 话题 1
+- 话题 2
 
-## Key Points
-- Point 1
-- Point 2
+## 关键点
+- 关键点 1
+- 关键点 2
 
-## Context
-[Brief context and goals]
+## 上下文
+[简短的上下文和目标]
 """
     )
     prompt.partial_variables = {"datetime": datetime.now().strftime("%Y-%m-%d")}

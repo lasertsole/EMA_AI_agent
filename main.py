@@ -281,7 +281,9 @@ if __name__ == "__main__":
 
             # 将消息持久化
             _storage_add_chat(dict(role = "assistant", content = _content), files = [file] if file is not None else None)
-            append_timeline_entry(messages = [HumanMessage(content=_user_input), AIMessage(content=_content)], session_id = session_id, tool_metas = [])
+
+            # 添加viking L0 和 L1 索引
+            task_queue.enqueue_append_timeline_entry(messages = [HumanMessage(content=_user_input), AIMessage(content=_content)], session_id = session_id, tool_metas = [])
 
             # 如果达到压缩阈值，则压缩历史会话
             total_chars = sum(len(m.get("content", "")) for m in _history) + len(_user_input)

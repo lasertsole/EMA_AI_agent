@@ -2,11 +2,12 @@
 
 import asyncio
 import logging
-from typing import Any, Literal
+from typing import Any, Literal, List, Optional
+from langchain_core.messages import AIMessage, HumanMessage, BaseMessage
 
 logger = logging.getLogger(__name__)
 
-TaskType = Literal["compress_session", "update_memory_index"]
+TaskType = Literal["compress_session", "update_memory_index", "append_timeline_entry"]
 
 
 class BackgroundTaskQueue:
@@ -27,15 +28,22 @@ class BackgroundTaskQueue:
         while True:
             task_type, data = await self.queue.get()
             try:
-                if task_type == "compress_session":
-                    # Import here to avoid circular dependency
-                    from tasks.compress_sessions import compress_session
-                    await compress_session(data["session_id"])
-                elif task_type == "update_memory_index":
-                    from tasks.memory_index import update_memory_index_incremental
-                    await update_memory_index_incremental(data["new_content"])
-                else:
-                    logger.warning(f"Unknown task type: {task_type}")
+                match task_type:
+                    case "compress_session":
+                        # Import here to avoid circular dependency
+                        from tasks.compress_sessions import compress_session
+                        await compress_session(data["session_id"])
+
+                    case "update_memory_index":
+                        from tasks.memory_index import update_memory_index_incremental
+                        await update_memory_index_incremental(data["new_content"])
+
+                    case "append_timeline_entry":
+                        from sessions.history_index import append_timeline_entry
+                        await append_timeline_entry(messages=data["messages"], session_id=data["session_id"], tool_metas=data["tool_metas"])
+
+                    case _:
+                        logger.warning(f"Unknown task type: {task_type}")
             except Exception as e:
                 logger.error(f"Task failed [{task_type}]: {e}", exc_info=True)
             finally:
@@ -48,4 +56,9 @@ class BackgroundTaskQueue:
     def enqueue_memory_index(self, new_content: str) -> None:
         """Enqueue a memory index update task."""
         coro = self.queue.put(("update_memory_index", {"new_content": new_content}))
+        asyncio.run_coroutine_threadsafe(coro, self._event_loop)
+
+    def enqueue_append_timeline_entry(self, session_id: str, messages: List[BaseMessage], tool_metas:List[str] ) -> None:
+        """Enqueue append timeline entry task."""
+        coro = self.queue.put(("append_timeline_entry", {"session_id": session_id, "messages": messages, "tool_metas": tool_metas}))
         asyncio.run_coroutine_threadsafe(coro, self._event_loop)

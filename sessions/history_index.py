@@ -250,7 +250,7 @@ def generate_tsid()->str:
 
     return f"{year}{month}{day}{hour}{minute}{second}"
 
-def append_timeline_entry(
+async def append_timeline_entry(
     messages: List[BaseMessage],
     session_id: str,
     tool_metas: List[str],
