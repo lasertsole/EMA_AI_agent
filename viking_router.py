@@ -177,7 +177,7 @@ def build_skill_names_only_prompt(skills: List[SkillIndexEntry])-> str:
     TODO 主入口
 """
 def viking_route(
-  user_message: str,
+  user_input: str,
   tools: List[str],
   file_names: List[str],
   skills: List[SkillIndexEntry],
@@ -198,7 +198,7 @@ def viking_route(
             "needs_l2": False,
         }
                     
-    if not user_message or len(user_message.strip()) == 0:
+    if not user_input or len(user_input.strip()) == 0:
         return {
             "tools": set(CORE_TOOL_NAMES),
             "files": set(),

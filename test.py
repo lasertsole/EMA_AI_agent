@@ -15,7 +15,7 @@ async def main():
     #
     # # ===== viking routing start =====
     # route_result = await viking_route(
-    #     user_message = "雪莉嫁给我如何？",
+    #     user_input = "雪莉嫁给我如何？",
     #     tools = [t.name for t in ALL_TOOLS],
     #     file_names = ALL_FILE_NAMES,
     #     timeline = l0_result['raw_timeline'],

@@ -76,14 +76,14 @@ def _append_memory(entry: str) -> None:
 #"""以上是主动记忆功能"""
 
 #"""以下是组织信息列表逻辑"""
-def _viking_routing(user_message: str)-> dict[str, Any]:
+def _viking_routing(user_input: str)-> dict[str, Any]:
     # ===== L0 时间线加载（始终） start =====
     l0_result = load_l0_timeline(session_id='1')
     # ===== L0 时间线加载（始终） end =====
 
     # ===== viking routing start =====
     route_result = viking_route(
-        user_message = user_message,
+        user_input = user_input,
         tools = [t.name for t in ALL_TOOLS],
         file_names = ALL_FILE_NAMES,
         timeline = l0_result['raw_timeline'],
