@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
+import os
 import json
 import logging
 from typing import Any
 from pathlib import Path
-from models import base_model
 from datetime import datetime
+from dotenv import load_dotenv
 from config import COMPRESS_RATIO
+from langchain.chat_models import init_chat_model
 
 
 from config import (
@@ -19,6 +21,18 @@ from sessions.store import read_session
 
 logger = logging.getLogger(__name__)
 
+current_dir = Path(__file__).parent.resolve()
+env_path = current_dir / '.env'
+env_path = env_path.resolve()
+load_dotenv(env_path, override = True)
+api_name = os.getenv("LOCAL_CHAT_API_NAME")
+model_provider = os.getenv("LOCAL_CHAT_MODEL_PROVIDER")
+
+compress_model = init_chat_model(
+    model_provider = model_provider,
+    model = api_name,
+    temperature = 0,
+)
 
 def _calculate_total_chars(messages: list[dict[str, Any]]) -> int:
     """Calculate total character count in session."""
@@ -48,7 +62,6 @@ def _split_messages(
 def _generate_summary(old_messages: list[dict[str, Any]]) -> str:
     """Generate structured summary from messages using LLM."""
     from langchain_core.prompts import ChatPromptTemplate
-    llm = base_model
 
     conversation = "\n".join(
         f"{m.get('role', 'unknown')}: {m.get('content', '')}" for m in old_messages
@@ -77,7 +90,7 @@ def _generate_summary(old_messages: list[dict[str, Any]]) -> str:
     )
     prompt.partial_variables = {"datetime": datetime.now().strftime("%Y-%m-%d")}
 
-    result = llm.invoke(prompt.format(conversation=conversation))
+    result = compress_model.invoke(prompt.format(conversation=conversation))
     content = result.content
     if isinstance(content, str):
         return content

@@ -112,7 +112,7 @@ def get_timeline_path(agent_dir: str, session_id: str)-> str:
 def get_summary_path(agent_dir: str, session_id: str)-> str:
     return (Path(get_sessions_dir(agent_dir)) / session_id / SUMMARY_FILE).as_posix()
 
-def _session_path(session_id: str) -> str:
+def _current_session_path(session_id: str) -> str:
     return (Path(SESSIONS_DIR) / f"{session_id}/current.jsonl").as_posix()
 
 def format_date()->str:
@@ -445,16 +445,16 @@ def load_l1_decisions(
 
         if len(matched) == 0:
             dates_str = ", ".join(dates)
-            return {"available": False, "prompt": ""}
+            return L1DecisionsResult(available=False, prompt="")
 
         filtered_content = "\n\n".join(matched)
         dates_str = ", ".join(dates)
         prompt = f"<key_decisions>\n以下是 {dates_str} 的关键决策和技术细节：\n{filtered_content}\n</key_decisions>"
-        return {"available": True, "prompt": prompt}
+        return L1DecisionsResult(available=True, prompt=prompt)
 
     # 无过滤，加载全部
     prompt = f"<key_decisions>\n以下是历史对话中提取的关键决策和技术细节：\n{full_content}\n</key_decisions>"
-    return {"available": True, "prompt": prompt}
+    return L1DecisionsResult(available=True, prompt=prompt)
 
 # ========================
 # L2: 按需加载（导出接口）

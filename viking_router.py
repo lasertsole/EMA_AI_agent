@@ -5,35 +5,32 @@ import os
 from enum import Enum
 from pathlib import Path
 from dotenv import load_dotenv
-from langchain.chat_models import init_chat_model
-from typing import List, TypedDict, Optional, Literal
-from langchain.messages import SystemMessage, HumanMessage
 from pydantic import BaseModel, Field
 from tools import CORE_TOOLS, ALL_TOOLS
+from typing import List, TypedDict, Optional
+from langchain.chat_models import init_chat_model
+from langchain.messages import SystemMessage, HumanMessage
 from workspace import CORE_FILE_NAMES, FILE_DESCRIPTIONS
 
 current_dir = Path(__file__).parent.resolve()
-env_path = current_dir / '../.env'
+env_path = current_dir / '.env'
 env_path = env_path.resolve()
 load_dotenv(env_path, override = True)
-api_key = os.getenv("VIKING_API_KEY")
-api_name = os.getenv("VIKING_API_NAME")
-model_provider = os.getenv("VIKING_MODEL_PROVIDER")
+api_name = os.getenv("LOCAL_CHAT_API_NAME")
+model_provider = os.getenv("LOCAL_CHAT_MODEL_PROVIDER")
 
 class RoutingModelResult(BaseModel):
     tools: List[str] = Field(description="List of capability tool names to load.")
     files: List[str] = Field(description="List of workspace files to load.")
     needs_l1: Optional[bool] = Field(description="Whether to load L1 layer index (historical key decisions). Set to true when user's question references previous work or requires context from past conversations")
-    l1_dates: Optional[List[str]] = Field(description="List of dates for L1 decisions to load, Empty array means no specific L1 dates needed", examples=[[], ["2026-03-14"], ["2026-03-14", "2026-03-11"]])
-    l1_tsids: Optional[List[str]] = Field(description="List of tsids for L1 decisions to load, Empty array means no specific L1 tsids needed", examples=[[], ["20260309232555"], ["20260309232555", "20260309232745"]])
+    l1_dates: Optional[List[str]] = Field(description="List of dates for L1 decisions to load, Sort by time (newest first), Empty array means no specific L1 dates needed", examples=[[], ["2026-03-14"], ["2026-03-14", "2026-03-11"]])
+    l1_tsids: Optional[List[str]] = Field(description="List of tsids for L1 decisions to load, Sort by time (newest first), Empty array means no specific L1 tsids needed", examples=[[], ["20260309232555"], ["20260309232745", "20260309232555"]])
     needs_l2: Optional[bool] = Field(description="Whether to load L2 layer full conversation history. Set to true when complete conversation context is required")
 
 routing_model = init_chat_model(
     model_provider = model_provider,
     model = api_name,
-    api_key = api_key,
     temperature = 0,
-    max_retries = 2,
 ).with_structured_output(RoutingModelResult)
 
 """
@@ -150,7 +147,7 @@ def call_routing_model(system: str, user: str)-> RoutingModelResult | None:
     ]
     
     try:
-        return routing_model.invoke(messages, max_tokens = 200).model_dump()
+        return routing_model.invoke(messages).model_dump()
     except Exception as e:
         print(e)
         return None
