@@ -1,56 +1,45 @@
+import time
 import asyncio
-from pathlib import Path
-from tools import ALL_TOOLS
-from workspace import ALL_FILE_NAMES
-from skills.loader import scan_skills
-from viking_router import viking_route, build_skill_names_only_prompt
-from sessions.history_index import load_l0_timeline, load_l1_decisions, load_l2_session, load_summary
+import streamlit as st
+from typing import List, Any
 
-current_dir = Path(__file__).parent.resolve()
-
+messages: List[dict[str, Any]] = []
 async def main():
-    # # ===== L0 时间线加载（始终） start =====
-    # l0_result = await load_l0_timeline(session_id='1')
-    # # ===== L0 时间线加载（始终） end =====
-    #
-    # # ===== viking routing start =====
-    # route_result = await viking_route(
-    #     user_input = "雪莉嫁给我如何？",
-    #     tools = [t.name for t in ALL_TOOLS],
-    #     file_names = ALL_FILE_NAMES,
-    #     timeline = l0_result['raw_timeline'],
-    #     skills = scan_skills()
-    # )
-    # # ===== viking routing end =====
-    #
-    # if route_result["skipped"]:
-    #     return None
-    #
-    # context:str = ""
-    # # ===== L1 按日期按需加载 start =====
-    # if route_result["needs_l1"]:
-    #     l1_prompt = load_l1_decisions(session_id='1', dates=route_result["l1_dates"], tsids=route_result["l1_tsids"])
-    #
-    #     if l1_prompt is not None and l1_prompt.available and len(l1_prompt.prompt)> 0:
-    #         context += "\n\n" + l1_prompt.prompt
-    # # ===== L1 按日期按需加载 end =====
-    #
-    # # ===== L2 按需加载 start =====
-    # if route_result["needs_l2"]:
-    #     l2_prompt = load_l2_session(session_id='1', tsids = route_result["l1_tsids"])
-    #
-    #     if l2_prompt is not None and l2_prompt.available and len(l2_prompt.prompt)> 0:
-    #         context += "\n\n" + l2_prompt.prompt
-    # # ===== L2 按需加载 end =====
-    #
-    # print(route_result)
-    # print({
-    #     "tools": route_result["tools"],
-    #     "files": route_result["files"],
-    #     "context": context,
-    # })
-    # return context
-    print(len(load_summary("1")))
+    with st.chat_message("assistant", avatar="./src/avatar/assistant.jpg"):
+        with st.status("tool calling.", expanded=True) as status:
+            completed_tools: List[str] = []
+            completed_placeholder = st.empty()
+            current_placeholder = st.empty()
 
-if __name__ == "__main__":
-    asyncio.run(main())
+            current_tool_name: str = ""
+            current_tool_id: str = ""
+            for message in messages:
+                tool_calls = message["msg"].get("tool_calls", []) if len(message["msg"].get("tool_calls", [])) > 0 else message["msg"].get("tool_call_chunks", [])
+
+                if message["type"] == "AIMessageChunk":
+                    if len(tool_calls) > 0 or current_tool_id.strip():
+                        if len(tool_calls) > 0:
+                          tool_call = tool_calls[0]
+
+                        if tool_call["name"] and tool_call["name"].strip():
+                            current_tool_name = tool_call['name']
+
+                        if tool_call["id"] and tool_call["id"].strip():
+                            current_tool_id = tool_call['id']
+
+                    current_placeholder.write(f"calling {current_tool_name} ")
+
+                elif message.get("content", None) is not None:
+                    status.update(label="calling", state="complete", expanded=False)
+
+                if message["type"] == "ToolMessage":
+                    completed:str = f"calling  {current_tool_name} complete"
+                    completed_tools.append(completed)
+                    completed_placeholder.markdown("\n\n".join(completed_tools))
+
+                    current_tool_name = ""
+                    current_tool_id = ""
+
+                    current_placeholder.empty()
+
+                time.sleep(0.2)
