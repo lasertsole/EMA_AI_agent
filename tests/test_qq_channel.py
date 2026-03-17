@@ -3,6 +3,8 @@ import asyncio
 import streamlit as st
 from typing import List, Any
 
+from streamlit.delta_generator import DeltaGenerator
+
 messages: List[dict[str, Any]] = [
 {"type": "AIMessageChunk", "content":'',"additional_kwargs":{},"response_metadata":{'model_provider': 'deepseek'},"id":"lc_run--019cf74c-b98d-72a2-a15c-9c90ad0781d8","tool_calls":[],"invalid_tool_calls":[],"tool_call_chunks":[]},
 {"type": "AIMessageChunk", "content":'',"additional_kwargs":{},"response_metadata":{'model_provider': 'deepseek'},"id":"lc_run--019cf74c-b98d-72a2-a15c-9c90ad0781d8","tool_calls":[{'name': 'tavily_search', 'args': {}, 'id': 'call_00_VeOdTEPG55qHf9kL2ZprzGO9', 'type': 'tool_call'}],"invalid_tool_calls":[],"tool_call_chunks":[{'name': 'tavily_search', 'args': '', 'id': 'call_00_VeOdTEPG55qHf9kL2ZprzGO9', 'index': 0, 'type': 'tool_call_chunk'}]},
@@ -73,45 +75,49 @@ messages: List[dict[str, Any]] = [
 {"type": "AIMessageChunk", "content":'',"additional_kwargs":{},"response_metadata":{'model_provider': 'deepseek'},"id":"lc_run--019cf74d-0c3c-78a1-a841-eee71a4af44d","tool_calls":[],"invalid_tool_calls":[],"tool_call_chunks":[]},
 {"type": "AIMessageChunk", "content":"哇","additional_kwargs":{},"response_metadata":{'model_provider': 'deepseek'},"id":"lc_run--019cf74d-0c3c-78a1-a841-eee71a4af44d","tool_calls":[],"invalid_tool_calls":[],"tool_call_chunks":[]},
 ]
+
+tool_chain_status: DeltaGenerator|None = None
+current_tool_name: str = ""
+current_tool_id: str = ""
+def build_tool_call_chain(message: dict[str, Any]):
+    global tool_chain_status
+    global current_tool_name
+    global current_tool_id
+
+    if message["type"] == "AIMessageChunk":
+        tool_calls = message.get("tool_calls", []) if len(message.get("tool_calls", [])) > 0 else message.get(
+            "tool_call_chunks", [])
+
+        if len(tool_calls) > 0 or current_tool_id.strip():
+            if len(tool_calls) > 0:
+                tool_call = tool_calls[0]
+
+                if tool_call["name"] and tool_call["name"].strip():
+                    current_tool_name = tool_call['name']
+
+                if tool_call["id"] and tool_call["id"].strip():
+                    current_tool_id = tool_call['id']
+
+            if tool_chain_status is None:
+                tool_chain_status = st.empty()
+
+            tool_chain_status.write(f"调用 {current_tool_name} 中")
+
+        if current_tool_id and tool_chain_status is not None and message.get("content", None) is not None and message["content"]:
+            current_tool_name = ""
+            current_tool_id = ""
+            tool_chain_status.write(f"调用工具 {current_tool_name} 结束。")
+            tool_chain_status = None
+
+
+    time.sleep(0.1)
+
 async def main():
     with st.chat_message("assistant", avatar="./src/avatar/assistant.jpg"):
-        with st.status("正在执行工具调用...", expanded=True) as status:
-            completed_tools: List[str] = []
-            completed_placeholder = st.empty()
-            current_placeholder = st.empty()
+        st.write("欢迎来到 DeepSeek ！")
+        for message in messages:
+            build_tool_call_chain(message)
 
-            current_tool_name: str = ""
-            current_tool_id: str = ""
-            for message in messages:
-                tool_calls = message.get("tool_calls", []) if len(message.get("tool_calls", [])) > 0 else message.get("tool_call_chunks", [])
-
-                if message["type"] == "AIMessageChunk":
-                    if len(tool_calls) > 0 or current_tool_id.strip():
-                        if len(tool_calls) > 0:
-                          tool_call = tool_calls[0]
-
-                        if tool_call["name"] and tool_call["name"].strip():
-                            current_tool_name = tool_call['name']
-
-                        if tool_call["id"] and tool_call["id"].strip():
-                            current_tool_id = tool_call['id']
-
-                        current_placeholder.write(f"调用 {current_tool_name} 中")
-
-                    elif current_tool_id and message.get("content", None) is not None:
-                        status.update(label="工具调用结束。", state="complete", expanded=False)
-
-                if message["type"] == "ToolMessage":
-                    completed:str = f"调用 {current_tool_name} 完成"
-                    completed_tools.append(completed)
-                    completed_placeholder.markdown("\n\n".join(completed_tools))
-
-                    current_tool_name = ""
-                    current_tool_id = ""
-
-                    current_placeholder.empty()
-
-                time.sleep(0.2)
 
 if __name__ == "__main__":
     asyncio.run(main())

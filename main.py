@@ -149,7 +149,12 @@ def _to_messages(history: list[dict[str, Any]], user_input: str) -> list[BaseMes
     return messages
 
 #"""以下是组织信息列表逻辑"""
+current_tool_name: str = ""
+current_tool_id: str = ""
 async def _async_generator(history: list[dict[str, Any]], user_input: str, config: dict[str, Any])-> AsyncGenerator[str, None]:
+    global current_tool_name
+    global current_tool_id
+
     # 创建消息队列
     messages: list[BaseMessage] = _to_messages(history, user_input)
     messages_dict = {"messages": messages}
@@ -159,12 +164,36 @@ async def _async_generator(history: list[dict[str, Any]], user_input: str, confi
             yield f"{assistant_name}:"
             async for chunk in agent.astream(messages_dict, config = config, stream_mode = "messages"):
                 msg_chunk: BaseMessage = chunk[0]
-                event_chunk: dict[str, Any] = chunk[1]
 
-                if (isinstance(msg_chunk, AIMessageChunk)
-                        and event_chunk.get("langgraph_node") == 'model'
-                        and len(msg_chunk.content) > 0):
-                    yield msg_chunk.content
+                if isinstance(msg_chunk, AIMessageChunk):
+                    # 以下是输出工具信息
+                    tool_calls = msg_chunk.tool_calls if msg_chunk.tool_calls and len(msg_chunk.tool_calls) > 0 else msg_chunk.tool_call_chunks
+                    if len(tool_calls) > 0 or current_tool_id.strip():
+                        repeat_flag: bool = True # 防止重复输出工具信息
+                        if len(tool_calls) > 0:
+                            tool_call = tool_calls[0]
+
+                            if tool_call["name"]:
+                                if tool_call["name"].strip() or tool_call["name"].strip() != current_tool_name:
+                                    current_tool_name = tool_call['name']
+
+                            if tool_call["id"]:
+                                if tool_call["id"].strip() or tool_call["id"].strip() != current_tool_id:
+                                    current_tool_id = tool_call['id']
+                                    repeat_flag = False
+
+                        if not repeat_flag:
+                            yield f"\n\n**调用工具 {current_tool_name} (工具id={current_tool_id})中**"
+
+                    if current_tool_id and msg_chunk.content is not None and msg_chunk.content:
+                        yield f"\n\n**调用工具 {current_tool_name} (工具id={current_tool_id}) 结束。**\n\n"
+                        current_tool_id = ""
+                    # 以上是输出工具信息
+
+                    # 以下是对话信息
+                    if len(msg_chunk.content) > 0:
+                        yield msg_chunk.content
+                    # 以上是对话信息
         else:
             result = await agent.ainvoke(messages_dict, config = config)
             yield result["messages"][-1].content
