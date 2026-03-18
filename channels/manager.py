@@ -14,8 +14,8 @@ current_dir = Path(__file__).parent.resolve()
 env_path = current_dir / '.env'
 env_path = env_path.resolve()
 load_dotenv(env_path, override = True)
-api_name = os.getenv("LOCAL_CHAT_API_NAME")
-model_provider = os.getenv("LOCAL_CHAT_MODEL_PROVIDER")
+model_provider = os.getenv("SIMPLE_CHAT_MODEL_PROVIDER")
+api_name = os.getenv("SIMPLE_CHAT_API_NAME")
 
 
 # class ChannelManager:

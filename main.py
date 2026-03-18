@@ -1,5 +1,6 @@
 import os
 import re
+import base64
 import requests
 import threading
 from typing import Any
@@ -10,6 +11,7 @@ from tools import ALL_TOOLS
 from dotenv import load_dotenv
 from typing import List, Optional
 from typing import AsyncGenerator
+from type import MultiModalMessage
 from workspace import ALL_FILE_NAMES
 from skills.loader import scan_skills
 from viking_router import viking_route
@@ -20,6 +22,8 @@ from langgraph.errors import GraphRecursionError
 from models import TTS_Request, fetch_TTS_sound
 from config import COMPRESS_THRESHOLD, MEMORY_DIR
 from workspace.prompt_builder import build_system_prompt
+from streamlit.elements.widgets.chat import ChatInputValue
+from streamlit.runtime.uploaded_file_manager import UploadedFile
 from utils import File, FileType, ChatStorage as Streamlit_ChatStorage
 from sessions import generate_tsid, append_session_message, read_session
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage, SystemMessage, BaseMessage
@@ -47,8 +51,6 @@ streamlit_chatStorage = Streamlit_ChatStorage(session_id = session_id, chats_max
 
 user_name = "远野汉娜"
 assistant_name = "橘雪莉"
-
-
 
 #"""以下是主动记忆功能"""
 def _maybe_extract_memory(text: str) -> str | None:
@@ -117,15 +119,15 @@ def _viking_routing(user_input: str)-> dict[str, Any]:
         "context": context,
     }
 
-def _to_messages(history: list[dict[str, Any]], user_input: str) -> list[BaseMessage]:
+def _to_messages(history: list[dict[str, Any]], multi_modal_message: MultiModalMessage) -> list[BaseMessage]:
     # 使用openviking路由
-    viking_result = _viking_routing(user_input)
+    viking_result = _viking_routing(multi_modal_message.text)
     files = viking_result.get("file_names", [])
     context = viking_result.get("context", "")
 
     #"""将历史对话和当前用户输入拼接成消息队列"""
     # 加入系统提示
-    messages: list[Any] = [SystemMessage(content=build_system_prompt(selected_file_names=files)+context)]
+    messages: list[Any] = [SystemMessage(content = build_system_prompt(selected_file_names = files)+context)]
 
     # 加入摘要
     summary:str = load_summary(session_id=session_id)
@@ -145,18 +147,23 @@ def _to_messages(history: list[dict[str, Any]], user_input: str) -> list[BaseMes
                     tool_call_id=m.get("tool_call_id", ""),
                 )
             )
-    messages.append(HumanMessage(content = user_input))
+
+    content_list : list[dict] = [{"type": "text", "text": multi_modal_message.text}]
+    if multi_modal_message.image_base64_list:
+        for image_base64 in multi_modal_message.image_base64_list:
+            content_list.append({"type": "image_url", "image_url": f"data:image/png;base64,{image_base64}"})
+    messages.append(HumanMessage(content = content_list))
     return messages
 
 #"""以下是组织信息列表逻辑"""
 current_tool_name: str = ""
 current_tool_id: str = ""
-async def _async_generator(history: list[dict[str, Any]], user_input: str, config: dict[str, Any])-> AsyncGenerator[str, None]:
+async def _async_generator(history: list[dict[str, Any]], multi_modal_message: MultiModalMessage, config: dict[str, Any])-> AsyncGenerator[str, None]:
     global current_tool_name
     global current_tool_id
 
     # 创建消息队列
-    messages: list[BaseMessage] = _to_messages(history, user_input)
+    messages: list[BaseMessage] = _to_messages(history, multi_modal_message)
     messages_dict = {"messages": messages}
 
     try:
@@ -238,13 +245,13 @@ def filter_content_for_tts(content: str) -> str:
 #"""以上是工具函数"""
 
 # streamlit主程序
-if __name__ == "__main__":
-    _config: dict[str, Any] = {"configurable": {"thread_id": thread_id }}
+def main():
+    _config: dict[str, Any] = {"configurable": {"thread_id": thread_id}}
     _history = read_session(session_id)
 
     chat_list: list[dict[str, Any]] = streamlit_chatStorage.get_chats()
     if len(chat_list) == 0:
-        hello_chat = dict(role="assistant", content = f"汉娜さん，来茶间聊天吧！")
+        hello_chat = dict(role="assistant", content=f"汉娜さん，来茶间聊天吧！")
         chat_list.append(hello_chat)
         _storage_add_chat(hello_chat)
 
@@ -258,63 +265,100 @@ if __name__ == "__main__":
                         with open(file_path, "rb") as f:
                             st.audio(data=f.read(), format="audio/ogg")
 
+            if "image_path_list" in _chat and _chat["image_path_list"] is not None:
+                for file_path in _chat["image_path_list"]:
+                    if Path(file_path).exists():
+                        with open(file_path, "rb") as f:
+                            st.image(f.read())
+
     # 用户输入
-    user_input_obj = st.chat_input(
+    user_input_obj: ChatInputValue = st.chat_input(
         "请输入对话内容",
         accept_file=True,
         file_type=["png", "jpg", "jpeg"],
     )
+    # 创建文件列表
+    file_list: list[File] = []
 
     if user_input_obj:
-        _user_input = user_input_obj.text
-        _files = user_input_obj.files
+        _multi_modal_message: MultiModalMessage = MultiModalMessage(text=user_input_obj.text)
+        _files: List[UploadedFile] = user_input_obj.files
 
         # 添加用户消息框UI
-        with st.chat_message("user", avatar="./src/avatar/user.jpg"):
-            st.markdown(f"{user_name}:{_user_input}")
+        with st.chat_message(name = "user", avatar = "./src/avatar/user.jpg"):
+            st.markdown(f"{user_name}:{_multi_modal_message.text}")
 
+            # 遍历用户上传图片文件
+            image_base64_list: List[str] = []
             for _file in _files:
+                # 显示图片
                 st.image(_file)
+                
+                # 将图片转为bytes
+                file_bytes: bytes = _file.getvalue()
 
-            _storage_add_chat(dict(role="user", content=_user_input))
+                # 将 图片bytes 放入base64列表
+                base64_bytes = base64.b64encode(file_bytes)
+                base64_string = base64_bytes.decode("utf-8")
+                image_base64_list.append(base64_string)
+
+                # 将 图片bytes 放入文件列表
+                file: File = {"content": file_bytes, "type": FileType.IMAGE, "extension": '.jpg'}
+                file_list.append(file)
+            _multi_modal_message.image_base64_list = image_base64_list if len(image_base64_list) > 0 else None
+
+            # 将用户消息持久化
+            _storage_add_chat(dict(role = "user", content = _multi_modal_message.text), files=file_list if len(file_list) > 0 else None)
 
         # 将用户要求的知识存入到MEMORY.MD
-        memory_entry = _maybe_extract_memory(_user_input)
+        memory_entry = _maybe_extract_memory(_multi_modal_message.text)
         if memory_entry:
             _append_memory(memory_entry)
             if task_queue:
                 threading.Thread(target=lambda: task_queue.enqueue_memory_index(memory_entry)).start()
 
+        # if True:
+        #     return
+
         # 添加AI消息框UI
-        with st.chat_message("assistant", avatar="./src/avatar/assistant.jpg"):
-            stream = _async_generator(_history, _user_input, _config)
+        with st.chat_message(name = "assistant", avatar="./src/avatar/assistant.jpg"):
+            stream = _async_generator(_history, _multi_modal_message, _config)
             _content = st.write_stream(stream)
 
             # 去除开头的assistant_name
             _content = _content[len(f"{assistant_name}:"):]
 
-            file: File = None
+            # 重置文件列表
+            file_list = []
+
             with st.spinner("正在生成语音..."):
                 # 生成语音,当生成失败时跳过生成
                 try:
                     # 去除多余字符
                     clear_content = filter_content_for_tts(_content)
 
-                    audio_requires = TTS_Request(text=clear_content, text_lang = "zh")
+                    audio_requires = TTS_Request(text=clear_content, text_lang="zh")
                     response = fetch_TTS_sound(audio_requires)
                     if response is not None:
-                        st.audio(data = response.content, format="audio/ogg")
-                        file = {"content":response.content, "type":FileType.AUDIO, "extension": '.wav'}
+                        st.audio(data=response.content, format="audio/ogg")
+                        file: File = {"content": response.content, "type": FileType.AUDIO, "extension": '.wav'}
+                        file_list.append(file)
                 except Exception as e:
                     pass
 
-            # 将消息持久化
-            _storage_add_chat(dict(role = "assistant", content = _content), files = [file] if file is not None else None)
+            # 将AI消息持久化
+            _storage_add_chat(dict(role = "assistant", content = _content), files = file_list if len(file_list) > 0 else None)
 
             # 添加viking L0 和 L1 索引
-            task_queue.enqueue_append_timeline_entry(messages = [HumanMessage(content=_user_input), AIMessage(content=_content)], session_id = session_id, tool_metas = [])
+            task_queue.enqueue_append_timeline_entry(
+                messages=[HumanMessage(content=_multi_modal_message.text), AIMessage(content=_content)], session_id = session_id,
+                tool_metas=[])
 
             # 如果达到压缩阈值，则压缩历史会话
-            total_chars = sum(len(m.get("content", "")) for m in _history) + len(_user_input)
+            total_chars = sum(len(m.get("content", "")) for m in _history) + len(_multi_modal_message.text)
             if total_chars > COMPRESS_THRESHOLD and task_queue:
                 task_queue.enqueue_compress(session_id)
+
+# 执行主程序
+if __name__ == "__main__":
+    main()

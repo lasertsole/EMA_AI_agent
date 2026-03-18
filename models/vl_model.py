@@ -11,9 +11,9 @@ current_dir = Path(__file__).parent.resolve()
 env_path = current_dir / '../.env'
 env_path = env_path.resolve()
 load_dotenv(env_path, override = True)
-api_key = os.getenv("CHAT_API_KEY")
-api_name = os.getenv("CHAT_API_NAME")
-model_provider = os.getenv("CHAT_MODEL_PROVIDER")
+api_key = os.getenv("VL_API_KEY")
+api_name = os.getenv("VL_API_NAME")
+model_provider = os.getenv("VL_MODEL_PROVIDER")
 
 model_config:dict[str, Any] = {
     "model_provider": model_provider,
@@ -23,4 +23,4 @@ model_config:dict[str, Any] = {
     "max_retries": 2
 }
 model_config = {k: v for k, v in model_config.items() if v is not None and v != ""}
-base_model = init_chat_model(**model_config) #生成模型对象
+vl_model = init_chat_model(**model_config) #生成模型对象

@@ -1,6 +1,7 @@
 from pathlib import Path
 
 ROOT_DIR = Path(__file__).parent.resolve()
+ROOT_DIR = ROOT_DIR / ".."
 
 MEMORY_DIR = ROOT_DIR / "memory"
 SESSIONS_DIR = ROOT_DIR / "sessions"
