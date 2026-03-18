@@ -2,15 +2,14 @@
 
 from __future__ import annotations
 
+import logging
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any
+from bus.events import InboundMessage, OutboundMessage
+from bus.queue import MessageBus
 
-from loguru import logger
-
-from nanobot.bus.events import InboundMessage, OutboundMessage
-from nanobot.bus.queue import MessageBus
-
+logger = logging.getLogger(__name__)
 
 class BaseChannel(ABC):
     """
@@ -41,7 +40,7 @@ class BaseChannel(ABC):
         if not self.transcription_api_key:
             return ""
         try:
-            from nanobot.providers.transcription import GroqTranscriptionProvider
+            from providers.transcription import GroqTranscriptionProvider
 
             provider = GroqTranscriptionProvider(api_key=self.transcription_api_key)
             return await provider.transcribe(file_path)
