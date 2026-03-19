@@ -5,7 +5,6 @@ import requests
 import threading
 from typing import Any
 import streamlit as st
-from agent import agent
 from pathlib import Path
 from tools import ALL_TOOLS
 from dotenv import load_dotenv
@@ -15,6 +14,7 @@ from type import MultiModalMessage
 from workspace import ALL_FILE_NAMES
 from skills.loader import scan_skills
 from viking_router import viking_route
+from agent import built_agent, ModelType
 from tasks.queue import BackgroundTaskQueue
 from langchain.messages import AIMessageChunk
 from langchain_core.tools import ToolException
@@ -37,6 +37,9 @@ is_stream = os.getenv("IS_STREAM")
 session_id = '1'
 thread_id = 1
 
+# 创建配置参数
+_config: dict[str, Any] = {"configurable": {"thread_id": thread_id, "model_type": "chat_model"}}
+
 # 创建任务队列
 @st.cache_resource
 def get_task_queue() -> BackgroundTaskQueue:
@@ -48,6 +51,9 @@ threading.Thread(target= lambda: task_queue.start(), daemon=True).start()
 
 # streamlit最大显示对话数
 streamlit_chatStorage = Streamlit_ChatStorage(session_id = session_id, chats_maxlen = 20)
+
+# 创建agent
+agent = built_agent()
 
 user_name = "远野汉娜"
 assistant_name = "橘雪莉"
@@ -120,6 +126,8 @@ def _viking_routing(user_input: str)-> dict[str, Any]:
     }
 
 def _to_messages(history: list[dict[str, Any]], multi_modal_message: MultiModalMessage) -> list[BaseMessage]:
+    global agent
+
     # 使用openviking路由
     viking_result = _viking_routing(multi_modal_message.text)
     files = viking_result.get("file_names", [])
@@ -151,7 +159,10 @@ def _to_messages(history: list[dict[str, Any]], multi_modal_message: MultiModalM
     content_list : list[dict] = [{"type": "text", "text": multi_modal_message.text}]
     if multi_modal_message.image_base64_list:
         for image_base64 in multi_modal_message.image_base64_list:
-            content_list.append({"type": "image_url", "image_url": f"data:image/png;base64,{image_base64}"})
+            content_list.append({"type": "image_url", "image_url": {"url": f"data:image/png;base64,{image_base64}"}})
+            # 切换模型
+            agent = built_agent(model_type = ModelType.VL_MODEL, enable_tool = False)
+
     messages.append(HumanMessage(content = content_list))
     return messages
 
@@ -246,7 +257,6 @@ def filter_content_for_tts(content: str) -> str:
 
 # streamlit主程序
 def main():
-    _config: dict[str, Any] = {"configurable": {"thread_id": thread_id}}
     _history = read_session(session_id)
 
     chat_list: list[dict[str, Any]] = streamlit_chatStorage.get_chats()
