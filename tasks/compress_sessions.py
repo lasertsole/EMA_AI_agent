@@ -17,32 +17,12 @@ from config import (
     COMPRESS_THRESHOLD,
     SESSIONS_DIR,
 )
+from models import simple_chat_model
 from sessions.store import read_session
 
 logger = logging.getLogger(__name__)
 
-current_dir = Path(__file__).parent.resolve()
-env_path = current_dir / '.env'
-env_path = env_path.resolve()
-load_dotenv(env_path, override = True)
-api_key = os.getenv()
-model_provider = os.getenv("SIMPLE_CHAT_MODEL_PROVIDER")
-api_name = os.getenv("SIMPLE_CHAT_API_NAME")
-
-
-
-model_config:dict[str, Any] = {
-    "api_key": api_key,
-    "model_provider": model_provider,
-    "model": api_name,
-    "temperature": 0,
-    "max_retries": 2
-}
-compress_model = init_chat_model(
-    model_provider = model_provider,
-    model = api_name,
-    temperature = 0,
-)
+compress_model = simple_chat_model.bind(temperature=0)
 
 def _calculate_total_chars(messages: list[dict[str, Any]]) -> int:
     """Calculate total character count in session."""

@@ -1,22 +1,8 @@
-import os
-from pathlib import Path
-from dotenv import load_dotenv
 from typing import TypedDict
-from langchain.chat_models import init_chat_model
 from langgraph.graph import StateGraph, START, END
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate, FewShotChatMessagePromptTemplate
-
-# 获取当前所在文件夹
-current_dir = Path(__file__).parent.resolve()
-
-# 加载环境变量和模型初始化（同上）
-env_path = current_dir / '../../../.env'
-env_path = env_path.resolve()
-load_dotenv(env_path, override = True)
-api_key = os.getenv("CHAT_API_KEY")
-api_name = os.getenv("CHAT_API_NAME")
-model_provider = os.getenv("CHAT_MODEL_PROVIDER")
+from models import base_model
 
 examples = [
     {
@@ -52,13 +38,7 @@ prompt = ChatPromptTemplate.from_messages(
     ]
 )
 
-generate_query_step_back = prompt | init_chat_model(
-    model_provider = model_provider,
-    model = api_name,
-    api_key = api_key,
-    temperature = 0,
-    max_retries = 2
-) | StrOutputParser()
+generate_query_step_back = prompt | base_model.bind(temperature = 0) | StrOutputParser()
 
 class GraphState(TypedDict):
     input: str  # 原问题(输入)

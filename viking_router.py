@@ -6,9 +6,10 @@ from enum import Enum
 from pathlib import Path
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field
+
+from models import base_model
 from tools import CORE_TOOLS, ALL_TOOLS
-from typing import List, TypedDict, Optional, Any
-from langchain.chat_models import init_chat_model
+from typing import List, TypedDict, Optional
 from langchain.messages import SystemMessage, HumanMessage
 from workspace import CORE_FILE_NAMES, FILE_DESCRIPTIONS
 
@@ -28,15 +29,7 @@ class RoutingModelResult(BaseModel):
     l1_tsids: Optional[List[str]] = Field(description="List of tsids for L1 decisions to load, Sort by time (newest first), Empty array means no specific L1 tsids needed", examples=[[], ["20260309232555"], ["20260309232745", "20260309232555"]])
     needs_l2: Optional[bool] = Field(description="Whether to load L2 layer full conversation history. Set to true when complete conversation context is required")
 
-model_config:dict[str, Any] = {
-    "api_key": api_key,
-    "model_provider": model_provider,
-    "model": api_name,
-    "temperature": 0,
-    "max_retries": 2
-}
-model_config = {k: v for k, v in model_config.items() if v is not None and v != ""}
-routing_model = init_chat_model(**model_config).with_structured_output(RoutingModelResult)
+routing_model = base_model.bind(temperature=0)
 
 """
 Controls which hardcoded sections are included in the system prompt.

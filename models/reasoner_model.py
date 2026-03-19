@@ -3,6 +3,7 @@ from typing import Any
 from pathlib import Path
 from dotenv import load_dotenv
 from langchain.chat_models import init_chat_model
+from langchain_core.runnables import ConfigurableField
 
 # 获取当前所在文件夹
 current_dir = Path(__file__).parent.resolve()
@@ -24,4 +25,9 @@ model_config:dict[str, Any] = {
 }
 model_config = {k: v for k, v in model_config.items() if v is not None and v != ""}
 #推理模型
-reasoner_model =init_chat_model(**model_config)
+reasoner_model = init_chat_model(**model_config)
+reasoner_model = reasoner_model.configurable_fields(
+    temperature=ConfigurableField(
+        id="temperature",
+    )
+)

@@ -3,13 +3,11 @@ import uuid
 import jieba
 from typing import List
 from pathlib import Path
-from models import embed_model
-from dotenv import load_dotenv
+from models import embed_model, base_model
 from langchain_classic.storage import LocalFileStore
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.documents import Document
-from langchain.chat_models import init_chat_model
 from langchain_classic.retrievers import MultiVectorRetriever, MultiQueryRetriever, EnsembleRetriever
 from langchain_community.retrievers import BM25Retriever
 from langchain_classic.retrievers.multi_vector import SearchType
@@ -19,15 +17,6 @@ from langchain_community.vectorstores import FAISS
 
 # 获取当前所在文件夹
 current_dir = Path(__file__).parent.resolve()
-
-# 加载环境变量
-env_path = current_dir / '../../../.env'
-env_path = env_path.resolve()
-load_dotenv(env_path, override = True)
-api_key = os.getenv("CHAT_API_KEY")
-api_name = os.getenv("CHAT_API_NAME")
-model_provider = os.getenv("CHAT_MODEL_PROVIDER")
-
 
 def format_doc(doc: Document, separators: list) -> Document:
     for sep in separators:
@@ -58,13 +47,7 @@ docs = text_splitter.split_documents(documents)
 docs = [format_doc(doc, separators) for doc in docs]
 
 # 生成对话模型
-llm = init_chat_model(
-    model_provider=model_provider,
-    model=api_name,
-    api_key=api_key,
-    temperature=0.8,
-    max_retries=2
-)
+llm = base_model.bind(temperature=0.8)
 
 if not indexFolderPath.exists():
     # 构造生成摘要链

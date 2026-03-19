@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
+from models import base_model
 from dotenv import load_dotenv
-from langchain.chat_models import init_chat_model
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
@@ -34,10 +34,4 @@ generate_prompt = ChatPromptTemplate.from_messages(
 )
 
 # Chain
-generator = generate_prompt | init_chat_model(
-        model_provider = model_provider,
-        model = api_name,
-        api_key = api_key,
-        temperature = 0,
-        max_retries = 2
-    ) | StrOutputParser()
+generator = generate_prompt | base_model.bind(temperature = 0) | StrOutputParser()

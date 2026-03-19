@@ -12,20 +12,20 @@ current_dir = Path(__file__).parent.resolve()
 env_path = current_dir / '../.env'
 env_path = env_path.resolve()
 load_dotenv(env_path, override = True)
-api_key = os.getenv("VL_API_KEY")
-api_name = os.getenv("VL_API_NAME")
-model_provider = os.getenv("VL_MODEL_PROVIDER")
+api_key = os.getenv("SIMPLE_CHAT_API_KEY")
+api_name = os.getenv("SIMPLE_CHAT_API_NAME")
+model_provider = os.getenv("SIMPLE_CHAT_MODEL_PROVIDER")
 
 model_config:dict[str, Any] = {
     "model_provider": model_provider,
     "model": api_name,
     "api_key": api_key,
-    "temperature": 0.8,
+    "temperature": 0,
     "max_retries": 2
 }
 model_config = {k: v for k, v in model_config.items() if v is not None and v != ""}
-vl_model = init_chat_model(**model_config) #生成模型对象
-vl_model = vl_model.configurable_fields(
+simple_chat_model = init_chat_model(**model_config) #生成模型对象
+simple_chat_model = simple_chat_model.configurable_fields(
     temperature=ConfigurableField(
         id="temperature",
     )
