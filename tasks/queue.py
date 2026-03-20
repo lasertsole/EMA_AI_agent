@@ -2,8 +2,8 @@
 
 import asyncio
 import logging
-from typing import Any, Literal, List, Optional
-from langchain_core.messages import AIMessage, HumanMessage, BaseMessage
+from typing import Any, Literal, List
+from langchain_core.messages import BaseMessage
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +39,7 @@ class BackgroundTaskQueue:
                         await update_memory_index_incremental(data["new_content"])
 
                     case "append_timeline_entry":
-                        from sessions.history_index import append_timeline_entry
+                        from sessions.viking.history_index import append_timeline_entry
                         await append_timeline_entry(messages=data["messages"], session_id=data["session_id"], tool_metas=data["tool_metas"])
 
                     case _:

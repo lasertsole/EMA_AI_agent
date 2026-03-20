@@ -27,7 +27,7 @@ from streamlit.runtime.uploaded_file_manager import UploadedFile
 from utils import File, FileType, ChatStorage as Streamlit_ChatStorage
 from sessions import generate_tsid, append_session_message, read_session
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage, SystemMessage, BaseMessage
-from sessions.history_index import load_l0_timeline, load_l1_decisions, load_l2_session, load_summary
+from sessions.viking.history_index import load_l0_timeline, load_l1_decisions, load_l2_session, load_summary
 
 env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), './.env')
 load_dotenv(env_path, override=True)
