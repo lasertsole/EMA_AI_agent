@@ -14,7 +14,7 @@ from typing import AsyncGenerator
 from type import MultiModalMessage
 from workspace import ALL_FILE_NAMES
 from skills.loader import scan_skills
-from viking_router import viking_route
+from sessions import viking_route
 from agent import built_agent, ModelType
 from tasks.queue import BackgroundTaskQueue
 from langchain.messages import AIMessageChunk
@@ -95,7 +95,7 @@ def _viking_routing(user_input: str)-> dict[str, Any]:
         user_input = user_input,
         tools = [t.name for t in ALL_TOOLS],
         file_names = ALL_FILE_NAMES,
-        timeline = l0_result['raw_timeline'],
+        timeline = l0_result.raw_timeline,
         skills = scan_skills()
     )
     # ===== viking routing end =====
