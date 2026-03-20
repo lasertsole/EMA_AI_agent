@@ -8,7 +8,6 @@ import streamlit as st
 from pathlib import Path
 from tools import ALL_TOOLS
 from dotenv import load_dotenv
-from sessions import viking_route
 from typing import List, Optional
 from typing import AsyncGenerator
 from type import MultiModalMessage

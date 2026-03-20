@@ -8,6 +8,7 @@ SESSIONS_DIR = ROOT_DIR / "sessions"
 SKILLS_DIR = ROOT_DIR / "skills"
 WORKSPACE_DIR = ROOT_DIR / "workspace"
 KNOWLEDGE_DIR = ROOT_DIR / "knowledge"
+SRC_DIR = ROOT_DIR / "src"
 
 # Compression and RAG thresholds
 COMPRESS_THRESHOLD = 7_000
