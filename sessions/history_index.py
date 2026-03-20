@@ -71,17 +71,16 @@ class Summary(BaseModel):
         "- 具体步骤：第一步寻找彩叶本人或手镯，第二步获取手镯，第三步激活手镯连接月读世界",
         "- 搜索策略：先询问相关人员，搜索实验室位置，寻找活动痕迹，重点搜索东京科技园区、大学机械工程系、义体技术研究中心",
         "- 时间线分析：发现辉夜等待八千年与彩叶是现代人的矛盾，推测月读世界时间流速不同或手镯有时空功能",
-        "- 备用方案：寻找月读世界其他入口，联系其他知道月读世界的人，使用魔法少女特殊能力",
+        "- 备用方案：寻找月读世界其他入口，联系其他知道月读世界的人",
     ]])
 
 # L0 加载结果
 class L0TimelineResult(BaseModel):
-    available: bool
-    prompt: str #L0 时间线文本，直接注入 system prompt
-    rawTimeline: str # L0 原始文本（不带 XML 标签，给路由模型用）
-    recentTurns: int # 分层模式下保留的最近对话轮数
-    dateTsidMap: dict[str, List[str]] # 日期(YYYY-MM-DD) → 时间戳ID[] 映射
-    tsidSessionMap: dict[str, str] # 时间戳ID → sessionId 映射（用于 L2 加载）
+    available: bool = False
+    prompt: str = "" #L0 时间线文本，直接注入 system prompt
+    raw_timeline: str = "" # L0 原始文本（不带 XML 标签，给路由模型用）
+    recent_turns: int = 5 # 分层模式下保留的最近对话轮数
+    tsids: List[str] = [] #  匹配到的tsid列表
 
 # L1 加载结果（按日期按需加载）
 class L1DecisionsResult(BaseModel):
@@ -336,28 +335,18 @@ async def append_timeline_entry(
 # ========================
 # 读取 L0（始终加载）
 # ========================
-def load_l0_timeline(session_id: str) -> dict[str, Any]:
+def load_l0_timeline(session_id: str) -> L0TimelineResult:
     """读取 L0（始终加载）"""
     timeline_path = get_timeline_path(ROOT_DIR, session_id)
     timeline = safe_read_file(timeline_path).strip()
 
     if not timeline:
-        return {
-            "available": False,
-            "prompt": "",
-            "raw_timeline": "",
-            "recent_turns": DEFAULT_RECENT_TURNS,
-        }
+        return L0TimelineResult(available=False, prompt="", raw_timeline= "", recent_turns= DEFAULT_RECENT_TURNS)
 
     prompt = f"<conversation_timeline>\n以下是历史对话的时间线索引：\n{timeline}\n </conversation_timeline>"
 
-    return {
-        "available": True,
-        "prompt": prompt,
-        "raw_timeline": timeline,
-        "recent_turns": DEFAULT_RECENT_TURNS,
-        "tsids": extract_tsids(timeline),
-    }
+    return L0TimelineResult(available=True, prompt=prompt, raw_timeline=timeline, recent_turns=DEFAULT_RECENT_TURNS, tsids=extract_tsids(timeline))
+
 
 async def load_layered_history(
     agent_dir: str,

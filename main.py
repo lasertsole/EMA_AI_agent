@@ -9,12 +9,12 @@ from agent import agent
 from pathlib import Path
 from tools import ALL_TOOLS
 from dotenv import load_dotenv
+from sessions import viking_route
 from typing import List, Optional
 from typing import AsyncGenerator
 from type import MultiModalMessage
 from workspace import ALL_FILE_NAMES
 from skills.loader import scan_skills
-from viking_router import viking_route
 from tasks.queue import BackgroundTaskQueue
 from langchain.messages import AIMessageChunk
 from langchain_core.tools import ToolException

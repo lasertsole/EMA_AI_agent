@@ -25,8 +25,8 @@ class RoutingModelResult(BaseModel):
     tools: List[str] = Field(description="List of capability tool names to load.")
     files: List[str] = Field(description="List of workspace files to load.")
     needs_l1: Optional[bool] = Field(description="Whether to load L1 layer index (historical key decisions). Set to true when user's question references previous work or requires context from past conversations")
-    l1_dates: Optional[List[str]] = Field(description="List of dates for L1 decisions to load, Sort by time (newest first), Empty array means no specific L1 dates needed", examples=[[], ["2026-03-14"], ["2026-03-14", "2026-03-11"]])
-    l1_tsids: Optional[List[str]] = Field(description="List of tsids for L1 decisions to load, Sort by time (newest first), Empty array means no specific L1 tsids needed", examples=[[], ["20260309232555"], ["20260309232745", "20260309232555"]])
+    l1_dates: Optional[List[str]] = Field(description="List of dates for L1 decisions to load, Empty array means no specific L1 dates needed", examples=[[], ["2026-03-14"], ["2026-03-14", "2026-03-11"]])
+    l1_tsids: Optional[List[str]] = Field(description="List of tsids for L1 decisions to load, Empty array means no specific L1 tsids needed", examples=[[], ["20260309232555"], ["20260309232745", "20260309232555"]])
     needs_l2: Optional[bool] = Field(description="Whether to load L2 layer full conversation history. Set to true when complete conversation context is required")
 
 routing_model = base_model.bind(temperature=0)
@@ -169,7 +169,7 @@ def build_skill_names_only_prompt(skills: List[SkillIndexEntry])-> str:
   ])
 
 """
-    TODO 主入口
+    主入口
 """
 def viking_route(
   user_input: str,
@@ -251,8 +251,8 @@ def viking_route(
     )
 
     needs_l1:bool = result.get("needs_l1") if result.get("needs_l1") is not None else False
-    l1_dates: List[str] = result.get("l1_dates") if result.get("l1_dates") is not None else []
-    l1_tsids: List[str] = result.get("l1_tsids") if result.get("l1_tsids") is not None else []
+    l1_dates: List[str] = sorted(result.get("l1_dates"), reverse=True) if result.get("l1_dates") is not None else []
+    l1_tsids: List[str] = sorted(result.get("l1_tsids"), reverse=True) if result.get("l1_tsids") is not None else []
     needs_l2: bool = result.get("needs_l2") if result.get("needs_l2") is not None else False
 
     return {
