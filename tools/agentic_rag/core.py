@@ -1,6 +1,6 @@
 import datetime
 from tools import web_search
-from models import base_model
+from models import chat_model
 from langchain_core.tools import tool
 from pydantic import BaseModel, Field
 from langchain.agents import create_agent
@@ -15,7 +15,7 @@ researcher_systemPrompt = """
 """
 #生成agent对象
 researcher = create_agent(
-    model = base_model,
+    model = chat_model,
     system_prompt = researcher_systemPrompt,
     tools = [web_search],
 )
@@ -46,7 +46,7 @@ class ReWriteQueryOutput(BaseModel):
             "如何根据市场行情判断西瓜的合理购买价格。"]
     )
 
-rewriter = rewriter_systemPrompt_Template | base_model.with_structured_output(ReWriteQueryOutput)
+rewriter = rewriter_systemPrompt_Template | chat_model.with_structured_output(ReWriteQueryOutput)
 
 class GraphState(MessagesState):
     query: str # 原问题

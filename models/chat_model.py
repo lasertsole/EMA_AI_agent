@@ -24,8 +24,8 @@ model_config:dict[str, Any] = {
     "max_retries": 2
 }
 model_config = {k: v for k, v in model_config.items() if v is not None and v != ""}
-base_model = init_chat_model(**model_config) #生成模型对象
-base_model = base_model.configurable_fields(
+chat_model = init_chat_model(**model_config) #生成模型对象
+chat_model = chat_model.configurable_fields(
     temperature=ConfigurableField(
         id="temperature",
     )

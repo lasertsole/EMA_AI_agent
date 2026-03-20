@@ -7,7 +7,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 
-from models import base_model
+from models import chat_model
 from tools import CORE_TOOLS, ALL_TOOLS
 from typing import List, TypedDict, Optional
 from langchain.messages import SystemMessage, HumanMessage
@@ -29,7 +29,7 @@ class RoutingModelResult(BaseModel):
     l1_tsids: Optional[List[str]] = Field(description="List of tsids for L1 decisions to load, Empty array means no specific L1 tsids needed", examples=[[], ["20260309232555"], ["20260309232745", "20260309232555"]])
     needs_l2: Optional[bool] = Field(description="Whether to load L2 layer full conversation history. Set to true when complete conversation context is required")
 
-routing_model = base_model.bind(temperature=0)
+routing_model = chat_model.bind(temperature=0).with_structured_output(RoutingModelResult)
 
 """
 Controls which hardcoded sections are included in the system prompt.

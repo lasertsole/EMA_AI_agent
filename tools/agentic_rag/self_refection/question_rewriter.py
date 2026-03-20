@@ -1,4 +1,4 @@
-from models import base_model
+from models import chat_model
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 
@@ -11,4 +11,4 @@ re_write_prompt = ChatPromptTemplate.from_messages(
     ]
 )
 
-question_rewriter = re_write_prompt | base_model.bind(temperature = 0) | StrOutputParser()
+question_rewriter = re_write_prompt | chat_model.bind(temperature = 0) | StrOutputParser()

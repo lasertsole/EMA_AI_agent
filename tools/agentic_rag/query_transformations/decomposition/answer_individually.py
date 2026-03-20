@@ -1,4 +1,4 @@
-from models import base_model
+from models import chat_model
 from langchain_core.documents import Document
 from langgraph.graph import StateGraph, START, END
 from langchain_core.prompts import ChatPromptTemplate
@@ -14,7 +14,7 @@ template = """
 
 prompt = ChatPromptTemplate.from_template(template)
 
-llm = base_model.bind(temperature = 0)
+llm = chat_model.bind(temperature = 0)
 
 
 def format_qa_pairs(questions: List[str], answers: List[str]):

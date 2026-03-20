@@ -11,8 +11,10 @@ BLACKLIST = {"rm -rf /", "mkfs", "shutdown", "reboot"}
 
 
 class SafeShellTool(ShellTool):
-    name: str = "terminal"
-    description: str = "Run shell commands in a sandboxed workspace."
+    """
+        name: str = "terminal"
+        description: str = "Run shell commands in a sandboxed workspace."
+    """
 
     def _run(self, command: str) -> str:
         for bad in BLACKLIST:

@@ -1,6 +1,6 @@
 from typing import List, Any
 from langchain.messages import HumanMessage
-from models import base_model, reasoner_model, vl_model
+from models import chat_model, reasoner_model, vl_model
 from langchain.agents.middleware import wrap_model_call, ModelRequest, ModelResponse
 
 def _get_last_user(messages):
@@ -46,7 +46,7 @@ async def dynamic_model_routing(request: ModelRequest, handler) -> ModelResponse
         # 1) 历史消息较长 2)最近用户输入很长 3) 出现复杂任务关键词
         request.override(model=reasoner_model)
     else:
-        request.override(model=base_model)
+        request.override(model=chat_model)
 
     # 结果异步返回
     for attempt in range(3):
