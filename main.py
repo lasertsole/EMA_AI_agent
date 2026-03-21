@@ -15,6 +15,7 @@ from type import MultiModalMessage
 from workspace import ALL_FILE_NAMES
 from skills.loader import scan_skills
 from agent import built_agent, ModelType
+from channels.manager import ChannelManager
 from tasks.queue import BackgroundTaskQueue
 from langchain.messages import AIMessageChunk
 from langchain_core.tools import ToolException
@@ -39,6 +40,15 @@ thread_id = 1
 
 # 创建配置参数
 _config: dict[str, Any] = {"configurable": {"thread_id": thread_id, "model_type": "chat_model"}}
+
+# 创建频道管理器
+@st.cache_resource
+def get_channel_manager():
+    return ChannelManager()
+
+# 启动频道
+channel_manager = get_channel_manager()
+threading.Thread(target= lambda: channel_manager.start_all(), daemon=True).start()
 
 # 创建任务队列
 @st.cache_resource

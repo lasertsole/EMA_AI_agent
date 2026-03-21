@@ -25,17 +25,16 @@ def discover_channel_names() -> list[str]:
         if name not in _INTERNAL and not ispkg
     ]
 
-
 def load_channel_class(module_name: str) -> type[BaseChannel]:
     """Import *module_name* and return the first BaseChannel subclass found."""
     from channels.base import BaseChannel as _Base
 
-    mod = importlib.import_module(f"nanobot.channels.{module_name}")
+    mod = importlib.import_module(f"channels.{module_name}")
     for attr in dir(mod):
         obj = getattr(mod, attr)
         if isinstance(obj, type) and issubclass(obj, _Base) and obj is not _Base:
             return obj
-    raise ImportError(f"No BaseChannel subclass in nanobot.channels.{module_name}")
+    raise ImportError(f"No BaseChannel subclass in channels.{module_name}")
 
 
 def discover_plugins() -> dict[str, type[BaseChannel]]:
@@ -43,7 +42,7 @@ def discover_plugins() -> dict[str, type[BaseChannel]]:
     from importlib.metadata import entry_points
 
     plugins: dict[str, type[BaseChannel]] = {}
-    for ep in entry_points(group="nanobot.channels"):
+    for ep in entry_points(group="channels"):
         try:
             cls = ep.load()
             plugins[ep.name] = cls

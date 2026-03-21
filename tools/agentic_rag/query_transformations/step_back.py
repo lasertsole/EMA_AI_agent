@@ -2,7 +2,7 @@ from typing import TypedDict
 from langgraph.graph import StateGraph, START, END
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate, FewShotChatMessagePromptTemplate
-from models import chat_model
+from models import simple_chat_model
 
 examples = [
     {
@@ -38,7 +38,7 @@ prompt = ChatPromptTemplate.from_messages(
     ]
 )
 
-generate_query_step_back = prompt | chat_model.bind(temperature = 0) | StrOutputParser()
+generate_query_step_back = prompt | simple_chat_model.bind(temperature = 0) | StrOutputParser()
 
 class GraphState(TypedDict):
     input: str  # 原问题(输入)

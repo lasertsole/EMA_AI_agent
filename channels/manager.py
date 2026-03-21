@@ -1,10 +1,13 @@
 """Channel manager for coordinating chat channels."""
 from __future__ import annotations
 
+import json
 import asyncio
 import logging
-from typing import Any
+from pathlib import Path
+from config import ROOT_DIR
 from .base import BaseChannel
+from typing import Any, Optional
 from bus.queue import MessageBus
 
 logger = logging.getLogger(__name__)
@@ -19,21 +22,30 @@ class ChannelManager:
     - Route outbound messages
     """
 
-    def __init__(self,  bus: MessageBus):
+    def __init__(self, config: Optional[dict[str, str]] = None,  bus: Optional[MessageBus] = None):
+        if config is None:
+            channels_json = Path(ROOT_DIR) / "channels.json"
+            if not channels_json.exists():
+                return
+
+            config = json.loads(channels_json.read_text())
+
+        if bus is None:
+            bus = MessageBus()
         self.bus = bus
         self.channels: dict[str, BaseChannel] = {}
         self._dispatch_task: asyncio.Task | None = None
-
+        self.config = config
+        self._event_loop = asyncio.new_event_loop()
         self._init_channels()
 
     def _init_channels(self) -> None:
         """Initialize channels discovered via pkgutil scan + entry_points plugins."""
         from channels.registry import discover_all
 
-        groq_key = self.config.providers.groq.api_key
 
         for name, cls in discover_all().items():
-            section = getattr(self.config.channels, name, None)
+            section = self.config.get(name, None)
             if section is None:
                 continue
             enabled = (
@@ -45,7 +57,6 @@ class ChannelManager:
                 continue
             try:
                 channel = cls(section, self.bus)
-                channel.transcription_api_key = groq_key
                 self.channels[name] = channel
                 logger.info("{} channel enabled", cls.display_name)
             except Exception as e:
@@ -68,23 +79,23 @@ class ChannelManager:
         except Exception as e:
             logger.error("Failed to start channel {}: {}", name, e)
 
-    async def start_all(self) -> None:
+    def start_all(self) -> None:
         """Start all channels and the outbound dispatcher."""
-        if not self.channels:
-            logger.warning("No channels enabled")
-            return
+        if not self._event_loop.is_running():
+            if not self.channels:
+                logger.warning("No channels enabled")
+                return
 
-        # Start outbound dispatcher
-        self._dispatch_task = asyncio.create_task(self._dispatch_outbound())
+            # Start outbound dispatcher
+            self._dispatch_task = self._event_loop.create_task(self._dispatch_outbound())
 
-        # Start channels
-        tasks = []
-        for name, channel in self.channels.items():
-            logger.info("Starting {} channel...", name)
-            tasks.append(asyncio.create_task(self._start_channel(name, channel)))
-
-        # Wait for all to complete (they should run forever)
-        await asyncio.gather(*tasks, return_exceptions=True)
+            # Start channels
+            tasks = []
+            for name, channel in self.channels.items():
+                logger.info("Starting {} channel...", name)
+                self._event_loop.create_task(self._start_channel(name, channel))
+            print(self._event_loop)
+            self._event_loop.run_forever()
 
     async def stop_all(self) -> None:
         """Stop all channels and the dispatcher."""
@@ -93,18 +104,20 @@ class ChannelManager:
         # Stop dispatcher
         if self._dispatch_task:
             self._dispatch_task.cancel()
-            try:
-                await self._dispatch_task
-            except asyncio.CancelledError:
-                pass
 
         # Stop all channels
+        tasks = []
         for name, channel in self.channels.items():
             try:
-                await channel.stop()
-                logger.info("Stopped {} channel", name)
+                tasks.append(asyncio.create_task(channel.stop()))
             except Exception as e:
                 logger.error("Error stopping {}: {}", name, e)
+
+        await asyncio.gather(*tasks, return_exceptions=True)
+
+        # Stop event loop
+        self._event_loop.stop()
+        self._event_loop = None
 
     async def _dispatch_outbound(self) -> None:
         """Dispatch outbound messages to the appropriate channel."""

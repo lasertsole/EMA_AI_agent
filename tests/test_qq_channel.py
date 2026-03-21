@@ -4,9 +4,10 @@ import pytest
 
 from bus.events import OutboundMessage
 from bus.queue import MessageBus
-from channels.qq import QQChannel
-from channels.qq import QQConfig
-
+from channels.qq import QQChannel, QQConfig
+import json
+from pathlib import Path
+from config import ROOT_DIR
 
 class _FakeApi:
     def __init__(self) -> None:
@@ -27,7 +28,13 @@ class _FakeClient:
 
 @pytest.mark.asyncio
 async def test_on_group_message_routes_to_group_chat_id() -> None:
-    channel = QQChannel(QQConfig(app_id="app", secret="secret", allow_from=["user1"]), MessageBus())
+    channels_json = Path(ROOT_DIR) / "channels.json"
+    if not channels_json.exists():
+        return
+
+    channels = json.loads(channels_json.read_text())
+    qq_config = channels["qq"]
+    channel = QQChannel(QQConfig(app_id=qq_config["appId"], secret=qq_config["secret"], allow_from=["user1"]), MessageBus())
 
     data = SimpleNamespace(
         id="msg1",
@@ -72,7 +79,14 @@ async def test_send_group_message_uses_plain_text_group_api_with_msg_seq() -> No
 
 @pytest.mark.asyncio
 async def test_send_c2c_message_uses_plain_text_c2c_api_with_msg_seq() -> None:
-    channel = QQChannel(QQConfig(app_id="app", secret="secret", allow_from=["*"]), MessageBus())
+    channels_json = Path(ROOT_DIR) / "channels.json"
+    if not channels_json.exists():
+        return
+
+    channels = json.loads(channels_json.read_text())
+    qq_config = channels["qq"]
+    channel = QQChannel(QQConfig(app_id=qq_config["appId"], secret=qq_config["secret"], allow_from=["*"]), MessageBus())
+
     channel._client = _FakeClient()
 
     await channel.send(
