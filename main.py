@@ -6,7 +6,9 @@ import threading
 from typing import Any
 import streamlit as st
 from pathlib import Path
+from bus import InboundMessage, OutboundMessage
 from dotenv import load_dotenv
+from channels import BaseChannel
 from typing import List, Optional
 from typing import AsyncGenerator
 from type import MultiModalMessage
@@ -41,9 +43,20 @@ _config: dict[str, Any] = {"configurable": {"thread_id": thread_id, "model_type"
 def get_channel_manager():
     return ChannelManager()
 
+
 # 启动频道
 channel_manager = get_channel_manager()
 threading.Thread(target= lambda: channel_manager.start_all(), daemon=True).start()
+
+# 配置频道
+async def process_qq_inbound(message: InboundMessage, channel: BaseChannel) -> None:
+    print(message)
+    await channel.send(OutboundMessage(channel="qq", chat_id=message.chat_id, content=message.content))
+channel_manager.set_inbound_consumer(
+    {
+        "qq": process_qq_inbound
+    }
+)
 
 # 创建任务队列
 @st.cache_resource

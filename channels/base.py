@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 import logging
-from abc import ABC, abstractmethod
-from pathlib import Path
 from typing import Any
-from bus.events import InboundMessage, OutboundMessage
 from bus.queue import MessageBus
+from abc import ABC, abstractmethod
+from bus.events import InboundMessage, OutboundMessage
 
 logger = logging.getLogger(__name__)
 
@@ -110,7 +109,6 @@ class BaseChannel(ABC):
             metadata=metadata or {},
             session_key_override=session_key,
         )
-        print(msg)
 
         await self.bus.publish_inbound(msg)
 

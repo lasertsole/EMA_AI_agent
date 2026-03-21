@@ -1,0 +1,8 @@
+{
+  "qq":{
+    "enabled": true,
+    "allow_from": ["*"],
+    "appId": "",
+    "secret": ""
+  }
+}

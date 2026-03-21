@@ -7,8 +7,10 @@ import logging
 from pathlib import Path
 from config import ROOT_DIR
 from .base import BaseChannel
-from typing import Any, Optional
 from bus.queue import MessageBus
+from asyncio import AbstractEventLoop
+from typing import Any, Optional, Callable, Awaitable
+from bus import InboundMessage, OutboundMessage
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +23,42 @@ class ChannelManager:
     - Start/stop channels
     - Route outbound messages
     """
+    
+    _bus: MessageBus = None
+    _channels: dict[str, BaseChannel] = {}
+    _dispatch_task: asyncio.Task | None = None
+    _config: dict[str, str] = None
+    _event_loop: AbstractEventLoop = asyncio.new_event_loop()
+    _inbound_consumer_dict: dict[str, Callable[[InboundMessage, BaseChannel], Awaitable[None]]] = {}
+    _outbound_consumer_dict: dict[str, Callable[[OutboundMessage, BaseChannel], Awaitable[None]]] = {}
+
+    async def _inbound_consume_loop(self):
+        while True:
+            msg: InboundMessage = await self._bus.consume_inbound()
+
+            for name, func in self._inbound_consumer_dict.items():
+                channel = self._channels.get(name)
+                if channel:
+                    await func(msg, channel)
+                else:
+                    logger.warning("Channel {} not found", name)
+
+    async def _outbound_consume_loop(self):
+        while True:
+            msg: OutboundMessage = await self._bus.consume_outbound()
+
+            for name, func in self._outbound_consumer_dict.items():
+                channel = self._channels.get(name)
+                if channel:
+                    await func(msg, channel)
+                else:
+                    logger.warning("Channel {} not found", name)
+
+    def set_inbound_consumer(self, inbound_consumer_dict: dict[str, Callable[[InboundMessage, BaseChannel], Awaitable[None]]])->None:
+        self._inbound_consumer_dict = inbound_consumer_dict
+
+    def set_outbound_consumer(self, outbound_consumer_dict: dict[str, Callable[[OutboundMessage, BaseChannel], Awaitable[None]]])->None:
+        self._outbound_consumer_dict = outbound_consumer_dict
 
     def __init__(self, config: Optional[dict[str, str]] = None,  bus: Optional[MessageBus] = None):
         if config is None:
@@ -32,11 +70,8 @@ class ChannelManager:
 
         if bus is None:
             bus = MessageBus()
-        self.bus = bus
-        self.channels: dict[str, BaseChannel] = {}
-        self._dispatch_task: asyncio.Task | None = None
-        self.config = config
-        self._event_loop = asyncio.new_event_loop()
+        self._bus = bus
+        self._config = config
         self._init_channels()
 
     def _init_channels(self) -> None:
@@ -45,7 +80,7 @@ class ChannelManager:
 
 
         for name, cls in discover_all().items():
-            section = self.config.get(name, None)
+            section = self._config.get(name, None)
             if section is None:
                 continue
             enabled = (
@@ -56,8 +91,8 @@ class ChannelManager:
             if not enabled:
                 continue
             try:
-                channel = cls(section, self.bus)
-                self.channels[name] = channel
+                channel = cls(section, self._bus)
+                self._channels[name] = channel
                 logger.info("{} channel enabled", cls.display_name)
             except Exception as e:
                 logger.warning("{} channel not available: {}", name, e)
@@ -65,7 +100,7 @@ class ChannelManager:
         self._validate_allow_from()
 
     def _validate_allow_from(self) -> None:
-        for name, ch in self.channels.items():
+        for name, ch in self._channels.items():
             if getattr(ch.config, "allow_from", None) == []:
                 raise SystemExit(
                     f'Error: "{name}" has empty allowFrom (denies all). '
@@ -82,19 +117,22 @@ class ChannelManager:
     def start_all(self) -> None:
         """Start all channels and the outbound dispatcher."""
         if not self._event_loop.is_running():
-            if not self.channels:
+            if not self._channels:
                 logger.warning("No channels enabled")
                 return
 
             # Start outbound dispatcher
             self._dispatch_task = self._event_loop.create_task(self._dispatch_outbound())
 
+            # Start inbound/outbound consumers
+            self._event_loop.create_task(self._inbound_consume_loop())
+            self._event_loop.create_task(self._outbound_consume_loop())
+
             # Start channels
-            tasks = []
-            for name, channel in self.channels.items():
+            for name, channel in self._channels.items():
                 logger.info("Starting {} channel...", name)
                 self._event_loop.create_task(self._start_channel(name, channel))
-            print(self._event_loop)
+
             self._event_loop.run_forever()
 
     async def stop_all(self) -> None:
@@ -107,7 +145,7 @@ class ChannelManager:
 
         # Stop all channels
         tasks = []
-        for name, channel in self.channels.items():
+        for name, channel in self._channels.items():
             try:
                 tasks.append(asyncio.create_task(channel.stop()))
             except Exception as e:
@@ -126,17 +164,17 @@ class ChannelManager:
         while True:
             try:
                 msg = await asyncio.wait_for(
-                    self.bus.consume_outbound(),
+                    self._bus.consume_outbound(),
                     timeout=1.0
                 )
 
                 if msg.metadata.get("_progress"):
-                    if msg.metadata.get("_tool_hint") and not self.config.channels.send_tool_hints:
+                    if msg.metadata.get("_tool_hint") and not self._config.send_tool_hints:
                         continue
-                    if not msg.metadata.get("_tool_hint") and not self.config.channels.send_progress:
+                    if not msg.metadata.get("_tool_hint") and not self._config.send_progress:
                         continue
 
-                channel = self.channels.get(msg.channel)
+                channel = self._channels.get(msg.channel)
                 if channel:
                     try:
                         await channel.send(msg)
@@ -152,7 +190,7 @@ class ChannelManager:
 
     def get_channel(self, name: str) -> BaseChannel | None:
         """Get a channel by name."""
-        return self.channels.get(name)
+        return self._channels.get(name)
 
     def get_status(self) -> dict[str, Any]:
         """Get status of all channels."""
@@ -161,10 +199,14 @@ class ChannelManager:
                 "enabled": True,
                 "running": channel.is_running
             }
-            for name, channel in self.channels.items()
+            for name, channel in self._channels.items()
         }
 
+    def get_bus(self) -> MessageBus:
+        """Get the message bus."""
+        return self._bus
+    
     @property
     def enabled_channels(self) -> list[str]:
         """Get list of enabled channel names."""
-        return list(self.channels.keys())
+        return list(self._channels.keys())
