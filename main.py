@@ -6,14 +6,10 @@ import threading
 from typing import Any
 import streamlit as st
 from pathlib import Path
-from tools import ALL_TOOLS
 from dotenv import load_dotenv
-from sessions import viking_route
 from typing import List, Optional
 from typing import AsyncGenerator
 from type import MultiModalMessage
-from workspace import ALL_FILE_NAMES
-from skills.loader import scan_skills
 from agent import built_agent, ModelType
 from channels.manager import ChannelManager
 from tasks.queue import BackgroundTaskQueue
@@ -26,9 +22,8 @@ from workspace.prompt_builder import build_system_prompt
 from streamlit.elements.widgets.chat import ChatInputValue
 from streamlit.runtime.uploaded_file_manager import UploadedFile
 from utils import File, FileType, ChatStorage as Streamlit_ChatStorage
-from sessions import generate_tsid, append_session_message, read_session
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage, SystemMessage, BaseMessage
-from sessions.viking.history_index import load_l0_timeline, load_l1_decisions, load_l2_session, load_summary
+from sessions import generate_tsid, append_session_message, read_session, viking_routing, load_summary
 
 env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), './.env')
 load_dotenv(env_path, override=True)
@@ -94,52 +89,11 @@ def _append_memory(entry: str) -> None:
 #"""以上是主动记忆功能"""
 
 #"""以下是组织信息列表逻辑"""
-def _viking_routing(user_input: str)-> dict[str, Any]:
-    # ===== L0 时间线加载（始终） start =====
-    l0_result = load_l0_timeline(session_id='1')
-    # ===== L0 时间线加载（始终） end =====
-
-    # ===== viking routing start =====
-    route_result = viking_route(
-        user_input = user_input,
-        tools = [t.name for t in ALL_TOOLS],
-        file_names = ALL_FILE_NAMES,
-        timeline = l0_result.raw_timeline,
-        skills = scan_skills()
-    )
-    # ===== viking routing end =====
-
-    if route_result["skipped"]:
-        return None
-
-    context:str = ""
-    # ===== L1 按日期按需加载 start =====
-    if route_result["needs_l1"]:
-        l1_prompt = load_l1_decisions(session_id='1', dates=route_result["l1_dates"], tsids=route_result["l1_tsids"])
-
-        if l1_prompt is not None and l1_prompt.available and len(l1_prompt.prompt)> 0:
-            context += "\n\n" + l1_prompt.prompt
-    # ===== L1 按日期按需加载 end =====
-
-    # ===== L2 按需加载 start =====
-    if route_result["needs_l2"]:
-        l2_prompt = load_l2_session(session_id='1', tsids = route_result["l1_tsids"])
-
-        if l2_prompt is not None and l2_prompt.available and len(l2_prompt.prompt)> 0:
-            context += "\n\n" + l2_prompt.prompt
-    # ===== L2 按需加载 end =====
-
-    return {
-        "tool_names": route_result["tools"],
-        "file_names": route_result["files"],
-        "context": context,
-    }
-
 def _to_messages(history: list[dict[str, Any]], multi_modal_message: MultiModalMessage) -> list[BaseMessage]:
     global agent
 
     # 使用openviking路由
-    viking_result = _viking_routing(multi_modal_message.text)
+    viking_result = viking_routing(multi_modal_message.text)
     files = viking_result.get("file_names", [])
     context = viking_result.get("context", "")
 
