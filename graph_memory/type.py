@@ -3,7 +3,12 @@ from config import ROOT_DIR
 from pydantic import BaseModel
 from typing import Any, List, Optional, Literal
 
-
+"""
+    graph-memory 类型定义
+    节点：TASK / SKILL / EVENT
+    边：USED_SKILL / SOLVED_BY / REQUIRES / PATCHES / CONFLICTS_WITH
+"""
+# ─── 节点 ─────────────────────────────────────────────────────
 class NodeType(Enum):
     TASK = "TASK"
     SKILL = "SKILL"
@@ -29,6 +34,8 @@ class GmNode(Node):
     created_at: int
     updated_at: int
 
+# ─── 边 ───────────────────────────────────────────────────────
+
 class EdgeType(Enum):
     USED_SKILL = "USED_SKILL"
     SOLVED_BY = "SOLVED_BY"
@@ -48,6 +55,7 @@ class GmEdge(Edge):
     session_id: str
     created_at: int
 
+# ─── 信号 ─────────────────────────────────────────────────────
 class SignalType(Enum):
     TOOL_ERROR = "tool_error"
     TOOL_SUCCESS = "tool_success"
@@ -61,7 +69,7 @@ class Signal(BaseModel):
     turn_index: int
     data: dict[str, Any]
 
-
+# ─── 提取结果 ─────────────────────────────────────────────────
 class ExtractionResult(BaseModel):
     nodes: List[Node]
     edges: List[Edge]
@@ -74,13 +82,13 @@ class FinalizeResult(BaseModel):
     new_edges: List[Edge]
     invalidations: List[str]
 
-
+# ─── 召回结果 ─────────────────────────────────────────────────
 class RecallResult(BaseModel):
     nodes: List[GmNode]
     edges: List[GmEdge]
     token_estimate: int
 
-
+# ─── Embedding 配置 ──────────────────────────────────────────
 class EmbeddingConfig(BaseModel):
     api_key: Optional[str]
     base_url: Optional[str]
@@ -91,7 +99,7 @@ class LLM(BaseModel):
     api_key: Optional[str]
     base_url: Optional[str]
     model: Optional[str]
-
+# ─── 插件配置 ─────────────────────────────────────────────────
 class GmConfig(BaseModel):
     db_path: str
     compact_turn_count: int

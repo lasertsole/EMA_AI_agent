@@ -13,6 +13,7 @@ class SliceLastTurn(TypedDict):
     tokens: int
     dropped: int
 
+# ─── 取最后一轮完整用户对话 ─────────────────────────────────
 def estimate_msg_tokens(msg: BaseMessage) -> int:
     content = msg.content
 
@@ -24,6 +25,11 @@ def estimate_msg_tokens(msg: BaseMessage) -> int:
     return math.ceil(len(text) / 3)
 
 def slice_last_turn(messages: List[BaseMessage]) -> SliceLastTurn:
+    """
+        从最后一个 role=user 到消息末尾，完整保留。
+        tool_use/tool_result 天然配对不会切断。
+        超长 tool_result 截断（保头尾砍中间）。
+    """
     if len(messages)==0:
         return { "messages": [], "tokens": 0, "dropped": 0 }
 

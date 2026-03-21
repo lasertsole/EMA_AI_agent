@@ -7,7 +7,7 @@ import sqlite3
 from typing import Any, Optional, List, TypedDict
 from ..type import GmNode, GmEdge
 
-
+# ─── 工具 ─────────────────────────────────────────────────────
 def uid(p: str) -> str:
     timestamp = int(time.time() * 1000)
     random_str = ''.join(random.choices(string.ascii_lowercase + string.digits, k=5))
@@ -42,6 +42,7 @@ def to_edge(r: dict[str, Any])-> GmEdge:
         created_at = r["created_at"],
     )
 
+# 标准化 name：全小写，空格转连字符，保留中文
 def normalize_name(name: str) -> str:
     name = name.strip().lower()
     name = re.sub(r'[\s_]+', '-', name)
@@ -50,6 +51,7 @@ def normalize_name(name: str) -> str:
 
     return name.strip('-')
 
+# ─── 节点 CRUD ───────────────────────────────────────────────
 def find_by_name(db: sqlite3.Connection, name: str) -> Optional[GmNode]:
     db.row_factory = sqlite3.Row
     cursor = db.cursor()
