@@ -8,17 +8,11 @@ import logging
 from typing import Any
 from pathlib import Path
 from datetime import datetime
-from dotenv import load_dotenv
 from config import COMPRESS_RATIO
-from langchain.chat_models import init_chat_model
-
-
-from config import (
-    COMPRESS_THRESHOLD,
-    SESSIONS_DIR,
-)
 from models import simple_chat_model
 from sessions.store import read_session
+from config import COMPRESS_THRESHOLD,  SESSIONS_DIR
+
 
 logger = logging.getLogger(__name__)
 

@@ -1,36 +1,16 @@
 import re
-import os
 import json
 from pathlib import Path
 from datetime import datetime
-from dotenv import load_dotenv
+from models import simple_chat_model
+from pydantic import BaseModel, Field
+from typing import Any, List, Optional
+from config import SESSIONS_DIR, ROOT_DIR
 from langchain_core.messages import BaseMessage
 from langchain_core.prompts import ChatPromptTemplate
-from pydantic import BaseModel, Field
-from config import SESSIONS_DIR, ROOT_DIR
-from typing import Any, List, Optional
-from langchain.chat_models import init_chat_model
-
-# 获取当前所在文件夹
-current_dir = Path(__file__).parent.resolve()
-
-# 加载环境变量
-env_path = current_dir / '../.env'
-env_path = env_path.resolve()
-load_dotenv(env_path, override = True)
-api_key = os.getenv("CHAT_API_KEY")
-api_name = os.getenv("CHAT_API_NAME")
-model_provider = os.getenv("CHAT_MODEL_PROVIDER")
 
 #生成模型对象
-summary_LLM = init_chat_model(
-    model_provider = model_provider,
-    model = api_name,
-    api_key = api_key,
-    temperature = 0.3,
-    max_retries = 2
-)
-
+summary_LLM = simple_chat_model.bind(temperature = 0.3)
 
 
 # ========================
@@ -457,7 +437,7 @@ def load_l2_session(session_id: str, tsids: List[str]) -> L2SessionResult:
     """
     jsonl_path = Path(get_history_path(ROOT_DIR, session_id))
     if not tsids or len(tsids) == 0 or not jsonl_path.exists():
-        return L2SessionResult(available=False, prompt="", loadedSessionIds=[])
+        return L2SessionResult(available=False, prompt="")
 
     raw = jsonl_path.read_text(encoding="utf-8")
     lines = [json.loads(line) for line in raw.split("\n") if line.strip()]
@@ -495,7 +475,7 @@ def load_l2_session(session_id: str, tsids: List[str]) -> L2SessionResult:
     if len(session_text) == 0:
         ids_str = ", ".join(target_ids)
         print(f"[history] L2: no sessions loaded from [{ids_str}]")
-        return L2SessionResult(available=False, prompt="", loadedSessionIds=[])
+        return L2SessionResult(available=False, prompt="")
 
     prompt = f"<full_conversation>\n以下是相关的完整对话记录：\n\n{session_text}\n</full_conversation>"
 

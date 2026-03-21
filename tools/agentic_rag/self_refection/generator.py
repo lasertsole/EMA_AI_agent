@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
-from models import chat_model
 from dotenv import load_dotenv
+from models import simple_chat_model
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
@@ -34,4 +34,4 @@ generate_prompt = ChatPromptTemplate.from_messages(
 )
 
 # Chain
-generator = generate_prompt | chat_model.bind(temperature = 0) | StrOutputParser()
+generator = generate_prompt | simple_chat_model.bind(temperature = 0) | StrOutputParser()

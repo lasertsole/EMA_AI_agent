@@ -1,4 +1,4 @@
-from models import chat_model
+from models import simple_chat_model
 from pydantic import BaseModel, Field
 from langchain_core.prompts import ChatPromptTemplate
 
@@ -8,7 +8,7 @@ class GradeDocuments(BaseModel):
 
     binary_score: str = Field(description="Documents are relevant to the question, 'yes' or 'no'")
 
-structured_llm_grader = chat_model.bind(temperature = 0).with_structured_output(GradeDocuments)
+structured_llm_grader = simple_chat_model.bind(temperature = 0).with_structured_output(GradeDocuments)
 
 # Prompt
 systemPrompt = """You are a grader assessing relevance of a retrieved document to a user question. \n 

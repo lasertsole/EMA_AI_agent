@@ -1,6 +1,6 @@
 import datetime
 from tools import web_search
-from models import chat_model
+from models import simple_chat_model
 from langchain_core.tools import tool
 from pydantic import BaseModel, Field
 from langchain.agents import create_agent
@@ -15,7 +15,7 @@ researcher_systemPrompt = """
 """
 #生成agent对象
 researcher = create_agent(
-    model = chat_model,
+    model = simple_chat_model,
     system_prompt = researcher_systemPrompt,
     tools = [web_search],
 )

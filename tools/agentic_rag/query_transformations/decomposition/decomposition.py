@@ -1,4 +1,4 @@
-from models import chat_model
+from models import simple_chat_model
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
@@ -9,4 +9,4 @@ Output (3 queries, No numbering.):"""
 prompt_decomposition = ChatPromptTemplate.from_template(template)
 
 # Chain
-generate_queries_decomposition =  prompt_decomposition | chat_model.bind(temperature = 0) | StrOutputParser() | (lambda x: x.split("\n"))
+generate_queries_decomposition =  prompt_decomposition | simple_chat_model.bind(temperature = 0) | StrOutputParser() | (lambda x: x.split("\n"))

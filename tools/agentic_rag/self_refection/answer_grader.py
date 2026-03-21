@@ -1,4 +1,4 @@
-from models import chat_model
+from models import simple_chat_model
 from pydantic import BaseModel, Field
 from langchain_core.prompts import ChatPromptTemplate
 
@@ -7,7 +7,7 @@ class GradeAnswer(BaseModel):
 
     binary_score: str = Field(description="Answer addresses the question, 'yes' or 'no'")
 
-structured_llm_grader = chat_model.bind(temperature = 0).with_structured_output(GradeAnswer)
+structured_llm_grader = simple_chat_model.bind(temperature = 0).with_structured_output(GradeAnswer)
 
 # Prompt
 system = """You are a grader assessing whether an answer addresses / resolves a question \n 

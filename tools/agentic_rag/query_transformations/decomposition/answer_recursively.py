@@ -1,4 +1,4 @@
-from models import chat_model
+from models import simple_chat_model
 from operator import itemgetter
 from langchain_core.documents import Document
 from langgraph.graph import StateGraph, START, END
@@ -34,7 +34,7 @@ def format_qa_pair(question, answer):
 
 
 # llm
-llm = chat_model.bind(temperature = 0)
+llm = simple_chat_model.bind(temperature = 0)
 
 class GraphState(TypedDict):
     input: List[str]  # 原问题序列

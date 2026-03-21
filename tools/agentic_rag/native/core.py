@@ -3,7 +3,7 @@ import uuid
 import jieba
 from typing import List
 from pathlib import Path
-from models import embed_model, chat_model
+from models import embed_model, simple_chat_model
 from langchain_classic.storage import LocalFileStore
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
@@ -47,7 +47,7 @@ docs = text_splitter.split_documents(documents)
 docs = [format_doc(doc, separators) for doc in docs]
 
 # 生成对话模型
-llm = chat_model.bind(temperature=0.8)
+llm = simple_chat_model.bind(temperature=0.8)
 
 if not indexFolderPath.exists():
     # 构造生成摘要链

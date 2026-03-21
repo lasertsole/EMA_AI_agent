@@ -1,7 +1,7 @@
 import umap
 import numpy as np
 import pandas as pd
-from models import chat_model
+from models import simple_chat_model
 from sklearn.mixture import GaussianMixture
 from models.rag_specific import extract_model
 from typing import Dict, List, Optional, Tuple
@@ -10,7 +10,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
 
-llm = chat_model.bind(temperature = 0)
+llm = simple_chat_model.bind(temperature = 0)
 
 RANDOM_SEED = 42  # Fixed seed for reproducibility
 
