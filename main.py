@@ -40,25 +40,36 @@ st_container: DeltaGenerator = st.container()
 # streamlit最大显示对话数
 streamlit_chatStorage = Streamlit_ChatStorage(session_id = session_id, chats_maxlen = 20)
 
+# 创建线程字典，用于存储多个运行中的线程
+@st.cache_resource
+def get_thread_dict()-> dict[str, Thread]:
+    return {}
+thread_dict: dict[str, Thread] = get_thread_dict()
+
 # 创建频道管理器
 @st.cache_resource
 def get_channel_manager()-> ChannelManager:
     return ChannelManager()
+channel_manager:ChannelManager = get_channel_manager()
 
 # 启动频道
-channel_manager:ChannelManager = get_channel_manager()
-channel_thread: Thread = Thread(target=lambda: channel_manager.start_all(), daemon=True)
-add_script_run_ctx(channel_thread, get_script_run_ctx()) # 添加脚本运行上下文
-channel_thread.start()
+if not thread_dict.get("channel_thread"): # 只有线程不存在时才创建和启动，防止僵尸线程
+    channel_thread: Thread = Thread(target=lambda: channel_manager.start_all(), daemon=True)
+    add_script_run_ctx(channel_thread, get_script_run_ctx()) # 添加脚本运行上下文
+    channel_thread.start()
+    thread_dict["channel_thread"] = channel_thread
 
 # 创建任务队列
 @st.cache_resource
 def get_task_queue() -> BackgroundTaskQueue:
     return BackgroundTaskQueue()
+task_queue: BackgroundTaskQueue | None = get_task_queue()
 
 # 启动任务队列
-task_queue: BackgroundTaskQueue | None = get_task_queue()
-Thread(target= lambda: task_queue.start(), daemon=True).start()
+if not thread_dict.get("task_queue_thread"): # 只有线程不存在时才创建和启动，防止僵尸线程
+    task_queue_thread: Thread = Thread(target=lambda: task_queue.start(), daemon=True)
+    task_queue_thread.start()
+    thread_dict["task_queue_thread"] = task_queue_thread
 
 # 创建更新页面条件
 @st.cache_resource
@@ -336,7 +347,7 @@ def main()-> None:
 # 执行主程序
 if __name__ == "__main__":
     # 配置频道处理逻辑
-    if channel_manager.get_inbound_consumer() is None:
+    if channel_manager.get_inbound_consumer() is None: # 判断是否已配置过，避免反复配置
         async def process_qq_inbound(message: InboundMessage, channel: BaseChannel) -> None:
             user_input_text: str = message.content
             user_input:MultiModalMessage = MultiModalMessage(text=user_input_text)
