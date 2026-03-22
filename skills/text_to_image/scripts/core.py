@@ -1,13 +1,23 @@
+import os
 import json
 import requests
-from dotenv import load_dotenv, find_dotenv
+import argparse
+from pathlib import Path
+from config import ROOT_DIR
+from dotenv import load_dotenv
 
-env_path = find_dotenv()  # 返回找到的 .env 路径
-load_dotenv()  # 会自动查找并加载
+current_dir = Path(__file__).parent.resolve()
+load_dotenv(ROOT_DIR, override = True)
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-a", "--age", type=int, help="你的年龄")
+parser.add_argument("--verbose", action="store_true", help="是否输出详细信息")
+args = parser.parse_args()
+
 
 if __name__ == '__main__':
     url = "https://api.modelarts-maas.com/v1/images/generations"  # API地址
-    api_key = "MAAS_API_KEY"  # 把MAAS_API_KEY替换成已获取的API Key
+    api_key = os.getenv("VL_API_KEY")
 
     # Send request.
     headers = {

@@ -1,8 +1,8 @@
 import time
 from pathlib import Path
-from dataclasses import dataclass, field, asdict
 from typing import Optional
 from models import extract_model
+from dataclasses import dataclass, field, asdict
 
 CHROMA_PERSIST_DIR = './chroma_db_persist_dir'
 COLLECTION_NAME = 'knowledge_graph'

@@ -1,13 +1,11 @@
 import os
-import signal
-import atexit
 import requests
-import subprocess
 from pathlib import Path
 from typing import Union
+from config import ENV_PATH
+from requests import Response
 from dotenv import load_dotenv
 from pydantic import BaseModel
-from requests import Response
 
 current_dir = Path(__file__).parent.resolve()
 
@@ -87,9 +85,7 @@ change_sovits_url = base_url + "/set_sovits_weights"
 change_refer_audio_url = base_url + "/set_refer_audio"
 
 # 加载环境变量
-env_path = current_dir /  '../../.env'
-env_path = env_path.resolve()
-load_dotenv(env_path, override=True)
+load_dotenv(ENV_PATH, override=True)
 
 # 获取gpt-sovits项目所在文件夹
 gpt_sovits_dir = os.getenv("GPT_SOVITS_DIR")

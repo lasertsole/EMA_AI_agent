@@ -2,6 +2,7 @@ import os
 import json
 import requests
 from pathlib import Path
+from config import ENV_PATH
 from dotenv import load_dotenv
 from typing import List, TypedDict, Any
 from langchain_core.documents import Document
@@ -13,9 +14,7 @@ from langgraph.graph import StateGraph, START, END, MessagesState
 current_dir = Path(__file__).parent.resolve()
 
 # 加载环境变量和模型初始化（同上）
-env_path = current_dir / '../../.env'
-env_path = env_path.resolve()
-load_dotenv(env_path, override=True)
+load_dotenv(ENV_PATH, override=True)
 api_key = os.getenv("EMBEDDING_API_KEY")
 
 # 定义请求基本信息

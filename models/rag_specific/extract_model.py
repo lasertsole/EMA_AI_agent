@@ -2,15 +2,14 @@ import os
 import requests
 from typing import List
 from pathlib import Path
+from config import ENV_PATH
 from dotenv import load_dotenv
 
 # 获取当前所在文件夹
 current_dir = Path(__file__).parent.resolve()
 
 # 加载环境变量
-env_path = current_dir / '../.env'
-env_path = env_path.resolve()
-load_dotenv(env_path, override = True)
+load_dotenv(ENV_PATH, override = True)
 api_key = os.getenv("MINERU_KEY")
 
 url = "https://mineru.net/api/v4/file-urls/batch"

@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from config import ENV_PATH
 from dotenv import load_dotenv
 from langchain_openai import OpenAIEmbeddings
 
@@ -7,9 +8,7 @@ from langchain_openai import OpenAIEmbeddings
 current_dir = Path(__file__).parent.resolve()
 
 # 加载环境变量
-env_path = current_dir / '../.env'
-env_path = env_path.resolve()
-load_dotenv(env_path, override = True)
+load_dotenv(ENV_PATH, override = True)
 api_key = os.getenv("EMBEDDING_API_KEY")
 api_name = os.getenv("EMBEDDING_API_NAME")
 

@@ -6,7 +6,7 @@ from typing import Any, List, Optional
 
 import yaml
 
-from config import ROOT_DIR, SKILLS_DIR, WORKSPACE_DIR
+from config import ROOT_DIR, SKILLS_DIR
 
 
 def _parse_frontmatter(text: str) -> dict[str, Any]:

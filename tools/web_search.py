@@ -1,9 +1,9 @@
 import os
+from config import ENV_PATH
 from dotenv import load_dotenv
 from langchain_tavily import TavilySearch
 
-env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../.env')
-load_dotenv(env_path, override = True)
+load_dotenv(ENV_PATH, override = True)
 
 tavily_api_key = os.getenv("TAVILY_API_KEY")
 web_search_tool = TavilySearch(tavily_api_key=tavily_api_key, max_results = 7)

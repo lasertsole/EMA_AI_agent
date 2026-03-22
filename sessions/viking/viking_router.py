@@ -1,25 +1,13 @@
 """
 OpenViking 分层路由器
 """
-import os
 from enum import Enum
-from pathlib import Path
-from dotenv import load_dotenv
-from pydantic import BaseModel, Field
-
 from models import simple_chat_model
+from pydantic import BaseModel, Field
 from tools import CORE_TOOLS, ALL_TOOLS
 from typing import List, TypedDict, Optional
 from langchain.messages import SystemMessage, HumanMessage
 from workspace import CORE_FILE_NAMES, FILE_DESCRIPTIONS
-
-current_dir = Path(__file__).parent.resolve()
-env_path = current_dir / '.env'
-env_path = env_path.resolve()
-load_dotenv(env_path, override = True)
-api_key = os.getenv("VIKING_API_KEY")
-api_name = os.getenv("VIKING_API_NAME")
-model_provider = os.getenv("VIKING_API_PROVIDER")
 
 class RoutingModelResult(BaseModel):
     tools: List[str] = Field(description="List of capability tool names to load.")
