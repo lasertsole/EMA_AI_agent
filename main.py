@@ -1,15 +1,14 @@
 import re
-import time
 import base64
 import requests
 from typing import Any
 import streamlit as st
 from typing import List
 from pathlib import Path
-from threading import Thread
 from channels import BaseChannel
 from typing import AsyncGenerator
 from type import MultiModalMessage
+from threading import Thread, Condition
 from agent import built_agent, ModelType
 from channels.manager import ChannelManager
 from tasks.queue import BackgroundTaskQueue
@@ -60,6 +59,12 @@ def get_task_queue() -> BackgroundTaskQueue:
 # 启动任务队列
 task_queue: BackgroundTaskQueue | None = get_task_queue()
 Thread(target= lambda: task_queue.start(), daemon=True).start()
+
+# 创建更新页面条件
+@st.cache_resource
+def get_update_page_condition() -> Condition:
+    return Condition()
+update_page_condition: Condition = get_update_page_condition()
 
 # 创建agent
 agent = built_agent()
@@ -146,11 +151,10 @@ async def _async_generator(history: list[dict[str, Any]], multi_modal_message: M
     messages_dict = {"messages": messages}
 
     try:
-        if is_stream == 'True':
+        if is_stream:
             yield f"{assistant_name}:"
             async for chunk in agent.astream(messages_dict, config = config, stream_mode = "messages"):
                 msg_chunk: BaseMessage = chunk[0]
-
                 if isinstance(msg_chunk, AIMessageChunk):
                     # 以下是输出工具信息
                     tool_calls = msg_chunk.tool_calls if msg_chunk.tool_calls and len(msg_chunk.tool_calls) > 0 else msg_chunk.tool_call_chunks
@@ -193,7 +197,6 @@ async def _async_generator(history: list[dict[str, Any]], multi_modal_message: M
     except ToolException as e:
         yield f"调用工具时发生错误: {e.args[0]}"
 #"""以上是组织信息列表逻辑"""
-
 
 #"""以下是工具函数"""
 def filter_content_for_tts(content: str) -> str:
@@ -278,8 +281,8 @@ def main()-> None:
             if task_queue:
                 Thread(target=lambda: task_queue.enqueue_memory_index(memory_entry)).start()
 
-        # if True:
-        #     return
+        with update_page_condition:
+            update_page_condition.notify_all()
 
         # 添加AI消息框UI
         with st_container:
@@ -321,8 +324,12 @@ def main()-> None:
             if total_chars > COMPRESS_THRESHOLD and task_queue:
                 task_queue.enqueue_compress(session_id)
 
-    # 每隔五秒刷新一次页面
-    time.sleep(5)
+        with update_page_condition:
+            update_page_condition.notify_all()
+
+    # 只在页面状态更新时刷新页面，让主程序挂起以便接收到频道信息
+    with update_page_condition:
+        update_page_condition.wait()
     st.rerun(scope="app")
 
 
@@ -342,6 +349,10 @@ if __name__ == "__main__":
                 ai_reply = item
             await channel.send(OutboundMessage(channel="qq", chat_id=message.chat_id, content=ai_reply))
             storage_add_chat(session_id=session_id, name=assistant_name, chat= dict(role="assistant", content=ai_reply))
+
+            # 更新页面
+            with update_page_condition:
+                update_page_condition.notify_all()
 
         channel_manager.set_inbound_consumer(
             {
