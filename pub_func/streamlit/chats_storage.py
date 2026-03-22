@@ -57,6 +57,9 @@ class ChatStorage:
         # 将新聊天记录列表写回文件
         self.__storage_chats_deque(self._chats_deque)
 
+    def get_session_id(self)->str:
+        return self._session_id
+
     def get_chats(self) -> List[dict[str, Any]]:
         return list([chat.model_dump() for chat in self._chats_deque])
 

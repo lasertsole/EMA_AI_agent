@@ -28,37 +28,45 @@ class ChannelManager:
     _channels: dict[str, BaseChannel] = {}
     _dispatch_task: asyncio.Task | None = None
     _config: dict[str, str] = None
-    _event_loop: AbstractEventLoop = asyncio.new_event_loop()
-    _inbound_consumer_dict: dict[str, Callable[[InboundMessage, BaseChannel], Awaitable[None]]] = {}
-    _outbound_consumer_dict: dict[str, Callable[[OutboundMessage, BaseChannel], Awaitable[None]]] = {}
+    _event_loop: AbstractEventLoop | None = asyncio.new_event_loop()
+    _inbound_consumer_dict: dict[str, Callable[[InboundMessage, BaseChannel], Awaitable[None]]] | None = None
+    _outbound_consumer_dict: dict[str, Callable[[OutboundMessage, BaseChannel], Awaitable[None]]] | None = None
 
     async def _inbound_consume_loop(self):
         while True:
             msg: InboundMessage = await self._bus.consume_inbound()
 
-            for name, func in self._inbound_consumer_dict.items():
-                channel = self._channels.get(name)
-                if channel:
-                    await func(msg, channel)
-                else:
-                    logger.warning("Channel {} not found", name)
+            if self._inbound_consumer_dict is not None:
+                for name, func in self._inbound_consumer_dict.items():
+                    channel = self._channels.get(name)
+                    if channel:
+                        await func(msg, channel)
+                    else:
+                        logger.warning("Channel {} not found", name)
 
     async def _outbound_consume_loop(self):
         while True:
             msg: OutboundMessage = await self._bus.consume_outbound()
 
-            for name, func in self._outbound_consumer_dict.items():
-                channel = self._channels.get(name)
-                if channel:
-                    await func(msg, channel)
-                else:
-                    logger.warning("Channel {} not found", name)
+            if self._outbound_consumer_dict is not None:
+                for name, func in self._outbound_consumer_dict.items():
+                    channel = self._channels.get(name)
+                    if channel:
+                        await func(msg, channel)
+                    else:
+                        logger.warning("Channel {} not found", name)
 
     def set_inbound_consumer(self, inbound_consumer_dict: dict[str, Callable[[InboundMessage, BaseChannel], Awaitable[None]]])->None:
         self._inbound_consumer_dict = inbound_consumer_dict
 
+    def get_inbound_consumer(self)->dict[str, Callable[[InboundMessage, BaseChannel], Awaitable[None]]] | None:
+        return self._inbound_consumer_dict
+
     def set_outbound_consumer(self, outbound_consumer_dict: dict[str, Callable[[OutboundMessage, BaseChannel], Awaitable[None]]])->None:
         self._outbound_consumer_dict = outbound_consumer_dict
+
+    def get_outbound_consumer(self)->dict[str, Callable[[InboundMessage, BaseChannel], Awaitable[None]]] | None:
+        return self._outbound_consumer_dict
 
     def __init__(self, config: Optional[dict[str, str]] = None,  bus: Optional[MessageBus] = None):
         if config is None:

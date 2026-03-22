@@ -1,15 +1,13 @@
-import os
 import re
+import time
 import base64
 import requests
-import threading
 from typing import Any
 import streamlit as st
+from typing import List
 from pathlib import Path
-from bus import InboundMessage, OutboundMessage
-from dotenv import load_dotenv
+from threading import Thread
 from channels import BaseChannel
-from typing import List, Optional
 from typing import AsyncGenerator
 from type import MultiModalMessage
 from agent import built_agent, ModelType
@@ -18,18 +16,17 @@ from tasks.queue import BackgroundTaskQueue
 from langchain.messages import AIMessageChunk
 from langchain_core.tools import ToolException
 from models import TTS_Request, fetch_TTS_sound
+from bus import InboundMessage, OutboundMessage
 from langgraph.errors import GraphRecursionError
 from config import COMPRESS_THRESHOLD, MEMORY_DIR
+from streamlit.delta_generator import DeltaGenerator
 from workspace.prompt_builder import build_system_prompt
 from streamlit.elements.widgets.chat import ChatInputValue
+from sessions import read_session, viking_routing, load_summary
 from streamlit.runtime.uploaded_file_manager import UploadedFile
-from utils import File, FileType, ChatStorage as Streamlit_ChatStorage
+from streamlit.runtime.scriptrunner import add_script_run_ctx, get_script_run_ctx
+from pub_func import File, FileType, ChatStorage as Streamlit_ChatStorage, storage_add_chat
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage, SystemMessage, BaseMessage
-from sessions import generate_tsid, append_session_message, read_session, viking_routing, load_summary
-
-env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), './.env')
-load_dotenv(env_path, override=True)
-is_stream = os.getenv("IS_STREAM")
 
 # 创建会话ID和线程ID
 session_id = '1'
@@ -38,25 +35,22 @@ thread_id = 1
 # 创建配置参数
 _config: dict[str, Any] = {"configurable": {"thread_id": thread_id, "model_type": "chat_model"}}
 
+# 创建streamlit显示容器
+st_container: DeltaGenerator = st.container()
+
+# streamlit最大显示对话数
+streamlit_chatStorage = Streamlit_ChatStorage(session_id = session_id, chats_maxlen = 20)
+
 # 创建频道管理器
 @st.cache_resource
-def get_channel_manager():
+def get_channel_manager()-> ChannelManager:
     return ChannelManager()
 
-
 # 启动频道
-channel_manager = get_channel_manager()
-threading.Thread(target= lambda: channel_manager.start_all(), daemon=True).start()
-
-# 配置频道
-async def process_qq_inbound(message: InboundMessage, channel: BaseChannel) -> None:
-    print(message)
-    await channel.send(OutboundMessage(channel="qq", chat_id=message.chat_id, content=message.content))
-channel_manager.set_inbound_consumer(
-    {
-        "qq": process_qq_inbound
-    }
-)
+channel_manager:ChannelManager = get_channel_manager()
+channel_thread: Thread = Thread(target=lambda: channel_manager.start_all(), daemon=True)
+add_script_run_ctx(channel_thread, get_script_run_ctx()) # 添加脚本运行上下文
+channel_thread.start()
 
 # 创建任务队列
 @st.cache_resource
@@ -65,10 +59,7 @@ def get_task_queue() -> BackgroundTaskQueue:
 
 # 启动任务队列
 task_queue: BackgroundTaskQueue | None = get_task_queue()
-threading.Thread(target= lambda: task_queue.start(), daemon=True).start()
-
-# streamlit最大显示对话数
-streamlit_chatStorage = Streamlit_ChatStorage(session_id = session_id, chats_maxlen = 20)
+Thread(target= lambda: task_queue.start(), daemon=True).start()
 
 # 创建agent
 agent = built_agent()
@@ -146,7 +137,7 @@ def _to_messages(history: list[dict[str, Any]], multi_modal_message: MultiModalM
 #"""以下是组织信息列表逻辑"""
 current_tool_name: str = ""
 current_tool_id: str = ""
-async def _async_generator(history: list[dict[str, Any]], multi_modal_message: MultiModalMessage, config: dict[str, Any])-> AsyncGenerator[str, None]:
+async def _async_generator(history: list[dict[str, Any]], multi_modal_message: MultiModalMessage, config: dict[str, Any], is_stream: bool = True)-> AsyncGenerator[str, None]:
     global current_tool_name
     global current_tool_id
 
@@ -192,6 +183,7 @@ async def _async_generator(history: list[dict[str, Any]], multi_modal_message: M
         else:
             result = await agent.ainvoke(messages_dict, config = config)
             yield result["messages"][-1].content
+
     except requests.exceptions.HTTPError as e:
         yield f"请求失败: {e.response.text}"
     except requests.exceptions.Timeout as e:
@@ -200,26 +192,6 @@ async def _async_generator(history: list[dict[str, Any]], multi_modal_message: M
         yield f"工具调用循环、超过限制: {e.args[0]}"
     except ToolException as e:
         yield f"调用工具时发生错误: {e.args[0]}"
-
-def _storage_add_chat(chat: dict[str, Any], files: Optional[List[File]] = None):
-    if not isinstance(chat["content"], str) or not isinstance(chat["role"], str):
-        raise ValueError("Invalid chat")
-
-    # 生成时间戳
-    timestamp = generate_tsid()
-
-    #"""持久化消息"""
-    append_session_message(session_id, {"role": chat["role"], "content": chat["content"], "timestamp": timestamp})
-
-    # 增加角色前缀
-    if chat["role"] == "assistant":
-        chat["content"] = f"{assistant_name}:{chat['content']}"
-    elif chat["role"] == "user":
-        chat["content"] = f"{user_name}:{chat['content']}"
-
-    chat["timestamp"] = timestamp
-
-    streamlit_chatStorage.add_chat(chat, files)
 #"""以上是组织信息列表逻辑"""
 
 
@@ -233,30 +205,31 @@ def filter_content_for_tts(content: str) -> str:
 #"""以上是工具函数"""
 
 # streamlit主程序
-def main():
+def main()-> None:
     _history = read_session(session_id)
 
     chat_list: list[dict[str, Any]] = streamlit_chatStorage.get_chats()
     if len(chat_list) == 0:
         hello_chat = dict(role="assistant", content=f"汉娜さん，来茶间聊天吧！")
         chat_list.append(hello_chat)
-        _storage_add_chat(hello_chat)
+        storage_add_chat(session_id=session_id, name=assistant_name, chat=hello_chat)
 
     # 创建历史聊天消息UI列表
-    for _chat in chat_list:
-        with st.chat_message(_chat["role"], avatar=f"./src/avatar/{_chat['role']}.jpg"):
-            st.markdown(_chat["content"])
-            if "audio_path_list" in _chat and _chat["audio_path_list"] is not None:
-                for file_path in _chat["audio_path_list"]:
-                    if Path(file_path).exists():
-                        with open(file_path, "rb") as f:
-                            st.audio(data=f.read(), format="audio/ogg")
+    with st_container:
+        for _chat in chat_list:
+            with st.chat_message(_chat["role"], avatar=f"./src/avatar/{_chat['role']}.jpg"):
+                st.markdown(_chat["content"])
+                if "audio_path_list" in _chat and _chat["audio_path_list"] is not None:
+                    for file_path in _chat["audio_path_list"]:
+                        if Path(file_path).exists():
+                            with open(file_path, "rb") as f:
+                                st.audio(data=f.read(), format="audio/ogg")
 
-            if "image_path_list" in _chat and _chat["image_path_list"] is not None:
-                for file_path in _chat["image_path_list"]:
-                    if Path(file_path).exists():
-                        with open(file_path, "rb") as f:
-                            st.image(f.read())
+                if "image_path_list" in _chat and _chat["image_path_list"] is not None:
+                    for file_path in _chat["image_path_list"]:
+                        if Path(file_path).exists():
+                            with open(file_path, "rb") as f:
+                                st.image(f.read())
 
     # 用户输入
     user_input_obj: ChatInputValue = st.chat_input(
@@ -272,69 +245,71 @@ def main():
         _files: List[UploadedFile] = user_input_obj.files
 
         # 添加用户消息框UI
-        with st.chat_message(name = "user", avatar = "./src/avatar/user.jpg"):
-            st.markdown(f"{user_name}:{_multi_modal_message.text}")
+        with st_container:
+            with st.chat_message(name = "user", avatar = "./src/avatar/user.jpg"):
+                st.markdown(f"{user_name}:{_multi_modal_message.text}")
 
-            # 遍历用户上传图片文件
-            image_base64_list: List[str] = []
-            for _file in _files:
-                # 显示图片
-                st.image(_file)
-                
-                # 将图片转为bytes
-                file_bytes: bytes = _file.getvalue()
+        # 遍历用户上传图片文件
+        image_base64_list: List[str] = []
+        for _file in _files:
+            # 显示图片
+            st.image(_file)
 
-                # 将 图片bytes 放入base64列表
-                base64_bytes = base64.b64encode(file_bytes)
-                base64_string = base64_bytes.decode("utf-8")
-                image_base64_list.append(base64_string)
+            # 将图片转为bytes
+            file_bytes: bytes = _file.getvalue()
 
-                # 将 图片bytes 放入文件列表
-                file: File = {"content": file_bytes, "type": FileType.IMAGE, "extension": '.jpg'}
-                file_list.append(file)
-            _multi_modal_message.image_base64_list = image_base64_list if len(image_base64_list) > 0 else None
+            # 将 图片bytes 放入base64列表
+            base64_bytes = base64.b64encode(file_bytes)
+            base64_string = base64_bytes.decode("utf-8")
+            image_base64_list.append(base64_string)
 
-            # 将用户消息持久化
-            _storage_add_chat(dict(role = "user", content = _multi_modal_message.text), files=file_list if len(file_list) > 0 else None)
+            # 将 图片bytes 放入文件列表
+            file: File = {"content": file_bytes, "type": FileType.IMAGE, "extension": '.jpg'}
+            file_list.append(file)
+        _multi_modal_message.image_base64_list = image_base64_list if len(image_base64_list) > 0 else None
+
+        # 将用户消息持久化
+        storage_add_chat(session_id=session_id, name=user_name, chat=dict(role = "user", content = _multi_modal_message.text), files=file_list if len(file_list) > 0 else None)
 
         # 将用户要求的知识存入到MEMORY.MD
         memory_entry = _maybe_extract_memory(_multi_modal_message.text)
         if memory_entry:
             _append_memory(memory_entry)
             if task_queue:
-                threading.Thread(target=lambda: task_queue.enqueue_memory_index(memory_entry)).start()
+                Thread(target=lambda: task_queue.enqueue_memory_index(memory_entry)).start()
 
         # if True:
         #     return
 
         # 添加AI消息框UI
-        with st.chat_message(name = "assistant", avatar="./src/avatar/assistant.jpg"):
-            stream = _async_generator(_history, _multi_modal_message, _config)
-            _content = st.write_stream(stream)
+        with st_container:
+            with st.chat_message(name = "assistant", avatar="./src/avatar/assistant.jpg"):
+                stream = _async_generator(_history, _multi_modal_message, _config)
+                _content = st.write_stream(stream)
 
-            # 去除开头的assistant_name
-            _content = _content[len(f"{assistant_name}:"):]
+                # 去除开头的assistant_name
+                _content = _content[len(f"{assistant_name}:"):]
 
-            # 重置文件列表
-            file_list = []
+                # 重置文件列表
+                file_list = []
 
-            with st.spinner("正在生成语音..."):
-                # 生成语音,当生成失败时跳过生成
-                try:
-                    # 去除多余字符
-                    clear_content = filter_content_for_tts(_content)
+                with st.spinner("正在生成语音..."):
+                    # 生成语音,当生成失败时跳过生成
+                    try:
+                        # 去除多余字符
+                        clear_content = filter_content_for_tts(_content)
 
-                    audio_requires = TTS_Request(text=clear_content, text_lang="zh")
-                    response = fetch_TTS_sound(audio_requires)
-                    if response is not None:
-                        st.audio(data=response.content, format="audio/ogg")
-                        file: File = {"content": response.content, "type": FileType.AUDIO, "extension": '.wav'}
-                        file_list.append(file)
-                except Exception as e:
-                    pass
+                        audio_requires = TTS_Request(text=clear_content, text_lang="zh")
+                        response = fetch_TTS_sound(audio_requires)
+                        if response is not None:
+                            st.audio(data=response.content, format="audio/ogg")
+                            file: File = {"content": response.content, "type": FileType.AUDIO, "extension": '.wav'}
+                            file_list.append(file)
+                    except Exception as e:
+                        pass
 
             # 将AI消息持久化
-            _storage_add_chat(dict(role = "assistant", content = _content), files = file_list if len(file_list) > 0 else None)
+            storage_add_chat(session_id=session_id, name=assistant_name, chat= dict(role="assistant", content=_content), files = file_list if len(file_list) > 0 else None)
 
             # 添加viking L0 和 L1 索引
             task_queue.enqueue_append_timeline_entry(
@@ -346,6 +321,35 @@ def main():
             if total_chars > COMPRESS_THRESHOLD and task_queue:
                 task_queue.enqueue_compress(session_id)
 
+    # 每隔五秒刷新一次页面
+    time.sleep(5)
+    st.rerun(scope="app")
+
+
 # 执行主程序
 if __name__ == "__main__":
-    main()
+    # 配置频道处理逻辑
+    if channel_manager.get_inbound_consumer() is None:
+        async def process_qq_inbound(message: InboundMessage, channel: BaseChannel) -> None:
+            user_input_text: str = message.content
+            user_input:MultiModalMessage = MultiModalMessage(text=user_input_text)
+            storage_add_chat(session_id=session_id, chat=dict(role="user", content=user_input_text), name=user_name)
+
+            _history = read_session(session_id)
+
+            ai_reply: str = ""
+            async for item in _async_generator(_history, user_input, _config, is_stream=False):
+                ai_reply = item
+            await channel.send(OutboundMessage(channel="qq", chat_id=message.chat_id, content=ai_reply))
+            storage_add_chat(session_id=session_id, name=assistant_name, chat= dict(role="assistant", content=ai_reply))
+
+        channel_manager.set_inbound_consumer(
+            {
+                "qq": process_qq_inbound
+            }
+        )
+
+    # 启动主程序
+    main_thread:Thread = Thread(target=main())
+    add_script_run_ctx(main_thread, get_script_run_ctx())
+    main_thread.start()

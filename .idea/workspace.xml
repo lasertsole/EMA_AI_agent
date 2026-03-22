@@ -4,13 +4,26 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="823222bf-bcd3-4fc1-9584-1cc7eda194dc" name="Changes" comment="update viking_router.py">
+    <list default="true" id="823222bf-bcd3-4fc1-9584-1cc7eda194dc" name="Changes" comment="prepare for graph-memory">
+      <change afterPath="$PROJECT_DIR$/channels/handler.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/pub_func/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/pub_func/store.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/pub_func/streamlit/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/test.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/EMA_AI_agent-main.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/EMA_AI_agent-main.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dictionaries/project.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dictionaries/project.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/channels.json" beforeDir="false" afterPath="$PROJECT_DIR$/channels.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/channels/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/channels/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/channels/manager.py" beforeDir="false" afterPath="$PROJECT_DIR$/channels/manager.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sessions/store.py" beforeDir="false" afterPath="$PROJECT_DIR$/sessions/store.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/start.sh" beforeDir="false" afterPath="$PROJECT_DIR$/start.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/streamlit/chats_storage.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/streamlit/chats_storage.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sessions/1/current.jsonl" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sessions/1/decisions.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sessions/1/timeline.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/streamlit/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/streamlit/chats_storage.py" beforeDir="false" afterPath="$PROJECT_DIR$/pub_func/streamlit/chats_storage.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -72,6 +85,13 @@
   <component name="PropertiesComponent">{
   &quot;keyToString&quot;: {
     &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;Python 测试.Python 测试 (test.py 内).executor&quot;: &quot;Debug&quot;,
+    &quot;Python 测试.Python 测试 (test_all_channel.py 内).executor&quot;: &quot;Run&quot;,
+    &quot;Python 测试.tests.test.test 的 Python 测试.executor&quot;: &quot;Run&quot;,
+    &quot;Python 测试.tests.test.test_send_c2c_message_uses_plain_text_c2c_api_with_msg_seq 的 Python 测试 (1).executor&quot;: &quot;Run&quot;,
+    &quot;Python 测试.tests.test.test_send_c2c_message_uses_plain_text_c2c_api_with_msg_seq 的 Python 测试.executor&quot;: &quot;Run&quot;,
+    &quot;Python 测试.tests.test_qq_channel.test_on_group_message_routes_to_group_chat_id 的 Python 测试.executor&quot;: &quot;Run&quot;,
+    &quot;Python 测试.tests.test_qq_channel.test_send_c2c_message_uses_plain_text_c2c_api_with_msg_seq 的 Python 测试.executor&quot;: &quot;Run&quot;,
     &quot;Python.__init__.executor&quot;: &quot;Run&quot;,
     &quot;Python.agent.executor&quot;: &quot;Run&quot;,
     &quot;Python.backgroundInfo (1).executor&quot;: &quot;Run&quot;,
@@ -93,8 +113,12 @@
     &quot;Python.history_index.executor&quot;: &quot;Run&quot;,
     &quot;Python.jsonl_storage.executor&quot;: &quot;Run&quot;,
     &quot;Python.main.executor&quot;: &quot;Run&quot;,
+    &quot;Python.manager.executor&quot;: &quot;Run&quot;,
+    &quot;Python.registry.executor&quot;: &quot;Run&quot;,
     &quot;Python.test (1).executor&quot;: &quot;Run&quot;,
+    &quot;Python.test (2).executor&quot;: &quot;Run&quot;,
     &quot;Python.test.executor&quot;: &quot;Run&quot;,
+    &quot;Python.test1.executor&quot;: &quot;Run&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
@@ -114,6 +138,9 @@
   &quot;keyToStringList&quot;: {
     &quot;DatabaseDriversLRU&quot;: [
       &quot;sqlite&quot;
+    ],
+    &quot;com.intellij.ide.scratch.ScratchImplUtil$2/新建临时文件&quot;: [
+      &quot;TEXT&quot;
     ]
   }
 }</component>
@@ -126,15 +153,15 @@
       <recent name="C:\app\code\project\EMA_AI_agent\utils" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\app\code\project\EMA_AI_agent\sessions" />
+      <recent name="C:\app\code\project\EMA_AI_agent\type" />
+      <recent name="C:\app\code\project\EMA_AI_agent\tests" />
+      <recent name="C:\app\code\project\EMA_AI_agent" />
       <recent name="C:\app\code\project\EMA_AI_agent\tools" />
-      <recent name="C:\app\code\project\EMA_AI_agent\memoryOS\tools" />
-      <recent name="C:\app\code\project\EMA_AI_agent\memoryOS\memory" />
-      <recent name="C:\app\code\project\EMA_AI_agent\utils\streamlit" />
-      <recent name="C:\app\code\project\EMA_AI_agent\utils" />
     </key>
   </component>
   <component name="RunManager" selected="Python.test (1)">
-    <configuration name="__init__" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="manager" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="EMA_AI_agent-main" />
       <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -143,13 +170,12 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tools" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/channels" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="RUN_TOOL" value="" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tools/__init__.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/channels/manager.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -158,7 +184,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="__init__" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="registry" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="EMA_AI_agent-main" />
       <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -167,109 +193,12 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tools" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/channels" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="RUN_TOOL" value="" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tools/__init__.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-    <configuration name="agent" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="EMA_AI_agent-main" />
-      <option name="ENV_FILES" value="" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="RUN_TOOL" value="" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/agent.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-    <configuration name="agent" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="EMA_AI_agent-main" />
-      <option name="ENV_FILES" value="" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="RUN_TOOL" value="" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/agent.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-    <configuration name="history_index" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="EMA_AI_agent-main" />
-      <option name="ENV_FILES" value="" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/sessions" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="RUN_TOOL" value="" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/sessions/history_index.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-    <configuration name="history_index" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="EMA_AI_agent-main" />
-      <option name="ENV_FILES" value="" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/sessions" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="RUN_TOOL" value="" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/sessions/history_index.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/channels/registry.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -287,13 +216,12 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tests" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="RUN_TOOL" value="" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/test.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tests/test.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -302,7 +230,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="test (1)" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="test" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="EMA_AI_agent-main" />
       <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -311,13 +239,12 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tests" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="RUN_TOOL" value="" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/test.py" />
+      <option name="SCRIPT_NAME" value="C:\app\code\project\EMA_AI_agent\tests\test.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -350,51 +277,74 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="test" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="Python 测试 (test.py 内)" type="tests" factoryName="Autodetect" temporary="true" nameIsGenerated="true">
       <module name="EMA_AI_agent-main" />
       <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/test" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="RUN_TOOL" value="" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/test/test.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
+      <option name="_new_additionalArguments" value="&quot;&quot;" />
+      <option name="_new_target" value="&quot;$PROJECT_DIR$/tests/test.py&quot;" />
+      <option name="_new_targetType" value="&quot;PATH&quot;" />
+      <method v="2" />
+    </configuration>
+    <configuration name="tests.test.test_send_c2c_message_uses_plain_text_c2c_api_with_msg_seq 的 Python 测试" type="tests" factoryName="Autodetect" temporary="true" nameIsGenerated="true">
+      <module name="EMA_AI_agent-main" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="RUN_TOOL" value="" />
+      <option name="_new_additionalArguments" value="&quot;&quot;" />
+      <option name="_new_target" value="&quot;tests.test.test_send_c2c_message_uses_plain_text_c2c_api_with_msg_seq&quot;" />
+      <option name="_new_targetType" value="&quot;PYTHON&quot;" />
+      <method v="2" />
+    </configuration>
+    <configuration name="tests.test.test_send_c2c_message_uses_plain_text_c2c_api_with_msg_seq 的 Python 测试" type="tests" factoryName="Autodetect">
+      <module name="EMA_AI_agent-main" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="RUN_TOOL" value="" />
+      <option name="_new_additionalArguments" value="&quot;&quot;" />
+      <option name="_new_target" value="&quot;&quot;" />
+      <option name="_new_targetType" value="&quot;PATH&quot;" />
       <method v="2" />
     </configuration>
     <list>
-      <item itemvalue="Python.__init__" />
-      <item itemvalue="Python.history_index" />
-      <item itemvalue="Python.agent" />
-      <item itemvalue="Python.test (1)" />
       <item itemvalue="Python.test" />
+      <item itemvalue="Python.manager" />
+      <item itemvalue="Python.registry" />
+      <item itemvalue="Python.test (1)" />
+      <item itemvalue="Python 测试.tests.test.test_send_c2c_message_uses_plain_text_c2c_api_with_msg_seq 的 Python 测试" />
+      <item itemvalue="Python 测试.Python 测试 (test.py 内)" />
     </list>
     <recent_temporary>
       <list>
         <item itemvalue="Python.test (1)" />
-        <item itemvalue="Python.__init__" />
-        <item itemvalue="Python.history_index" />
-        <item itemvalue="Python.test" />
-        <item itemvalue="Python.agent" />
+        <item itemvalue="Python.manager" />
+        <item itemvalue="Python 测试.Python 测试 (test.py 内)" />
+        <item itemvalue="Python.registry" />
       </list>
     </recent_temporary>
   </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-js-predefined-d6986cc7102b-9b0f141eb926-JavaScript-PY-253.30387.173" />
         <option value="bundled-python-sdk-4762d8aabb82-6d6dccd035ac-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-253.30387.173" />
       </set>
     </attachedChunks>
@@ -428,199 +378,18 @@
       <workItem from="1773063606749" duration="7058000" />
       <workItem from="1773138325810" duration="11828000" />
       <workItem from="1773225410423" duration="4010000" />
-      <workItem from="1773229999571" duration="3515000" />
-    </task>
-    <task id="LOCAL-00019" summary="change project structure temporarily">
-      <option name="closed" value="true" />
-      <created>1768144004972</created>
-      <option name="number" value="00019" />
-      <option name="presentableId" value="LOCAL-00019" />
-      <option name="project" value="LOCAL" />
-      <updated>1768144004972</updated>
-    </task>
-    <task id="LOCAL-00020" summary="change project structure temporarily">
-      <option name="closed" value="true" />
-      <created>1768144069132</created>
-      <option name="number" value="00020" />
-      <option name="presentableId" value="LOCAL-00020" />
-      <option name="project" value="LOCAL" />
-      <updated>1768144069132</updated>
-    </task>
-    <task id="LOCAL-00021" summary="prepare connect agentic rag to graph rag by langExtract">
-      <option name="closed" value="true" />
-      <created>1768233548933</created>
-      <option name="number" value="00021" />
-      <option name="presentableId" value="LOCAL-00021" />
-      <option name="project" value="LOCAL" />
-      <updated>1768233548933</updated>
-    </task>
-    <task id="LOCAL-00022" summary="check graphrag table">
-      <option name="closed" value="true" />
-      <created>1768317084090</created>
-      <option name="number" value="00022" />
-      <option name="presentableId" value="LOCAL-00022" />
-      <option name="project" value="LOCAL" />
-      <updated>1768317084090</updated>
-    </task>
-    <task id="LOCAL-00023" summary="simplify structure">
-      <option name="closed" value="true" />
-      <created>1768488634964</created>
-      <option name="number" value="00023" />
-      <option name="presentableId" value="LOCAL-00023" />
-      <option name="project" value="LOCAL" />
-      <updated>1768488634964</updated>
-    </task>
-    <task id="LOCAL-00024" summary="simplify structure">
-      <option name="closed" value="true" />
-      <created>1768489146855</created>
-      <option name="number" value="00024" />
-      <option name="presentableId" value="LOCAL-00024" />
-      <option name="project" value="LOCAL" />
-      <updated>1768489146855</updated>
-    </task>
-    <task id="LOCAL-00025" summary="Convert the synchronous agent to an asynchronous one">
-      <option name="closed" value="true" />
-      <created>1768660845327</created>
-      <option name="number" value="00025" />
-      <option name="presentableId" value="LOCAL-00025" />
-      <option name="project" value="LOCAL" />
-      <updated>1768660845327</updated>
-    </task>
-    <task id="LOCAL-00026" summary="create a global_search_engine">
-      <option name="closed" value="true" />
-      <created>1768665182324</created>
-      <option name="number" value="00026" />
-      <option name="presentableId" value="LOCAL-00026" />
-      <option name="project" value="LOCAL" />
-      <updated>1768665182324</updated>
-    </task>
-    <task id="LOCAL-00027" summary="use checkPointer instead of custom array variable to memory history">
-      <option name="closed" value="true" />
-      <created>1768872335084</created>
-      <option name="number" value="00027" />
-      <option name="presentableId" value="LOCAL-00027" />
-      <option name="project" value="LOCAL" />
-      <updated>1768872335084</updated>
-    </task>
-    <task id="LOCAL-00028" summary="use checkPointer instead of custom array variable to memory history">
-      <option name="closed" value="true" />
-      <created>1768872371253</created>
-      <option name="number" value="00028" />
-      <option name="presentableId" value="LOCAL-00028" />
-      <option name="project" value="LOCAL" />
-      <updated>1768872371253</updated>
-    </task>
-    <task id="LOCAL-00029" summary="use checkPointer instead of custom array variable to memory history">
-      <option name="closed" value="true" />
-      <created>1768873654404</created>
-      <option name="number" value="00029" />
-      <option name="presentableId" value="LOCAL-00029" />
-      <option name="project" value="LOCAL" />
-      <updated>1768873654404</updated>
-    </task>
-    <task id="LOCAL-00030" summary="update demo1.py">
-      <option name="closed" value="true" />
-      <created>1768874485948</created>
-      <option name="number" value="00030" />
-      <option name="presentableId" value="LOCAL-00030" />
-      <option name="project" value="LOCAL" />
-      <updated>1768874485948</updated>
-    </task>
-    <task id="LOCAL-00031" summary="update demo1.py">
-      <option name="closed" value="true" />
-      <created>1768880168936</created>
-      <option name="number" value="00031" />
-      <option name="presentableId" value="LOCAL-00031" />
-      <option name="project" value="LOCAL" />
-      <updated>1768880168936</updated>
-    </task>
-    <task id="LOCAL-00032" summary="change structure">
-      <option name="closed" value="true" />
-      <created>1768910744018</created>
-      <option name="number" value="00032" />
-      <option name="presentableId" value="LOCAL-00032" />
-      <option name="project" value="LOCAL" />
-      <updated>1768910744018</updated>
-    </task>
-    <task id="LOCAL-00033" summary="add tool_call_limit.py">
-      <option name="closed" value="true" />
-      <created>1768957047384</created>
-      <option name="number" value="00033" />
-      <option name="presentableId" value="LOCAL-00033" />
-      <option name="project" value="LOCAL" />
-      <updated>1768957047384</updated>
-    </task>
-    <task id="LOCAL-00034" summary="update structure">
-      <option name="closed" value="true" />
-      <created>1768960782379</created>
-      <option name="number" value="00034" />
-      <option name="presentableId" value="LOCAL-00034" />
-      <option name="project" value="LOCAL" />
-      <updated>1768960782379</updated>
-    </task>
-    <task id="LOCAL-00035" summary="connect sovits">
-      <option name="closed" value="true" />
-      <created>1771940333385</created>
-      <option name="number" value="00035" />
-      <option name="presentableId" value="LOCAL-00035" />
-      <option name="project" value="LOCAL" />
-      <updated>1771940333385</updated>
-    </task>
-    <task id="LOCAL-00036" summary="update sovits configuration">
-      <option name="closed" value="true" />
-      <created>1772008071912</created>
-      <option name="number" value="00036" />
-      <option name="presentableId" value="LOCAL-00036" />
-      <option name="project" value="LOCAL" />
-      <updated>1772008071912</updated>
-    </task>
-    <task id="LOCAL-00037" summary="update sovits configuration">
-      <option name="closed" value="true" />
-      <created>1772022780399</created>
-      <option name="number" value="00037" />
-      <option name="presentableId" value="LOCAL-00037" />
-      <option name="project" value="LOCAL" />
-      <updated>1772022780399</updated>
-    </task>
-    <task id="LOCAL-00038" summary="update sovits code">
-      <option name="closed" value="true" />
-      <created>1772031804592</created>
-      <option name="number" value="00038" />
-      <option name="presentableId" value="LOCAL-00038" />
-      <option name="project" value="LOCAL" />
-      <updated>1772031804592</updated>
-    </task>
-    <task id="LOCAL-00039" summary="update sovits config">
-      <option name="closed" value="true" />
-      <created>1772111303762</created>
-      <option name="number" value="00039" />
-      <option name="presentableId" value="LOCAL-00039" />
-      <option name="project" value="LOCAL" />
-      <updated>1772111303762</updated>
-    </task>
-    <task id="LOCAL-00040" summary="update streamlit">
-      <option name="closed" value="true" />
-      <created>1772117217069</created>
-      <option name="number" value="00040" />
-      <option name="presentableId" value="LOCAL-00040" />
-      <option name="project" value="LOCAL" />
-      <updated>1772117217069</updated>
-    </task>
-    <task id="LOCAL-00041" summary="update streamlit UI">
-      <option name="closed" value="true" />
-      <created>1772163395832</created>
-      <option name="number" value="00041" />
-      <option name="presentableId" value="LOCAL-00041" />
-      <option name="project" value="LOCAL" />
-      <updated>1772163395832</updated>
-    </task>
-    <task id="LOCAL-00042" summary="update streamlit UI">
-      <option name="closed" value="true" />
-      <created>1772178195351</created>
-      <option name="number" value="00042" />
-      <option name="presentableId" value="LOCAL-00042" />
-      <option name="project" value="LOCAL" />
-      <updated>1772178195351</updated>
+      <workItem from="1773229999571" duration="12867000" />
+      <workItem from="1773311466053" duration="12644000" />
+      <workItem from="1773398689341" duration="7453000" />
+      <workItem from="1773461307999" duration="12878000" />
+      <workItem from="1773544213405" duration="23826000" />
+      <workItem from="1773583267857" duration="442000" />
+      <workItem from="1773660680662" duration="9696000" />
+      <workItem from="1773670412032" duration="5840000" />
+      <workItem from="1773676648931" duration="347000" />
+      <workItem from="1773743764999" duration="12804000" />
+      <workItem from="1773757520254" duration="24000" />
+      <workItem from="1773830507226" duration="30000" />
     </task>
     <task id="LOCAL-00043" summary="update streamlit">
       <option name="closed" value="true" />
@@ -822,7 +591,199 @@
       <option name="project" value="LOCAL" />
       <updated>1773150828792</updated>
     </task>
-    <option name="localTasksCounter" value="68" />
+    <task id="LOCAL-00068" summary="update structure">
+      <option name="closed" value="true" />
+      <created>1773233583287</created>
+      <option name="number" value="00068" />
+      <option name="presentableId" value="LOCAL-00068" />
+      <option name="project" value="LOCAL" />
+      <updated>1773233583288</updated>
+    </task>
+    <task id="LOCAL-00069" summary="update structure">
+      <option name="closed" value="true" />
+      <created>1773239694638</created>
+      <option name="number" value="00069" />
+      <option name="presentableId" value="LOCAL-00069" />
+      <option name="project" value="LOCAL" />
+      <updated>1773239694638</updated>
+    </task>
+    <task id="LOCAL-00070" summary="update structure">
+      <option name="closed" value="true" />
+      <created>1773242200996</created>
+      <option name="number" value="00070" />
+      <option name="presentableId" value="LOCAL-00070" />
+      <option name="project" value="LOCAL" />
+      <updated>1773242200996</updated>
+    </task>
+    <task id="LOCAL-00071" summary="update structure">
+      <option name="closed" value="true" />
+      <created>1773418961665</created>
+      <option name="number" value="00071" />
+      <option name="presentableId" value="LOCAL-00071" />
+      <option name="project" value="LOCAL" />
+      <updated>1773418961665</updated>
+    </task>
+    <task id="LOCAL-00072" summary="update openviking layer history storage">
+      <option name="closed" value="true" />
+      <created>1773500162948</created>
+      <option name="number" value="00072" />
+      <option name="presentableId" value="LOCAL-00072" />
+      <option name="project" value="LOCAL" />
+      <updated>1773500162948</updated>
+    </task>
+    <task id="LOCAL-00073" summary="update openviking layer history storage and router">
+      <option name="closed" value="true" />
+      <created>1773553811345</created>
+      <option name="number" value="00073" />
+      <option name="presentableId" value="LOCAL-00073" />
+      <option name="project" value="LOCAL" />
+      <updated>1773553811345</updated>
+    </task>
+    <task id="LOCAL-00074" summary="update openviking layer history storage and router">
+      <option name="closed" value="true" />
+      <created>1773570213337</created>
+      <option name="number" value="00074" />
+      <option name="presentableId" value="LOCAL-00074" />
+      <option name="project" value="LOCAL" />
+      <updated>1773570213337</updated>
+    </task>
+    <task id="LOCAL-00075" summary="update openviking layer history storage and router">
+      <option name="closed" value="true" />
+      <created>1773578687512</created>
+      <option name="number" value="00075" />
+      <option name="presentableId" value="LOCAL-00075" />
+      <option name="project" value="LOCAL" />
+      <updated>1773578687512</updated>
+    </task>
+    <task id="LOCAL-00076" summary="OpenViking successfully integrated">
+      <option name="closed" value="true" />
+      <created>1773582649488</created>
+      <option name="number" value="00076" />
+      <option name="presentableId" value="LOCAL-00076" />
+      <option name="project" value="LOCAL" />
+      <updated>1773582649488</updated>
+    </task>
+    <task id="LOCAL-00077" summary="OpenViking successfully integrated">
+      <option name="closed" value="true" />
+      <created>1773583528511</created>
+      <option name="number" value="00077" />
+      <option name="presentableId" value="LOCAL-00077" />
+      <option name="project" value="LOCAL" />
+      <updated>1773583528511</updated>
+    </task>
+    <task id="LOCAL-00078" summary="debug openviking">
+      <option name="closed" value="true" />
+      <created>1773676234035</created>
+      <option name="number" value="00078" />
+      <option name="presentableId" value="LOCAL-00078" />
+      <option name="project" value="LOCAL" />
+      <updated>1773676234035</updated>
+    </task>
+    <task id="LOCAL-00079" summary="prepare for connecting QQ channel">
+      <option name="closed" value="true" />
+      <created>1773676925442</created>
+      <option name="number" value="00079" />
+      <option name="presentableId" value="LOCAL-00079" />
+      <option name="project" value="LOCAL" />
+      <updated>1773676925442</updated>
+    </task>
+    <task id="LOCAL-00080" summary="Test Tool Call Chain">
+      <option name="closed" value="true" />
+      <created>1773748736823</created>
+      <option name="number" value="00080" />
+      <option name="presentableId" value="LOCAL-00080" />
+      <option name="project" value="LOCAL" />
+      <updated>1773748736824</updated>
+    </task>
+    <task id="LOCAL-00081" summary="Preparing to connect to QQ">
+      <option name="closed" value="true" />
+      <created>1773757450832</created>
+      <option name="number" value="00081" />
+      <option name="presentableId" value="LOCAL-00081" />
+      <option name="project" value="LOCAL" />
+      <updated>1773757450832</updated>
+    </task>
+    <task id="LOCAL-00082" summary="delete test_tool_example.txt">
+      <option name="closed" value="true" />
+      <created>1773757495370</created>
+      <option name="number" value="00082" />
+      <option name="presentableId" value="LOCAL-00082" />
+      <option name="project" value="LOCAL" />
+      <updated>1773757495370</updated>
+    </task>
+    <task id="LOCAL-00083" summary="multi modal agent">
+      <option name="closed" value="true" />
+      <created>1773849931464</created>
+      <option name="number" value="00083" />
+      <option name="presentableId" value="LOCAL-00083" />
+      <option name="project" value="LOCAL" />
+      <updated>1773849931465</updated>
+    </task>
+    <task id="LOCAL-00084" summary="debug structure">
+      <option name="closed" value="true" />
+      <created>1773917560412</created>
+      <option name="number" value="00084" />
+      <option name="presentableId" value="LOCAL-00084" />
+      <option name="project" value="LOCAL" />
+      <updated>1773917560412</updated>
+    </task>
+    <task id="LOCAL-00085" summary="debug the image-to-text feature">
+      <option name="closed" value="true" />
+      <created>1773923254872</created>
+      <option name="number" value="00085" />
+      <option name="presentableId" value="LOCAL-00085" />
+      <option name="project" value="LOCAL" />
+      <updated>1773923254872</updated>
+    </task>
+    <task id="LOCAL-00086" summary="prepare for TTI">
+      <option name="closed" value="true" />
+      <created>1773925261681</created>
+      <option name="number" value="00086" />
+      <option name="presentableId" value="LOCAL-00086" />
+      <option name="project" value="LOCAL" />
+      <updated>1773925261681</updated>
+    </task>
+    <task id="LOCAL-00087" summary="update structure">
+      <option name="closed" value="true" />
+      <created>1774065528989</created>
+      <option name="number" value="00087" />
+      <option name="presentableId" value="LOCAL-00087" />
+      <option name="project" value="LOCAL" />
+      <updated>1774065528989</updated>
+    </task>
+    <task id="LOCAL-00088" summary="Successfully connected to QQ channel">
+      <option name="closed" value="true" />
+      <created>1774082352338</created>
+      <option name="number" value="00088" />
+      <option name="presentableId" value="LOCAL-00088" />
+      <option name="project" value="LOCAL" />
+      <updated>1774082352338</updated>
+    </task>
+    <task id="LOCAL-00089" summary="update structure">
+      <option name="closed" value="true" />
+      <created>1774083272153</created>
+      <option name="number" value="00089" />
+      <option name="presentableId" value="LOCAL-00089" />
+      <option name="project" value="LOCAL" />
+      <updated>1774083272153</updated>
+    </task>
+    <task id="LOCAL-00090" summary="update channel">
+      <option name="closed" value="true" />
+      <created>1774097048317</created>
+      <option name="number" value="00090" />
+      <option name="presentableId" value="LOCAL-00090" />
+      <option name="project" value="LOCAL" />
+      <updated>1774097048317</updated>
+    </task>
+    <task id="LOCAL-00091" summary="prepare for graph-memory">
+      <option name="closed" value="true" />
+      <created>1774106345834</created>
+      <option name="number" value="00091" />
+      <option name="presentableId" value="LOCAL-00091" />
+      <option name="project" value="LOCAL" />
+      <updated>1774106345835</updated>
+    </task>
+    <option name="localTasksCounter" value="92" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -840,39 +801,39 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="use checkPointer instead of custom array variable to memory history" />
-    <MESSAGE value="update demo1.py" />
-    <MESSAGE value="change structure" />
-    <MESSAGE value="add tool_call_limit.py" />
-    <MESSAGE value="connect sovits" />
-    <MESSAGE value="update sovits configuration" />
-    <MESSAGE value="update sovits code" />
-    <MESSAGE value="update sovits config" />
-    <MESSAGE value="update streamlit UI" />
-    <MESSAGE value="update streamlit" />
-    <MESSAGE value="create the memoryOS" />
-    <MESSAGE value="update the memoryOS(hybrid openclaw and openviking)" />
-    <MESSAGE value="use native rag tool to instead of DIY rag tool" />
-    <MESSAGE value="update openclaw structure。Thanks to the architecture provided by https://github.com/zero565656/mini-openclaw/tree/main" />
-    <MESSAGE value="update workspace" />
     <MESSAGE value="updated mini openclaw structure" />
     <MESSAGE value="success to execute SKILL.md" />
     <MESSAGE value="update viking-router.py" />
-    <MESSAGE value="update structure" />
     <MESSAGE value="succuss to compress history" />
     <MESSAGE value="prepare for integrating openviking" />
     <MESSAGE value="debug tts audio" />
     <MESSAGE value="Successfully implemented long-term memory functionality" />
     <MESSAGE value="update history_index.py" />
     <MESSAGE value="update viking_router.py" />
-    <option name="LAST_COMMIT_MESSAGE" value="update viking_router.py" />
+    <MESSAGE value="update openviking layer history storage" />
+    <MESSAGE value="update openviking layer history storage and router" />
+    <MESSAGE value="OpenViking successfully integrated" />
+    <MESSAGE value="debug openviking" />
+    <MESSAGE value="prepare for connecting QQ channel" />
+    <MESSAGE value="Test Tool Call Chain" />
+    <MESSAGE value="Preparing to connect to QQ" />
+    <MESSAGE value="delete test_tool_example.txt" />
+    <MESSAGE value="multi modal agent" />
+    <MESSAGE value="debug structure" />
+    <MESSAGE value="debug the image-to-text feature" />
+    <MESSAGE value="prepare for TTI" />
+    <MESSAGE value="Successfully connected to QQ channel" />
+    <MESSAGE value="update structure" />
+    <MESSAGE value="update channel" />
+    <MESSAGE value="prepare for graph-memory" />
+    <option name="LAST_COMMIT_MESSAGE" value="prepare for graph-memory" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/EMA_AI_agent$agent.coverage" NAME="agent 覆盖结果" MODIFIED="1772544941565" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/EMA_AI_agent$jsonl_storage.coverage" NAME="jsonl_storage 覆盖结果" MODIFIED="1772204004979" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/utils" />
     <SUITE FILE_PATH="coverage/EMA_AI_agent$core.coverage" NAME="core 覆盖结果" MODIFIED="1772541642396" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tools/agentic_rag/native" />
     <SUITE FILE_PATH="coverage/EMA_AI_agent$core__2_.coverage" NAME="core (2) 覆盖结果" MODIFIED="1771943425575" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/models/sovits_model" />
-    <SUITE FILE_PATH="coverage/EMA_AI_agent$test__1_.coverage" NAME="test (1) 覆盖结果" MODIFIED="1773231378010" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/EMA_AI_agent$test__1_.coverage" NAME="test (1) 覆盖结果" MODIFIED="1773664078256" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/EMA_AI_agent$core__1_.coverage" NAME="core (1) 覆盖结果" MODIFIED="1771933779183" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tools/agentic_rag" />
     <SUITE FILE_PATH="coverage/EMA_AI_agent$chats_storage__1_.coverage" NAME="chats_storage (1) 覆盖结果" MODIFIED="1772197780178" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/utils" />
     <SUITE FILE_PATH="coverage/EMA_AI_agent$config.coverage" NAME="config 覆盖结果" MODIFIED="1772537703914" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
