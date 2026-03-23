@@ -5,9 +5,9 @@ from skills.loader import scan_skills
 from .viking_router import viking_route
 
 
-def viking_routing(user_input: str)-> dict[str, Any]:
+def viking_routing(session_id: str,user_input: str)-> dict[str, Any]:
     # ===== L0 时间线加载（始终） start =====
-    l0_result = load_l0_timeline(session_id='1')
+    l0_result = load_l0_timeline(session_id = session_id)
     # ===== L0 时间线加载（始终） end =====
 
     # ===== viking routing start =====
@@ -26,7 +26,7 @@ def viking_routing(user_input: str)-> dict[str, Any]:
     context:str = ""
     # ===== L1 按日期按需加载 start =====
     if route_result["needs_l1"]:
-        l1_prompt = load_l1_decisions(session_id='1', dates=route_result["l1_dates"], tsids=route_result["l1_tsids"])
+        l1_prompt = load_l1_decisions(session_id = session_id, dates = route_result["l1_dates"], tsids = route_result["l1_tsids"])
 
         if l1_prompt is not None and l1_prompt.available and len(l1_prompt.prompt)> 0:
             context += "\n\n" + l1_prompt.prompt
@@ -34,7 +34,7 @@ def viking_routing(user_input: str)-> dict[str, Any]:
 
     # ===== L2 按需加载 start =====
     if route_result["needs_l2"]:
-        l2_prompt = load_l2_session(session_id='1', tsids = route_result["l1_tsids"])
+        l2_prompt = load_l2_session(session_id = session_id, tsids = route_result["l1_tsids"])
 
         if l2_prompt is not None and l2_prompt.available and len(l2_prompt.prompt)> 0:
             context += "\n\n" + l2_prompt.prompt

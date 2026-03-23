@@ -112,8 +112,8 @@ def _append_memory(entry: str) -> None:
 def _to_messages(history: list[dict[str, Any]], multi_modal_message: MultiModalMessage) -> list[BaseMessage]:
     global agent
 
-    # 使用openviking路由
-    viking_result = viking_routing(multi_modal_message.text)
+    # 使用open-viking路由
+    viking_result = viking_routing(session_id = session_id, user_input = multi_modal_message.text)
     files = viking_result.get("file_names", [])
     context = viking_result.get("context", "")
 
