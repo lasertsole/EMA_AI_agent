@@ -309,3 +309,618 @@ def top_nodes(db: sqlite3.Connection, limit: int = 6) -> list:
     """
     rows = db.execute(sql, (limit,)).fetchall()
     return [to_node(dict(row)) for row in rows]
+
+
+# ─── 递归 CTE 图遍历 ────────────────────────────────────────
+def graph_walk(
+        db: sqlite3.Connection,
+        seed_ids: list[str],
+        max_depth: int,
+) -> dict[str, list]:
+    """使用递归 CTE 进行图遍历，获取种子节点的邻居"""
+    if not seed_ids:
+        return {"nodes": [], "edges": []}
+
+    placeholders = ",".join("?" * len(seed_ids))
+
+    walk_sql = f"""
+        WITH RECURSIVE walk(node_id, depth) AS (
+            SELECT id, 0 FROM gm_nodes WHERE id IN ({placeholders}) AND status='active'
+            UNION
+            SELECT
+                CASE WHEN e.from_id = w.node_id THEN e.to_id ELSE e.from_id END,
+                w.depth + 1
+            FROM walk w
+            JOIN gm_edges e ON (e.from_id = w.node_id OR e.to_id = w.node_id)
+            WHERE w.depth < ?
+        )
+        SELECT DISTINCT node_id FROM walk
+    """
+
+    walk_rows = db.execute(walk_sql, (*seed_ids, max_depth)).fetchall()
+    node_ids = [dict(row)['node_id'] for row in walk_rows]
+
+    if not node_ids:
+        return {"nodes": [], "edges": []}
+
+    np = ",".join("?" * len(node_ids))
+
+    nodes_sql = f"""
+        SELECT * FROM gm_nodes WHERE id IN ({np}) AND status='active'
+    """
+    nodes = [to_node(dict(row)) for row in db.execute(nodes_sql, (*node_ids,)).fetchall()]
+
+    edges_sql = f"""
+        SELECT * FROM gm_edges WHERE from_id IN ({np}) AND to_id IN ({np})
+    """
+    edges = [to_edge(dict(row)) for row in db.execute(edges_sql, (*node_ids, *node_ids)).fetchall()]
+
+    return {"nodes": nodes, "edges": edges}
+
+# ─── 按 session 查询 ────────────────────────────────────────
+
+def get_by_session(db: sqlite3.Connection, session_id: str) -> list[GmNode]:
+    """根据 session ID 获取相关节点"""
+    sql = """
+        SELECT DISTINCT n.* FROM gm_nodes n, json_each(n.source_sessions) j
+        WHERE j.value = ? AND n.status = 'active'
+    """
+    rows = db.execute(sql, (session_id,)).fetchall()
+    return [to_node(dict(row)) for row in rows]
+
+
+# ─── 消息 CRUD ───────────────────────────────────────────────
+def save_message(
+        db: sqlite3.Connection,
+        sid: str,
+        turn: int,
+        role: str,
+        content: Any
+) -> None:
+    """保存消息到数据库"""
+    import json
+    import time
+
+    db.execute("""
+        INSERT OR IGNORE INTO gm_messages (id, session_id, turn_index, role, content, created_at)
+        VALUES (?,?,?,?,?,?)
+    """, (uid("m"), sid, turn, role, json.dumps(content), int(time.time() * 1000)))
+
+
+def get_messages(db: sqlite3.Connection, sid: str, limit: Optional[int] = None) -> list:
+    """获取指定 session 的消息"""
+    if limit:
+        sql = """
+            SELECT * FROM gm_messages 
+            WHERE session_id=? 
+            ORDER BY turn_index DESC 
+            LIMIT ?
+        """
+        rows = db.execute(sql, (sid, limit)).fetchall()
+    else:
+        sql = """
+            SELECT * FROM gm_messages 
+            WHERE session_id=? 
+            ORDER BY turn_index
+        """
+        rows = db.execute(sql, (sid,)).fetchall()
+
+    return [dict(row) for row in rows]
+
+
+def get_unextracted(db: sqlite3.Connection, sid: str, limit: int) -> list:
+    """获取未提取的消息"""
+    sql = """
+        SELECT * FROM gm_messages 
+        WHERE session_id=? AND extracted=0 
+        ORDER BY turn_index 
+        LIMIT ?
+    """
+    rows = db.execute(sql, (sid, limit)).fetchall()
+    return [dict(row) for row in rows]
+
+
+def mark_extracted(db: sqlite3.Connection, sid: str, up_to_turn: int) -> None:
+    """标记消息已提取"""
+    db.execute("""
+        UPDATE gm_messages 
+        SET extracted=1 
+        WHERE session_id=? AND turn_index<=?
+    """, (sid, up_to_turn))
+
+
+def get_episodic_messages(
+        db: sqlite3.Connection,
+        session_ids: list[str],
+        near_time: int,
+        max_chars: int = 1500,
+) -> list[dict]:
+    """
+    溯源选拉：按 session 拉取 user/assistant 核心对话（跳过 tool/tool_result）
+    用于 assemble 时补充三元组的原始上下文
+
+    Args:
+        session_ids: session ID 列表
+        near_time: 优先取时间最接近的消息（节点的 updated_at）
+        max_chars: 总字符上限
+
+    Returns:
+        包含 sessionId, turnIndex, role, text, createdAt 的字典列表
+    """
+    import json
+
+    if not session_ids:
+        return []
+
+    results = []
+    used_chars = 0
+
+    for sid in session_ids:
+        if used_chars >= max_chars:
+            break
+
+        sql = """
+            SELECT turn_index, role, content, created_at FROM gm_messages
+            WHERE session_id = ? AND role IN ('user', 'assistant')
+            ORDER BY ABS(created_at - ?) ASC
+            LIMIT 6
+        """
+        rows = db.execute(sql, (sid, near_time)).fetchall()
+
+        for r in rows:
+            if used_chars >= max_chars:
+                break
+
+            row_dict = dict(r)
+            text = ""
+
+            try:
+                parsed = json.loads(row_dict['content'])
+                if isinstance(parsed, str):
+                    text = parsed
+                elif isinstance(parsed, dict) and isinstance(parsed.get('content'), str):
+                    text = parsed['content']
+                elif isinstance(parsed, list):
+                    text_parts = [
+                        item.get('text', '')
+                        for item in parsed
+                        if isinstance(item, dict) and item.get('type') == 'text'
+                    ]
+                    text = "\n".join(text_parts)
+                else:
+                    text = str(parsed)[:300]
+            except (json.JSONDecodeError, Exception):
+                text = str(row_dict['content'])[:300]
+
+            if not text.strip():
+                continue
+
+            truncated = text[:max_chars - used_chars]
+            results.append({
+                'session_id': sid,
+                'turn_index': row_dict['turn_index'],
+                'role': row_dict['role'],
+                'text': truncated,
+                'created_at': row_dict['created_at'],
+            })
+            used_chars += len(truncated)
+
+    return results
+
+
+# ─── 信号 CRUD ───────────────────────────────────────────────
+def save_signal(db: sqlite3.Connection, sid: str, signal_data: dict) -> None:
+    """保存信号到数据库"""
+    import json
+    import time
+
+    db.execute("""
+        INSERT INTO gm_signals (id, session_id, turn_index, type, data, created_at)
+        VALUES (?,?,?,?,?,?)
+    """, (uid("s"), sid, signal_data['turnIndex'], signal_data['type'],
+          json.dumps(signal_data['data']), int(time.time() * 1000)))
+
+
+def pending_signals(db: sqlite3.Connection, sid: str) -> list:
+    """获取未处理的信号"""
+    import json
+
+    sql = """
+        SELECT * FROM gm_signals 
+        WHERE session_id=? AND processed=0 
+        ORDER BY turn_index
+    """
+    rows = db.execute(sql, (sid,)).fetchall()
+
+    return [
+        {
+            'type': row['type'],
+            'turn_index': row['turn_index'],
+            'data': json.loads(row['data'])
+        }
+        for row in rows
+    ]
+
+
+def mark_signals_done(db: sqlite3.Connection, sid: str) -> None:
+    """标记信号处理完成"""
+    db.execute("""
+        UPDATE gm_signals 
+        SET processed=1 
+        WHERE session_id=?
+    """, (sid,))
+
+
+# ─── 统计 ────────────────────────────────────────────────────
+def get_stats(db: sqlite3.Connection) -> dict:
+    """获取图谱统计信息"""
+    total_nodes = db.execute(
+        "SELECT COUNT(*) as c FROM gm_nodes WHERE status='active'"
+    ).fetchone()['c']
+
+    by_type = {}
+    type_rows = db.execute("""
+        SELECT type, COUNT(*) as c 
+        FROM gm_nodes 
+        WHERE status='active' 
+        GROUP BY type
+    """).fetchall()
+    for row in type_rows:
+        by_type[row['type']] = row['c']
+
+    total_edges = db.execute("SELECT COUNT(*) as c FROM gm_edges").fetchone()['c']
+
+    by_edge_type = {}
+    edge_type_rows = db.execute("""
+        SELECT type, COUNT(*) as c 
+        FROM gm_edges 
+        GROUP BY type
+    """).fetchall()
+    for row in edge_type_rows:
+        by_edge_type[row['type']] = row['c']
+
+    communities = db.execute("""
+        SELECT COUNT(DISTINCT community_id) as c 
+        FROM gm_nodes 
+        WHERE status='active' AND community_id IS NOT NULL
+    """).fetchone()['c']
+
+    return {
+        'total_nodes': total_nodes,
+        'by_type': by_type,
+        'total_edges': total_edges,
+        'by_edge_type': by_edge_type,
+        'communities': communities
+    }
+
+
+# ─── 向量存储 + 搜索 ────────────────────────────────────────
+
+def save_vector(
+        db: sqlite3.Connection,
+        node_id: str,
+        content: str,
+        vec: list[float]
+) -> None:
+    """保存向量到数据库"""
+    import hashlib
+
+    content_hash = hashlib.md5(content.encode()).hexdigest()
+
+    db.execute("""
+        INSERT INTO gm_vectors (node_id, content_hash, embedding) VALUES (?,?,?)
+        ON CONFLICT(node_id) DO UPDATE SET content_hash=excluded.content_hash, embedding=excluded.embedding
+    """, (node_id, content_hash, json.dumps(vec)))
+
+
+def get_vector_hash(db: sqlite3.Connection, node_id: str) -> Optional[str]:
+    """获取向量的内容哈希"""
+    row = db.execute(
+        "SELECT content_hash FROM gm_vectors WHERE node_id=?",
+        (node_id,)
+    ).fetchone()
+    return row['content_hash'] if row else None
+
+
+def get_all_vectors(db: sqlite3.Connection) -> list[dict]:
+    """获取所有向量（供去重/聚类用）"""
+    rows = db.execute("""
+        SELECT v.node_id, v.embedding FROM gm_vectors v
+        JOIN gm_nodes n ON n.id = v.node_id WHERE n.status = 'active'
+    """).fetchall()
+
+    return [
+        {
+            'node_id': row['node_id'],
+            'embedding': json.loads(row['embedding'])
+        }
+        for row in rows
+    ]
+
+
+class ScoredNode(TypedDict):
+    """带分数的节点"""
+    node: GmNode
+    score: float
+
+
+def vector_search_with_score(
+        db: sqlite3.Connection,
+        query_vec: list[float],
+        limit: int,
+        min_score: float = 0.35
+) -> list[ScoredNode]:
+    """向量搜索并返回带余弦相似度的节点"""
+    import math
+
+    rows = db.execute("""
+        SELECT v.node_id, v.embedding, n.*
+        FROM gm_vectors v JOIN gm_nodes n ON n.id = v.node_id
+        WHERE n.status = 'active'
+    """).fetchall()
+
+    if not rows:
+        return []
+
+    q_norm = math.sqrt(sum(x * x for x in query_vec))
+    if q_norm == 0:
+        return []
+
+    results = []
+    for row in rows:
+        v = json.loads(row['embedding'])
+        min_len = min(len(v), len(query_vec))
+
+        dot = sum(v[i] * query_vec[i] for i in range(min_len))
+        v_norm = math.sqrt(sum(v[i] * v[i] for i in range(min_len)))
+
+        score = dot / (v_norm * q_norm + 1e-9)
+
+        if score > min_score:
+            results.append({
+                'node': to_node(dict(row)),
+                'score': score
+            })
+
+    results.sort(key=lambda x: x['score'], reverse=True)
+    return results[:limit]
+
+
+def vector_search(
+        db: sqlite3.Connection,
+        query_vec: list[float],
+        limit: int,
+        min_score: float = 0.35
+) -> list[GmNode]:
+    """向量搜索（兼容旧接口）"""
+    scored = vector_search_with_score(db, query_vec, limit, min_score)
+    return [item['node'] for item in scored]
+
+
+def community_representatives(
+        db: sqlite3.Connection,
+        per_community: int = 2
+) -> list[GmNode]:
+    """
+    社区代表节点：每个社区取最近更新的 topN 个节点
+    用于泛化召回 —— 用户问"做了哪些工作"时按领域返回概览
+    """
+    rows = db.execute("""
+        SELECT * FROM gm_nodes
+        WHERE status = 'active' AND community_id IS NOT NULL
+        ORDER BY community_id, updated_at DESC
+    """).fetchall()
+
+    by_community: dict[str, list[GmNode]] = {}
+    for row in rows:
+        node = to_node(dict(row))
+        cid = row['community_id']
+        if cid not in by_community:
+            by_community[cid] = []
+        if len(by_community[cid]) < per_community:
+            by_community[cid].append(node)
+
+    # 社区按最新更新时间排序
+    sorted_communities = sorted(
+        by_community.items(),
+        key=lambda x: max(n['updated_at'] for n in x[1]),
+        reverse=True
+    )
+
+    result: list[GmNode] = []
+    for _, nodes in sorted_communities:
+        result.extend(nodes)
+
+    return result
+
+
+# ─── 社区描述 CRUD ──────────────────────────────────────────
+
+class CommunitySummary(TypedDict):
+    """社区摘要"""
+    id: str
+    summary: str
+    node_count: int
+    created_at: int
+    updated_at: int
+
+
+def upsert_community_summary(
+        db: sqlite3.Connection,
+        summary_id: str,
+        summary_text: str,
+        node_count: int,
+        embedding: Optional[list[float]] = None
+) -> None:
+    """插入或更新社区摘要"""
+    now = int(time.time() * 1000)
+
+    existing = db.execute(
+        "SELECT id FROM gm_communities WHERE id=?",
+        (summary_id,)
+    ).fetchone()
+
+    if existing:
+        if embedding:
+            db.execute("""
+                UPDATE gm_communities 
+                SET summary=?, node_count=?, embedding=?, updated_at=? 
+                WHERE id=?
+            """, (summary_text, node_count, json.dumps(embedding), now, summary_id))
+        else:
+            db.execute("""
+                UPDATE gm_communities 
+                SET summary=?, node_count=?, updated_at=? 
+                WHERE id=?
+            """, (summary_text, node_count, now, summary_id))
+    else:
+        db.execute("""
+            INSERT INTO gm_communities 
+            (id, summary, node_count, embedding, created_at, updated_at) 
+            VALUES (?,?,?,?,?,?)
+        """, (summary_id, summary_text, node_count,
+              json.dumps(embedding) if embedding else None, now, now))
+
+
+def get_community_summary(
+        db: sqlite3.Connection,
+        summary_id: str
+) -> Optional[CommunitySummary]:
+    """获取社区摘要"""
+    row = db.execute(
+        "SELECT * FROM gm_communities WHERE id=?",
+        (summary_id,)
+    ).fetchone()
+
+    if not row:
+        return None
+
+    return {
+        'id': row['id'],
+        'summary': row['summary'],
+        'node_count': row['node_count'],
+        'created_at': row['created_at'],
+        'updated_at': row['updated_at']
+    }
+
+def get_all_community_summaries(
+        db: sqlite3.Connection
+) -> list[CommunitySummary]:
+    """获取所有社区摘要"""
+    rows = db.execute("""
+        SELECT * FROM gm_communities 
+        ORDER BY node_count DESC
+    """).fetchall()
+
+    return [
+        {
+            'id': row['id'],
+            'summary': row['summary'],
+            'node_count': row['node_count'],
+            'created_at': row['created_at'],
+            'updated_at': row['updated_at']
+        }
+        for row in rows
+    ]
+
+
+class ScoredCommunity(TypedDict):
+    """带分数的社区"""
+    id: str
+    summary: str
+    score: float
+    node_count: int
+
+
+def community_vector_search(
+        db: sqlite3.Connection,
+        query_vec: list[float],
+        min_score: float = 0.15
+) -> list[ScoredCommunity]:
+    """
+    社区向量搜索：用 query 向量匹配社区 embedding，返回按相似度排序的社区
+    """
+    import math
+
+    rows = db.execute("""
+        SELECT id, summary, node_count, embedding 
+        FROM gm_communities 
+        WHERE embedding IS NOT NULL
+    """).fetchall()
+
+    if not rows:
+        return []
+
+    q_norm = math.sqrt(sum(x * x for x in query_vec))
+    if q_norm == 0:
+        return []
+
+    results = []
+    for row in rows:
+        v = json.loads(row['embedding'])
+        min_len = min(len(v), len(query_vec))
+
+        dot = sum(v[i] * query_vec[i] for i in range(min_len))
+        v_norm = math.sqrt(sum(v[i] * v[i] for i in range(min_len)))
+
+        score = dot / (v_norm * q_norm + 1e-9)
+
+        if score > min_score:
+            results.append({
+                'id': row['id'],
+                'summary': row['summary'],
+                'score': score,
+                'node_count': row['node_count']
+            })
+
+    results.sort(key=lambda x: x['score'], reverse=True)
+    return results
+
+
+def nodes_by_community_ids(
+        db: sqlite3.Connection,
+        community_ids: list[str],
+        per_community: int = 3
+) -> list[GmNode]:
+    """
+    按社区 ID 列表获取成员节点（按时间倒序）
+    """
+    if not community_ids:
+        return []
+
+    placeholders = ",".join("?" * len(community_ids))
+    rows = db.execute(f"""
+        SELECT * FROM gm_nodes
+        WHERE community_id IN ({placeholders}) AND status='active'
+        ORDER BY community_id, updated_at DESC
+    """, (*community_ids,)).fetchall()
+
+    by_community: dict[str, list[GmNode]] = {}
+    for row in rows:
+        node = to_node(dict(row))
+        cid = row['community_id']
+        if cid not in by_community:
+            by_community[cid] = []
+        if len(by_community[cid]) < per_community:
+            by_community[cid].append(node)
+
+    result: list[GmNode] = []
+    for cid in community_ids:
+        members = by_community.get(cid)
+        if members:
+            result.extend(members)
+
+    return result
+
+
+def prune_community_summaries(db: sqlite3.Connection) -> int:
+    """清除已不存在的社区描述"""
+    cursor = db.cursor()
+    cursor.execute("""
+        DELETE FROM gm_communities WHERE id NOT IN (
+            SELECT DISTINCT community_id FROM gm_nodes 
+            WHERE community_id IS NOT NULL AND status='active'
+        )
+    """)
+    db.commit()
+    return cursor.rowcount

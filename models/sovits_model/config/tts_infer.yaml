@@ -9,7 +9,7 @@ custom:
 v1:
   bert_base_path: GPT_SoVITS/pretrained_models/chinese-roberta-wwm-ext-large
   cnhuhbert_base_path: GPT_SoVITS/pretrained_models/chinese-hubert-base
-  device: cpu
+  device: cuda
   is_half: false
   t2s_weights_path: GPT_SoVITS/pretrained_models/s1bert25hz-2kh-longer-epoch=68e-step=50232.ckpt
   version: v1
@@ -17,7 +17,7 @@ v1:
 v2:
   bert_base_path: GPT_SoVITS/pretrained_models/chinese-roberta-wwm-ext-large
   cnhuhbert_base_path: GPT_SoVITS/pretrained_models/chinese-hubert-base
-  device: cpu
+  device: cuda
   is_half: false
   t2s_weights_path: GPT_SoVITS/pretrained_models/gsv-v2final-pretrained/s1bert25hz-5kh-longer-epoch=12-step=369668.ckpt
   version: v2
@@ -25,7 +25,7 @@ v2:
 v2Pro:
   bert_base_path: GPT_SoVITS/pretrained_models/chinese-roberta-wwm-ext-large
   cnhuhbert_base_path: GPT_SoVITS/pretrained_models/chinese-hubert-base
-  device: cpu
+  device: cuda
   is_half: false
   t2s_weights_path: GPT_SoVITS/pretrained_models/s1v3.ckpt
   version: v2Pro
@@ -33,7 +33,7 @@ v2Pro:
 v2ProPlus:
   bert_base_path: GPT_SoVITS/pretrained_models/chinese-roberta-wwm-ext-large
   cnhuhbert_base_path: GPT_SoVITS/pretrained_models/chinese-hubert-base
-  device: cpu
+  device: cuda
   is_half: false
   t2s_weights_path: GPT_SoVITS/pretrained_models/s1v3.ckpt
   version: v2ProPlus
@@ -41,7 +41,7 @@ v2ProPlus:
 v3:
   bert_base_path: GPT_SoVITS/pretrained_models/chinese-roberta-wwm-ext-large
   cnhuhbert_base_path: GPT_SoVITS/pretrained_models/chinese-hubert-base
-  device: cpu
+  device: cuda
   is_half: false
   t2s_weights_path: GPT_SoVITS/pretrained_models/s1v3.ckpt
   version: v3
@@ -49,7 +49,7 @@ v3:
 v4:
   bert_base_path: GPT_SoVITS/pretrained_models/chinese-roberta-wwm-ext-large
   cnhuhbert_base_path: GPT_SoVITS/pretrained_models/chinese-hubert-base
-  device: cpu
+  device: cuda
   is_half: false
   t2s_weights_path: GPT_SoVITS/pretrained_models/s1v3.ckpt
   version: v4

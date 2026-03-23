@@ -13,10 +13,8 @@ from agent import built_agent, ModelType
 from channels.manager import ChannelManager
 from tasks.queue import BackgroundTaskQueue
 from langchain.messages import AIMessageChunk
-from langchain_core.tools import ToolException
 from models import TTS_Request, fetch_TTS_sound
 from bus import InboundMessage, OutboundMessage
-from langgraph.errors import GraphRecursionError
 from config import COMPRESS_THRESHOLD, MEMORY_DIR
 from streamlit.delta_generator import DeltaGenerator
 from workspace.prompt_builder import build_system_prompt
@@ -184,10 +182,10 @@ async def _async_generator(history: list[dict[str, Any]], multi_modal_message: M
                                     repeat_flag = False
 
                         if not repeat_flag:
-                            yield f"\n\n**调用工具 {current_tool_name} (工具id={current_tool_id})中**"
+                            yield f"\n\n**调用工具 {current_tool_name} 中**"
 
                     if current_tool_id and msg_chunk.content is not None and msg_chunk.content:
-                        yield f"\n\n**调用工具 {current_tool_name} (工具id={current_tool_id}) 结束。**\n\n"
+                        yield f"\n\n**调用工具 {current_tool_name} 结束。**\n\n"
                         current_tool_id = ""
                     # 以上是输出工具信息
 
@@ -203,10 +201,6 @@ async def _async_generator(history: list[dict[str, Any]], multi_modal_message: M
         yield f"请求失败: {e.response.text}"
     except requests.exceptions.Timeout as e:
         yield f"请求超时: {e.args[0]}"
-    except GraphRecursionError as e:
-        yield f"工具调用循环、超过限制: {e.args[0]}"
-    except ToolException as e:
-        yield f"调用工具时发生错误: {e.args[0]}"
 #"""以上是组织信息列表逻辑"""
 
 #"""以下是工具函数"""
@@ -337,6 +331,8 @@ def main()-> None:
 
         with update_page_condition:
             update_page_condition.notify_all()
+
+    # print(agent.get_state(config=_config).values.get("messages", []))
 
     # 只在页面状态更新时刷新页面，让主程序挂起以便接收到频道信息
     with update_page_condition:

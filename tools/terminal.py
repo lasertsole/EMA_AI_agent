@@ -24,5 +24,7 @@ class SafeShellTool(ShellTool):
 
 
 def build_terminal_tool() -> SafeShellTool:
-    return SafeShellTool(root_dir=str(ROOT_DIR))
+    tool = SafeShellTool(root_dir=str(ROOT_DIR))
+    tool.handle_tool_error = True
+    return tool
 

@@ -34,7 +34,9 @@ class CleanFetchTool(RequestsGetTool):
 
 
 def build_fetch_tool() -> CleanFetchTool:
-    return CleanFetchTool(
+    tool = CleanFetchTool(
         requests_wrapper=RequestsWrapper(),
         allow_dangerous_requests=True,
     )
+    tool.handle_tool_error = True
+    return tool
