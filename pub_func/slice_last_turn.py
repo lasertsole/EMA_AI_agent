@@ -1,28 +1,14 @@
 import json
-import math
-from store import get_db
-from models import chat_model
-from typing import TypedDict, List, Any
-from langchain_core.messages import BaseMessage, HumanMessage, ToolMessage
+from typing import Any, List, TypedDict
+from .estimate_msg_tokens import estimate_msg_tokens
+from langchain_core.messages import BaseMessage, ToolMessage, HumanMessage, AIMessage
 
-db = get_db()
-llm = chat_model.bind(temperature = 0.8)
 
 class SliceLastTurn(TypedDict):
     messages: List[Any]
     tokens: int
     dropped: int
 
-# ─── 取最后一轮完整用户对话 ─────────────────────────────────
-def estimate_msg_tokens(msg: BaseMessage) -> int:
-    content = msg.content
-
-    if isinstance(content, str):
-        text = content
-    else:
-        text = json.dumps(content) if content is not None else ""
-
-    return math.ceil(len(text) / 3)
 
 TOKEN_MAX = 6000
 def _truncate_msg(msg: BaseMessage)-> BaseMessage:
@@ -49,6 +35,7 @@ def _truncate_msg(msg: BaseMessage)-> BaseMessage:
 
     return msg.model_copy(deep=True, update={"content": truncated_text})
 
+# ─── 取最后一轮完整用户对话 ─────────────────────────────────
 def slice_last_turn(messages: List[BaseMessage]) -> SliceLastTurn:
     """
         从最后一个 role=user 到消息末尾，完整保留。

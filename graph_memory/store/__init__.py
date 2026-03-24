@@ -1,2 +1,2 @@
-from .db import get_db
+from .db import *
 from .core import *
