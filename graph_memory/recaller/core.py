@@ -15,18 +15,18 @@ graph-memory — 跨对话召回
 import os
 import math
 import hashlib
-from typing import TypedDict, List, Dict, Set, Optional, Any, Callable, Awaitable
 from sqlite3 import Connection
-
+from ..type import GmConfig, GmNode, GmEdge
+from langchain_core.embeddings import Embeddings
+from ..graph.community import get_community_peers
+from ..graph.pagerank import personalized_page_rank
+from typing import TypedDict, List, Dict, Set, Optional, Any, Callable, Awaitable
 from ..store.core import (
     search_nodes, vector_search_with_score,
     graph_walk, community_representatives,
     community_vector_search, nodes_by_community_ids,
     save_vector, get_vector_hash,
 )
-from ..graph.community import get_community_peers
-from ..graph.pagerank import personalized_page_rank
-from ..type import GmConfig, GmNode, GmEdge
 
 
 # 类型定义
@@ -67,11 +67,7 @@ class Recaller:
         """
         self.db = db
         self.cfg = cfg
-        self.embed: Optional[EmbedFn] = None
-
-    def set_embed_fn(self, fn: EmbedFn) -> None:
-        """设置 Embedding 函数"""
-        self.embed = fn
+        self.embed: Optional[Embeddings] = cfg.embedding
 
     async def recall(self, query: str) -> RecallResult:
         """
@@ -125,7 +121,7 @@ class Recaller:
 
         if self.embed:
             try:
-                vec = await self.embed(query)
+                vec = await self.embed.aembed_query(query)
                 scored = vector_search_with_score(
                     self.db, vec, math.ceil(limit / 2)
                 )
@@ -221,7 +217,7 @@ class Recaller:
         # 优先用社区向量搜索
         if self.embed:
             try:
-                vec = await self.embed(query)
+                vec = await self.embed.aembed_query(query)
                 scored_communities = community_vector_search(self.db, vec)
 
                 if scored_communities:
@@ -383,7 +379,7 @@ class Recaller:
             description = node.get('description', '')
             text = f"{name}: {description}\n{content[:500]}"
 
-            vec = await self.embed(text)
+            vec = await self.embed.aembed_query(text)
 
             if vec:
                 save_vector(self.db, node['id'], content, vec)

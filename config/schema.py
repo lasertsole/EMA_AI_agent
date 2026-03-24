@@ -198,7 +198,7 @@ class Config(BaseSettings):
                     return p, spec.name
 
         # Fallback: configured local providers can route models without
-        # provider-specific keywords (for example plain "llama3.2" on Ollama).
+        # provider-specific keywords (for example.txt plain "llama3.2" on Ollama).
         # Prefer providers whose detect_by_base_keyword matches the configured api_base
         # (e.g. Ollama's "11434" in "http://localhost:11434") over plain registry order.
         local_fallback: tuple[ProviderConfig, str] | None = None

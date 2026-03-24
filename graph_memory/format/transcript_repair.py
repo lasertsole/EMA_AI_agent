@@ -120,8 +120,8 @@ def extract_tool_result_id(msg: ToolMessage) -> Optional[str]:
     Returns:
         工具调用 ID，如果不存在则返回 None
     """
-    tool_call_id = msg.get('tool_call_id')
-    if isinstance(tool_call_id, str) and tool_call_id:
+    tool_call_id = getattr(msg, "tool_call_id", None)
+    if tool_call_id and isinstance(tool_call_id, str):
         return tool_call_id
 
     return None

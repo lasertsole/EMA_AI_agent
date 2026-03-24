@@ -25,6 +25,8 @@ import os
 from typing import Callable, Awaitable, Optional, TypedDict
 from sqlite3 import Connection
 
+from langchain_core.language_models import BaseChatModel
+
 from ..store.core import update_communities, upsert_community_summary, prune_community_summaries
 
 
@@ -202,7 +204,7 @@ COMMUNITY_SUMMARY_SYS = """你是知识图谱摘要引擎。根据节点列表�
 async def summarize_communities(
         db: Connection,
         communities: dict[str, list[str]],
-        llm: CompleteFn,
+        llm: BaseChatModel,
         embed_fn: Optional[EmbedFn] = None,
 ) -> int:
     """
@@ -248,13 +250,12 @@ async def summarize_communities(
 
         try:
             # LLM 生成描述
-            summary = await llm(
-                COMMUNITY_SUMMARY_SYS,
-                f"社区成员：\n{member_text}",
+            summary = await llm.ainvoke(
+                COMMUNITY_SUMMARY_SYS+f"社区成员：\n{member_text}",
             )
 
             # 清理输出
-            cleaned = summary.strip()
+            cleaned = summary.content.strip()
             cleaned = re.sub(r'<think>[\s\S]*?</think>', '', cleaned, flags=re.IGNORECASE)
             cleaned = re.sub(r'<think>[\s\S]*', '', cleaned, flags=re.IGNORECASE)
             cleaned = re.sub(r'^["\'「"]|["\'「""]$', '', cleaned)

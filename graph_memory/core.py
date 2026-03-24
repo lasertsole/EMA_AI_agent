@@ -1,17 +1,50 @@
 import json
 import math
+import asyncio
+import logging
 from store import get_db
-from models import chat_model
-from typing import TypedDict, List, Any
+from config import ROOT_DIR
+from typing import TypedDict, List, Any, Dict, Callable
+from models import simple_chat_model, embed_model
+from graph_memory import Recaller, GmConfig, Extractor, save_message, get_unextracted, get_by_session, upsert_node, \
+    find_by_id, find_by_name, upsert_edge, mark_extracted, invalidate_graph_cache, edges_from, edges_to, \
+    sanitize_tool_use_result_pairing, assemble_context, compute_global_page_rank, detect_communities, \
+    summarize_communities
 from langchain_core.messages import BaseMessage, HumanMessage, ToolMessage
 
-db = get_db()
-llm = chat_model.bind(temperature = 0.8)
+logger = logging.getLogger(__name__)
 
 class SliceLastTurn(TypedDict):
     messages: List[Any]
     tokens: int
     dropped: int
+
+class RecallResult(TypedDict):
+    nodes: List[Any]
+    edges: List[Any]
+
+# ── 初始化核心模块 ──────────────────────────────────────
+DEFAULT_CONFIG: GmConfig = GmConfig(
+    db_path=f"{ROOT_DIR}/src/graph-memory/graph-memory.db",
+    compact_turn_count = 6,
+    recall_max_nodes = 6,
+    recall_max_depth = 2,
+    fresh_tail_count = 10,
+    dedup_threshold = 0.90,
+    pagerank_damping = 0.85,
+    pagerank_iterations = 20,
+    embedding = embed_model,
+    llm = simple_chat_model.bind(temperature=0)
+)
+
+db = get_db()
+recaller = Recaller(db, DEFAULT_CONFIG)
+extractor = Extractor(DEFAULT_CONFIG)
+
+# ── Session运行时状态 ──────────────────────────────────
+msgSeq: Dict[str, int] = {}
+recalled: Dict[str, RecallResult] = {}
+turnCounter = Dict[str, int] = {} # 社区维护计数器
 
 # ─── 取最后一轮完整用户对话 ─────────────────────────────────
 def estimate_msg_tokens(msg: BaseMessage) -> int:
@@ -79,3 +112,405 @@ def slice_last_turn(messages: List[BaseMessage]) -> SliceLastTurn:
         tokens += estimate_msg_tokens(msg)
 
     return { "messages": kept, "tokens": tokens, "dropped": dropped }
+
+# ─── 规范化消息 content，确保 OpenClaw 对 content.filter() 不崩 ──
+def normalize_message_content(messages: list[Any]) -> list[Any]:
+    """标准化消息内容格式
+
+    - 如果 content 是数组 → 修复畸形的 text block
+    - 如果 content 是字符串 → 包装成标准 content block 数组
+    - 如果 content 是 None/undefined → 空 text block
+    """
+    result = []
+
+    for msg in messages:
+        if not msg or not isinstance(msg, (dict, BaseMessage)):
+            result.append(msg)
+            continue
+
+        # 获取 content 属性（兼容字典和对象）
+        if isinstance(msg, dict):
+            c = msg.get("content")
+        else:
+            c = getattr(msg, "content", None)
+
+        # 如果 content 是数组 → 修复畸形 block
+        if isinstance(c, list):
+            fixed = []
+            changed = False
+
+            for block in c:
+                if block and isinstance(block, dict) and block.get("type") == "text":
+                    if "text" not in block:
+                        # 缺少 text 属性，补充空字符串
+                        fixed_block = {**block, "text": ""}
+                        fixed.append(fixed_block)
+                        changed = True
+                        continue
+
+                fixed.append(block)
+
+            # 如果有修改，返回新对象
+            if changed:
+                if isinstance(msg, dict):
+                    new_msg = {**msg, "content": fixed}
+                else:
+                    new_msg = msg.model_copy(deep=True, update={"content": fixed})
+                result.append(new_msg)
+            else:
+                result.append(msg)
+            continue
+
+        # 如果 content 是字符串 → 包装成标准 content block 数组
+        if isinstance(c, str):
+            if isinstance(msg, dict):
+                new_msg = {**msg, "content": [{"type": "text", "text": c}]}
+            else:
+                new_msg = msg.model_copy(deep=True, update={"content": [{"type": "text", "text": c}]})
+            result.append(new_msg)
+            continue
+
+        # 如果 content 是 None/null → 空 text block
+        if c is None:
+            if isinstance(msg, dict):
+                new_msg = {**msg, "content": [{"type": "text", "text": ""}]}
+            else:
+                new_msg = msg.model_copy(deep=True, update={"content": [{"type": "text", "text": ""}]})
+            result.append(new_msg)
+            continue
+
+        # 其他情况原样返回
+        result.append(msg)
+
+    return result
+
+
+def ingest_message(session_id: str, message: Any)-> None:
+    """ 存一条消息到 gm_messages（同步，零 LLM）"""
+    seq = msgSeq.get(session_id)
+    if seq is None:
+        # 首次入库：从数据库读取当前最大 turn_index，避免重启后 turn_index 重叠
+        cursor = db.cursor()
+        cursor.execute(
+            "SELECT MAX(turn_index) as maxTurn FROM gm_messages WHERE session_id=?",
+            (session_id,)
+        )
+        row = cursor.fetchone()
+        seq = row[0] if row and row[0] is not None else 0
+
+    seq += 1
+    msgSeq[session_id] = seq
+
+    role = getattr(message, 'role', 'unknown') or 'unknown'
+    save_message(db, session_id, seq, role, message)
+
+
+async def run_turn_extract(session_id: str, new_messages: list[Any]) -> None:
+    """每轮结束后直接提取当前轮的消息"""
+    if not new_messages:
+        return
+
+    try:
+        # 获取未提取的消息（包含刚入库的）
+        msgs = get_unextracted(db, session_id, 50)
+        if not msgs:
+            return
+
+        existing = [node["name"] for node in get_by_session(db, session_id)]
+        result = await extractor.extract(messages= msgs, existing_names = existing)
+
+        name_to_id: Dict[str, str] = {}
+        for nc in result["nodes"]:
+            upsert_result = upsert_node(
+                db,
+                {
+                    "type": nc["type"],
+                    "name": nc["name"],
+                    "description": nc["description"],
+                    "content": nc["content"],
+                },
+                session_id
+            )
+            node = upsert_result["node"]
+            name_to_id[node["name"]] = node["id"]
+
+            # 异步生成 embedding，不阻塞主流程
+            asyncio.create_task(recaller.sync_embed(node))
+
+        for ec in result["edges"]:
+            from_id = name_to_id.get(ec["from_node"])
+            if from_id is None:
+                found = find_by_id(db, ec["from_node"])
+                from_id = found["id"] if found else None
+
+            to_id = name_to_id.get(ec["to_node"])
+            if to_id is None:
+                found = find_by_name(db, ec["to_node"])
+                to_id = found["id"] if found else None
+
+            if from_id and to_id:
+                upsert_edge(
+                    db,
+                    {
+                        "from_id": from_id,
+                        "to_id": to_id,
+                        "type": ec["type"],
+                        "instruction": ec["instruction"],
+                        "condition": ec["condition"],
+                        "session_id": session_id,
+                    }
+                )
+
+        max_turn = max(msg["turn_index"] for msg in msgs)
+        mark_extracted(db, session_id, max_turn)
+
+        if result["nodes"] or result["edges"]:
+            invalidate_graph_cache()
+    except Exception as e:
+        logger.error(f"[graph-memory] turn extract failed: {e}")
+
+
+async def ingest(session_id: str, message: Any, is_heartbeat: bool = False) -> bool:
+    if is_heartbeat:
+        return False
+    ingest_message(session_id, message)
+    return True
+
+
+async def assemble(
+        session_id: str,
+        messages: list[Any],
+        token_budget: int | None = None
+) -> dict:
+    active_nodes = get_by_session(db, session_id)
+    active_edges = []
+    for node in active_nodes:
+        active_edges.extend(edges_from(db, node["id"]))
+        active_edges.extend(edges_to(db, node["id"]))
+
+    rec = recalled.get(session_id, {"nodes": [], "edges": []})
+    total_gm_nodes = len(active_nodes) + len(rec["nodes"])
+
+    if total_gm_nodes == 0:
+        return {
+            "messages": normalize_message_content(messages),
+            "estimated_tokens": 0
+        }
+
+    # ── 1. 最后一轮完整对话 ─────────────────────────
+    last_turn = slice_last_turn(messages)
+    repaired = sanitize_tool_use_result_pairing(last_turn["messages"])
+
+    # ── 2. 图谱 + 溯源 ─────────────────────────────
+    assemble_result = assemble_context(
+        db,
+        {
+            "token_budget": 0,
+            "active_nodes": active_nodes,
+            "active_edges": active_edges,
+            "recalled_nodes": rec["nodes"],
+            "recalled_edges": rec["edges"],
+        }
+    )
+    xml = assemble_result["xml"]
+    system_prompt = assemble_result["system_prompt"]
+    gm_tokens = assemble_result["tokens"]
+    episodic_xml = assemble_result["episodic_xml"]
+    episodic_tokens = assemble_result["episodic_tokens"]
+
+    if last_turn["dropped"] > 0 or episodic_tokens > 0:
+        logger.info(
+            f"[graph-memory] assemble: last turn {len(last_turn['messages'])} msgs "
+            f"(~{last_turn['tokens']} tok), dropped {last_turn['dropped']} older msgs, "
+            f"graph ~{gm_tokens} tok"
+            + (f", episodic ~{episodic_tokens} tok" if episodic_tokens > 0 else "")
+        )
+
+    # ── 3. 组装 systemPrompt ────────────────────────
+    system_prompt_addition: str | None = None
+    parts = [system_prompt, xml, episodic_xml]
+    filtered_parts = [p for p in parts if p]
+    if filtered_parts:
+        system_prompt_addition = "\n\n".join(filtered_parts)
+
+    result = {
+        "messages": normalize_message_content(repaired),
+        "estimated_tokens": gm_tokens + last_turn["tokens"],
+    }
+    if system_prompt_addition:
+        result["system_prompt_addition"] = system_prompt_addition
+
+    return result
+
+
+async def compact(
+        session_id: str,
+        session_file: str,
+        force: bool = False,
+        current_token_count: int | None = None,
+        token_budget: int | None = None
+) -> dict:
+    # compact 仍然保留作为兜底，但主要提取在 after_turn 完成
+    msgs = get_unextracted(db, session_id, 50)
+
+    if not msgs:
+        return {"ok": True, "compacted": False, "reason": "no messages"}
+
+    try:
+        existing = [node["name"] for node in get_by_session(db, session_id)]
+        result = await extractor.extract(messages=msgs, existing_names=existing)
+
+        name_to_id: Dict[str, str] = {}
+        for nc in result["nodes"]:
+            upsert_result = upsert_node(
+                db,
+                {
+                    "type": nc["type"],
+                    "name": nc["name"],
+                    "description": nc["description"],
+                    "content": nc["content"],
+                },
+                session_id
+            )
+            node = upsert_result["node"]
+            name_to_id[node["name"]] = node["id"]
+
+            # 异步生成 embedding，不阻塞主流程
+            asyncio.create_task(recaller.sync_embed(node))
+
+        for ec in result["edges"]:
+            from_id = name_to_id.get(ec["from_node"])
+            if from_id is None:
+                found = find_by_name(db, ec["from_node"])
+                from_id = found["id"] if found else None
+
+            to_id = name_to_id.get(ec["to_node"])
+            if to_id is None:
+                found = find_by_name(db, ec["to_node"])
+                to_id = found["id"] if found else None
+
+            if from_id and to_id:
+                upsert_edge(
+                    db,
+                    {
+                        "from_id": from_id,
+                        "to_id": to_id,
+                        "type": ec["type"],
+                        "instruction": ec["instruction"],
+                        "condition": ec["condition"],
+                        "session_id": session_id,
+                    }
+                )
+
+        max_turn = max(msg["turn_index"] for msg in msgs)
+        mark_extracted(db, session_id, max_turn)
+
+        return {
+            "ok": True,
+            "compacted": True,
+            "result": {
+                "summary": f"extracted {len(result['nodes'])} nodes, "
+                           f"{len(result['edges'])} edges",
+                "tokens_before": current_token_count if current_token_count else 0,
+            },
+        }
+
+    except Exception as err:
+        logger.error(f"[graph-memory] compact failed: {err}")
+        return {"ok": False, "compacted": False, "reason": str(err)}
+
+async def after_turn(
+        session_id: str,
+        session_file: str,
+        messages: list[Any],
+        pre_prompt_message_count: int,
+        is_heartbeat: bool = False,
+        auto_compaction_summary: str | None = None,
+        token_budget: int | None = None
+) -> None:
+    """每轮对话后的处理钩子"""
+    if is_heartbeat:
+        return
+
+    # 消息入库（同步，零 LLM）
+    new_messages = messages[pre_prompt_message_count:] if pre_prompt_message_count else messages
+    for message in new_messages:
+        ingest_message(session_id, message)
+
+    total_msgs = msgSeq.get(session_id, 0)
+    logger.info(
+        f"[graph-memory] after_turn sid={session_id[:8]} "
+        f"new_msgs={len(new_messages)} total_msgs={total_msgs}"
+    )
+
+    # ★ 每轮直接提取（后台任务）
+    async def run_extract():
+        try:
+            await run_turn_extract(session_id, new_messages)
+        except Exception as err:
+            logger.error(f"[graph-memory] turn extract failed: {err}")
+
+    asyncio.create_task(run_extract())
+
+    # ★ 社区维护：每 N 轮触发一次（纯计算，<5ms）
+    turns = turnCounter.get(session_id, 0) + 1
+    turnCounter[session_id] = turns
+    maintain_interval = getattr(DEFAULT_CONFIG, 'compact_turn_count', 7)
+
+    if turns % maintain_interval == 0:
+        try:
+            invalidate_graph_cache()
+            pr = compute_global_page_rank(db, DEFAULT_CONFIG)
+            comm = detect_communities(db)
+
+            # 提取 top 3 节点名称
+            top_names = [n["name"] for n in pr["top_k"][:3]]
+            logger.info(
+                f"[graph-memory] periodic maintenance (turn {turns}): "
+                f"pagerank top={', '.join(top_names)}, "
+                f"communities={comm['count']}"
+            )
+
+            # 每次社区检测后立即生成摘要（需要 LLM），确保泛化召回可用
+            if comm["communities"] and len(comm["communities"]) > 0:
+                embed_fn = getattr(recaller, 'embed', None)
+                summaries = await summarize_communities(
+                    db,
+                    comm["communities"],
+                    DEFAULT_CONFIG.llm,
+                    embed_fn
+                )
+                logger.info(
+                    f"[graph-memory] community summaries refreshed: "
+                    f"{summaries} summaries"
+                )
+
+        except Exception as err:
+            logger.error(f"[graph-memory] periodic maintenance failed: {err}")
+
+
+async def prepare_subagent_spawn(parent_session_key: str, child_session_key: str) -> Callable[[], None]:
+    """准备子代理启动：复制父代理的记忆到子代理"""
+    rec = recalled.get(parent_session_key)
+    if rec:
+        recalled[child_session_key] = rec
+
+    def rollback():
+        if child_session_key in recalled:
+            del recalled[child_session_key]
+
+    return rollback
+
+
+async def on_subagent_ended(child_session_key: str) -> None:
+    """子代理结束后清理记忆"""
+    if child_session_key in recalled:
+        del recalled[child_session_key]
+    if child_session_key in msgSeq:
+        del msgSeq[child_session_key]
+
+
+async def dispose() -> None:
+    """释放所有内存"""
+    msgSeq.clear()
+    recalled.clear()

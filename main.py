@@ -7,6 +7,8 @@ from typing import List
 from pathlib import Path
 from channels import BaseChannel
 from typing import AsyncGenerator
+from pprint import pprint
+from graph_memory import sanitize_tool_use_result_pairing
 from type import MultiModalMessage
 from threading import Thread, Condition
 from agent import built_agent, ModelType
@@ -332,7 +334,7 @@ def main()-> None:
         with update_page_condition:
             update_page_condition.notify_all()
 
-    # print(agent.get_state(config=_config).values.get("messages", []))
+    pprint(sanitize_tool_use_result_pairing(agent.get_state(config=_config).values.get("messages", [])))
 
     # 只在页面状态更新时刷新页面，让主程序挂起以便接收到频道信息
     with update_page_condition:

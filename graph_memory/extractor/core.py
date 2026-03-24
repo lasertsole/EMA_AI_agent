@@ -5,7 +5,7 @@ graph-memory — 知识图谱提取引擎
 import re
 import os
 import json
-
+from ..type import GmConfig
 from langchain_core.messages import SystemMessage, HumanMessage
 
 from models import chat_model
@@ -341,7 +341,7 @@ def extract_json(raw: str) -> str:
 class Extractor:
     """知识图谱提取器"""
 
-    def __init__(self, cfg: Dict[str, Any], llm: CompiledStateGraph):
+    def __init__(self, cfg: GmConfig):
         """
         初始化提取器
 
@@ -350,7 +350,7 @@ class Extractor:
             llm: LLM 补全函数
         """
         self._cfg = cfg
-        self.llm = llm
+        self.llm = cfg.llm
 
     async def extract(self, messages: List[Dict], existing_names: List[str]) -> ExtractionResult:
         """

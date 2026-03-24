@@ -14,7 +14,7 @@ examples = [
         "output": "what is Jan Sindel’s personal history?",
     },
 ]
-# We now transform these to example messages
+# We now transform these to example.txt messages
 example_prompt = ChatPromptTemplate.from_messages(
     [
         ("human", "{input}"),
