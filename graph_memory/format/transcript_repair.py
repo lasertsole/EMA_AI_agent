@@ -8,30 +8,13 @@ Tool use/result pairing repair for assembled context.
 
 import time
 from typing import TypedDict, List, Set, Dict, Any, Optional
-
-
-class AgentMessageLike(TypedDict, total=False):
-    """Agent 消息类型"""
-    role: str
-    content: Any
-    tool_call_id: Optional[str]
-    tool_use_id: Optional[str]
-    tool_name: Optional[str]
-    stop_reason: Optional[str]
-    is_error: Optional[bool]
-    timestamp: Optional[int]
-
+from langchain_core.messages import ToolMessage, AIMessage, BaseMessage
 
 class ToolCallLike(TypedDict):
     """工具调用类型"""
     id: str
     name: Optional[str]
-
-
-TOOL_CALL_TYPES = {
-    "toolCall", "toolUse", "tool_use", "tool-use",
-    "functionCall", "function_call",
-}
+    error: Optional[str]
 
 
 def extract_tool_call_id(block: Dict[str, Any]) -> Optional[str]:
@@ -53,7 +36,7 @@ def extract_tool_call_id(block: Dict[str, Any]) -> Optional[str]:
     return None
 
 
-def extract_tool_calls_from_assistant(msg: AgentMessageLike) -> List[ToolCallLike]:
+def extract_tool_calls_from_assistant(msg: AIMessage) -> List[ToolCallLike]:
     """
     从助手消息中提取工具调用列表
 
@@ -63,14 +46,14 @@ def extract_tool_calls_from_assistant(msg: AgentMessageLike) -> List[ToolCallLik
     Returns:
         工具调用列表
     """
-    content = msg.get('content')
+    tool_calls = getattr(msg, "tool_calls", None)
 
-    if not isinstance(content, list):
+    if not isinstance(tool_calls, list):
         return []
 
     calls: List[ToolCallLike] = []
 
-    for block in content:
+    for block in tool_calls:
         if not block or not isinstance(block, dict):
             continue
 
@@ -81,7 +64,7 @@ def extract_tool_calls_from_assistant(msg: AgentMessageLike) -> List[ToolCallLik
 
         block_type = block.get('type')
 
-        if isinstance(block_type, str) and block_type in TOOL_CALL_TYPES:
+        if isinstance(block_type, str) and block_type == "tool_call":
             calls.append({
                 'id': call_id,
                 'name': block.get('name') if isinstance(block.get('name'), str) else None,
@@ -89,8 +72,45 @@ def extract_tool_calls_from_assistant(msg: AgentMessageLike) -> List[ToolCallLik
 
     return calls
 
+def extract_invalid_tool_calls_from_assistant(msg: AIMessage) -> List[ToolCallLike]:
+    """
+    从助手消息中提取无效工具调用列表
 
-def extract_tool_result_id(msg: AgentMessageLike) -> Optional[str]:
+    Args:
+        msg: 助手消息
+
+    Returns:
+        工具调用列表
+    """
+    invalid_tool_calls = getattr(msg, "invalid_tool_calls", None)
+
+    if not isinstance(invalid_tool_calls, list):
+        return []
+
+    calls: List[ToolCallLike] = []
+
+    for block in invalid_tool_calls:
+        if not block or not isinstance(block, dict):
+            continue
+
+        call_id = extract_tool_call_id(block)
+
+        if not call_id:
+            continue
+
+        error = block.get('error', '')
+
+        if isinstance(error, str) and error != "":
+            calls.append({
+                'id': call_id,
+                'name': block.get('name') if isinstance(block.get('name'), str) else None,
+                'error': error,
+            })
+
+    return calls
+
+
+def extract_tool_result_id(msg: ToolMessage) -> Optional[str]:
     """
     从工具结果消息中提取 ID
 
@@ -104,14 +124,10 @@ def extract_tool_result_id(msg: AgentMessageLike) -> Optional[str]:
     if isinstance(tool_call_id, str) and tool_call_id:
         return tool_call_id
 
-    tool_use_id = msg.get('tool_use_id')
-    if isinstance(tool_use_id, str) and tool_use_id:
-        return tool_use_id
-
     return None
 
 
-def make_missing_tool_result(tool_call_id: str, tool_name: Optional[str] = None) -> AgentMessageLike:
+def make_missing_tool_result(tool_call_id: str, tool_name: Optional[str] = None) -> ToolMessage:
     """
     创建缺失的工具结果消息
 
@@ -122,17 +138,16 @@ def make_missing_tool_result(tool_call_id: str, tool_name: Optional[str] = None)
     Returns:
         虚拟的工具结果消息
     """
-    return {
-        'role': 'toolResult',
-        'tool_call_id': tool_call_id,
-        'tool_name': tool_name or 'unknown',
-        'content': [{'type': 'text', 'text': "[graph-memory] tool result missing after context trim." }],
-        'is_error': True,
-        'timestamp': int(time.time() * 1000),
-    }
+    return ToolMessage(
+        name = tool_name or 'unknown',
+        content = "[graph-memory] tool result missing after context trim.",
+        tool_call_id = tool_call_id,
+        status = "error",
+        additional_kwargs = {"timestamp": int(time.time() * 1000)}
+    )
 
 
-def sanitize_tool_use_result_pairing(messages: List[AgentMessageLike]) -> List[AgentMessageLike]:
+def sanitize_tool_use_result_pairing(messages: List[BaseMessage]) -> List[BaseMessage]:
     """
     修复工具调用和结果的配对关系
 
@@ -144,11 +159,11 @@ def sanitize_tool_use_result_pairing(messages: List[AgentMessageLike]) -> List[A
     Returns:
         修复后的消息列表
     """
-    out: List[AgentMessageLike] = []
+    out: List[BaseMessage] = []
     seen_tool_result_ids: Set[str] = set()
     changed = False
 
-    def push_tool_result(msg: AgentMessageLike) -> None:
+    def push_tool_result(msg: ToolMessage) -> None:
         """添加工具结果消息，避免重复"""
         nonlocal changed
 
@@ -167,16 +182,8 @@ def sanitize_tool_use_result_pairing(messages: List[AgentMessageLike]) -> List[A
     while i < len(messages):
         msg = messages[i]
 
-        if not msg or not isinstance(msg, dict):
-            out.append(msg)
-            i += 1
-            continue
-
-        role = msg.get('role')
-
-        # 非助手消息处理
-        if role != 'assistant':
-            if role != 'toolResult':
+        if not isinstance(msg, AIMessage):
+            if not (isinstance(msg, ToolMessage) and msg.content):
                 out.append(msg)
             else:
                 changed = True
@@ -184,10 +191,10 @@ def sanitize_tool_use_result_pairing(messages: List[AgentMessageLike]) -> List[A
             i += 1
             continue
 
-        stop_reason = msg.get('stop_reason')
-
         # 错误状态直接保留
-        if stop_reason in ('error', 'aborted'):
+        invalid_tool_calls: List[ToolCallLike] = extract_invalid_tool_calls_from_assistant(msg)
+
+        if getattr(msg, 'status', "") == "error" or len(invalid_tool_calls) > 0:
             out.append(msg)
             i += 1
             continue
@@ -200,25 +207,19 @@ def sanitize_tool_use_result_pairing(messages: List[AgentMessageLike]) -> List[A
             i += 1
             continue
 
-        tool_call_ids = {t['id'] for t in tool_calls}
-        span_results_by_id: Dict[str, AgentMessageLike] = {}
-        remainder: List[AgentMessageLike] = []
+        tool_call_ids:Set[str] = {t['id'] for t in tool_calls}
+        span_results_by_id: Dict[str, ToolMessage] = {}
+        remainder: List[ToolMessage] = []
 
         # 查找后续的工具结果
         j = i + 1
-
         while j < len(messages):
             next_msg = messages[j]
 
-            if not next_msg or not isinstance(next_msg, dict):
-                remainder.append(next_msg)
-                j += 1
-                continue
-
-            if next_msg.get('role') == 'assistant':
+            if isinstance(next_msg, AIMessage):
                 break
 
-            if next_msg.get('role') == 'toolResult':
+            if isinstance(next_msg, ToolMessage) and next_msg.content:
                 result_id = extract_tool_result_id(next_msg)
 
                 if result_id and result_id in tool_call_ids:
@@ -233,7 +234,7 @@ def sanitize_tool_use_result_pairing(messages: List[AgentMessageLike]) -> List[A
                     j += 1
                     continue
 
-            if next_msg.get('role') != 'toolResult':
+            if isinstance(next_msg, ToolMessage) and getattr(next_msg, "content", "") != "":
                 remainder.append(next_msg)
             else:
                 changed = True
@@ -243,7 +244,7 @@ def sanitize_tool_use_result_pairing(messages: List[AgentMessageLike]) -> List[A
         # 添加助手消息
         out.append(msg)
 
-        if span_results_by_id and remainder:
+        if len(span_results_by_id)>0 and len(remainder)>0:
             changed = True
 
         # 添加工具结果（现有的或虚拟的）
