@@ -5,10 +5,9 @@ from typing import Any
 import streamlit as st
 from typing import List
 from pathlib import Path
+from pprint import pprint
 from channels import BaseChannel
 from typing import AsyncGenerator
-from pprint import pprint
-from graph_memory import sanitize_tool_use_result_pairing
 from type import MultiModalMessage
 from threading import Thread, Condition
 from agent import built_agent, ModelType
@@ -20,6 +19,7 @@ from bus import InboundMessage, OutboundMessage
 from config import COMPRESS_THRESHOLD, MEMORY_DIR
 from streamlit.delta_generator import DeltaGenerator
 from workspace.prompt_builder import build_system_prompt
+from graph_memory import sanitize_tool_use_result_pairing
 from streamlit.elements.widgets.chat import ChatInputValue
 from sessions import read_session, viking_routing, load_summary
 from streamlit.runtime.uploaded_file_manager import UploadedFile
@@ -334,7 +334,7 @@ def main()-> None:
         with update_page_condition:
             update_page_condition.notify_all()
 
-    pprint(sanitize_tool_use_result_pairing(agent.get_state(config=_config).values.get("messages", [])))
+    # pprint(sanitize_tool_use_result_pairing(agent.get_state(config=_config).values.get("messages", [])))
 
     # 只在页面状态更新时刷新页面，让主程序挂起以便接收到频道信息
     with update_page_condition:
