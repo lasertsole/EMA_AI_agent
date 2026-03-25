@@ -15,7 +15,7 @@ from config import COMPRESS_THRESHOLD,  SESSIONS_DIR
 
 logger = logging.getLogger(__name__)
 
-compress_model = simple_chat_model.bind(temperature=0)
+compress_model = simple_chat_model
 
 def _calculate_total_chars(messages: list[dict[str, Any]]) -> int:
     """Calculate total character count in session."""

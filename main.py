@@ -19,7 +19,6 @@ from bus import InboundMessage, OutboundMessage
 from config import COMPRESS_THRESHOLD, MEMORY_DIR
 from streamlit.delta_generator import DeltaGenerator
 from workspace.prompt_builder import build_system_prompt
-from graph_memory import sanitize_tool_use_result_pairing
 from streamlit.elements.widgets.chat import ChatInputValue
 from sessions import read_session, viking_routing, load_summary
 from streamlit.runtime.uploaded_file_manager import UploadedFile

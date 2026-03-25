@@ -2,15 +2,17 @@ import json
 import math
 import asyncio
 import logging
-from store import get_db
-from config import ROOT_DIR
-from typing import TypedDict, List, Any, Dict, Callable
+from config import SRC_DIR
+from .type import GmConfig
+from recaller import Recaller
+from .extractor import Extractor
 from models import simple_chat_model, embed_model
-from graph_memory import Recaller, GmConfig, Extractor, save_message, get_unextracted, get_by_session, upsert_node, \
-    find_by_id, find_by_name, upsert_edge, mark_extracted, invalidate_graph_cache, edges_from, edges_to, \
-    sanitize_tool_use_result_pairing, assemble_context, compute_global_page_rank, detect_communities, \
-    summarize_communities
+from typing import TypedDict, List, Any, Dict, Callable
+from .format import sanitize_tool_use_result_pairing, assemble_context
 from langchain_core.messages import BaseMessage, HumanMessage, ToolMessage
+from .graph import invalidate_graph_cache, compute_global_page_rank, detect_communities, summarize_communities, run_maintenance
+from store import get_db, deprecate, save_message, get_unextracted, get_by_session, upsert_node, find_by_id, find_by_name,\
+                   upsert_edge, mark_extracted, edges_from, edges_to
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +27,7 @@ class RecallResult(TypedDict):
 
 # ── 初始化核心模块 ──────────────────────────────────────
 DEFAULT_CONFIG: GmConfig = GmConfig(
-    db_path=f"{ROOT_DIR}/src/graph-memory/graph-memory.db",
+    db_path=f"{SRC_DIR}/store/graph-memory.db",
     compact_turn_count = 6,
     recall_max_nodes = 6,
     recall_max_depth = 2,
@@ -34,7 +36,7 @@ DEFAULT_CONFIG: GmConfig = GmConfig(
     pagerank_damping = 0.85,
     pagerank_iterations = 20,
     embedding = embed_model,
-    llm = simple_chat_model.bind(temperature=0)
+    llm = simple_chat_model
 )
 
 db = get_db()
@@ -514,3 +516,105 @@ async def dispose() -> None:
     """释放所有内存"""
     msg_seq.clear()
     recalled.clear()
+
+
+async def session_end(event: dict, ctx: dict) -> None:
+    """Session 结束时的清理和知识固化操作"""
+    # 获取 session ID（兼容多种字段名）
+    sid = (
+            ctx.get("sessionKey")
+            or ctx.get("sessionId")
+            or event.get("sessionKey")
+            or event.get("sessionId")
+    )
+
+    if not sid:
+        return
+
+    try:
+        # 获取该 session 的所有节点
+        nodes = get_by_session(db, sid)
+
+        if nodes:
+            # 获取全局 Top 20 节点作为图谱摘要
+            cursor = db.cursor()
+            cursor.execute(
+                "SELECT name, type, validated_count, pagerank FROM gm_nodes WHERE status='active' ORDER BY pagerank DESC LIMIT 20"
+            )
+            top_nodes = cursor.fetchall()
+
+            # 构建摘要字符串
+            summary_parts = []
+            for n in top_nodes:
+                name, node_type, validated_count, pagerank = n
+                summary_parts.append(
+                    f"{node_type}:{name}(v{validated_count},pr{pagerank:.3f})"
+                )
+            summary = ", ".join(summary_parts)
+
+            # 调用整理器进行最终审查
+            fin = await extractor.finalize(
+                session_nodes=nodes,
+                graph_summary=summary
+            )
+
+            # 处理升级的技能
+            for nc in fin.promoted_skills:
+                if nc.name and nc.content:
+                    upsert_node(
+                        db,
+                        {
+                            "type": "SKILL",
+                            "name": nc.name,
+                            "description": nc.description or "",
+                            "content": nc.content,
+                        },
+                        sid
+                    )
+
+            # 处理新边
+            for ec in fin.new_edges:
+                from_node = find_by_name(db, ec.from_node)
+                to_node = find_by_name(db, ec.to_node)
+
+                if from_node and to_node:
+                    upsert_edge(
+                        db,
+                        {
+                            "from_id": from_node["id"],
+                            "to_id": to_node["id"],
+                            "type": ec.type,
+                            "instruction": ec.instruction,
+                            "session_id": sid,
+                        }
+                    )
+
+            # 标记失效节点
+            for node_id in fin.invalidations:
+                deprecate(db, node_id)
+
+        # 执行图谱维护
+        embed_fn = getattr(recaller, "embed", None)
+        result = run_maintenance(db, DEFAULT_CONFIG, DEFAULT_CONFIG.llm, embed_fn)
+
+        # 记录维护日志
+        top_pr_names = [
+            f"{n['name']}({n['score']:.3f})"
+            for n in result["pagerank"]["top_k"][:3]
+        ]
+
+        logger.info(
+            f"[graph-memory] maintenance: {result['duration_ms']}ms, "
+            f"dedup={result['dedup']['merged']}, "
+            f"communities={result['community']['count']}, "
+            f"summaries={result['community_summaries']}, "
+            f"top_pr={', '.join(top_pr_names)}"
+        )
+
+    except Exception as err:
+        logger.error(f"[graph-memory] session_end error: {err}")
+    finally:
+        # 清理 Session 状态
+        msg_seq.pop(sid, None)
+        recalled.pop(sid, None)
+        turnCounter.pop(sid, None)

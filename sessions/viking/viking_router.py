@@ -17,7 +17,7 @@ class RoutingModelResult(BaseModel):
     l1_tsids: Optional[List[str]] = Field(description="List of tsids for L1 decisions to load, Empty array means no specific L1 tsids needed", examples=[[], ["20260309232555"], ["20260309232745", "20260309232555"]])
     needs_l2: Optional[bool] = Field(description="Whether to load L2 layer full conversation history. Set to true when complete conversation context is required")
 
-routing_model = simple_chat_model.bind(temperature=0).with_structured_output(RoutingModelResult)
+routing_model = simple_chat_model.with_structured_output(RoutingModelResult)
 
 """
 Controls which hardcoded sections are included in the system prompt.
