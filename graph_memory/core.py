@@ -42,7 +42,7 @@ recaller = Recaller(db, DEFAULT_CONFIG)
 extractor = Extractor(DEFAULT_CONFIG)
 
 # ── Session运行时状态 ──────────────────────────────────
-msgSeq: Dict[str, int] = {}
+msg_seq: Dict[str, int] = {}
 recalled: Dict[str, RecallResult] = {}
 turnCounter = Dict[str, int] = {} # 社区维护计数器
 
@@ -187,7 +187,7 @@ def normalize_message_content(messages: list[Any]) -> list[Any]:
 
 def ingest_message(session_id: str, message: Any)-> None:
     """ 存一条消息到 gm_messages（同步，零 LLM）"""
-    seq = msgSeq.get(session_id)
+    seq = msg_seq.get(session_id)
     if seq is None:
         # 首次入库：从数据库读取当前最大 turn_index，避免重启后 turn_index 重叠
         cursor = db.cursor()
@@ -199,7 +199,7 @@ def ingest_message(session_id: str, message: Any)-> None:
         seq = row[0] if row and row[0] is not None else 0
 
     seq += 1
-    msgSeq[session_id] = seq
+    msg_seq[session_id] = seq
 
     role = getattr(message, 'role', 'unknown') or 'unknown'
     save_message(db, session_id, seq, role, message)
@@ -437,7 +437,7 @@ async def after_turn(
     for message in new_messages:
         ingest_message(session_id, message)
 
-    total_msgs = msgSeq.get(session_id, 0)
+    total_msgs = msg_seq.get(session_id, 0)
     logger.info(
         f"[graph-memory] after_turn sid={session_id[:8]} "
         f"new_msgs={len(new_messages)} total_msgs={total_msgs}"
@@ -506,11 +506,11 @@ async def on_subagent_ended(child_session_key: str) -> None:
     """子代理结束后清理记忆"""
     if child_session_key in recalled:
         del recalled[child_session_key]
-    if child_session_key in msgSeq:
-        del msgSeq[child_session_key]
+    if child_session_key in msg_seq:
+        del msg_seq[child_session_key]
 
 
 async def dispose() -> None:
     """释放所有内存"""
-    msgSeq.clear()
+    msg_seq.clear()
     recalled.clear()

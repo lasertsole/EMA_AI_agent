@@ -5,7 +5,7 @@ from config import SRC_DIR
 from sqlite3 import Connection
 
 _db:Connection = None
-_db_path = Path(SRC_DIR) / "store/sqlite.db"
+_db_path = Path(SRC_DIR) / "store/graph_memory.db"
 
 def get_db():
     global _db
@@ -18,6 +18,7 @@ def get_db():
 
     _db.execute("PRAGMA journal_mode = WAL")
     _db.execute("PRAGMA foreign_keys = ON")
+    migrate(_db)
 
     return _db
 
