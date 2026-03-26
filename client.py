@@ -5,27 +5,23 @@ from typing import Any
 import streamlit as st
 from typing import List
 from pathlib import Path
-from pprint import pprint
 from channels import BaseChannel
+from sessions import read_session
 from typing import AsyncGenerator
 from type import MultiModalMessage
-from config import COMPRESS_THRESHOLD
 from threading import Thread, Condition
-from agent import built_agent, ModelType
 from channels.manager import ChannelManager
 from tasks.queue import BackgroundTaskQueue
-from langchain.messages import AIMessageChunk
-from models import TTS_Request, fetch_TTS_sound
 from bus import InboundMessage, OutboundMessage
+from models import TTS_Request, fetch_TTS_sound
 from streamlit.delta_generator import DeltaGenerator
-from workspace.prompt_builder import build_system_prompt
 from streamlit.elements.widgets.chat import ChatInputValue
-from sessions import read_session, viking_routing, load_summary
+from langchain_core.messages import AIMessage, HumanMessage
 from streamlit.runtime.uploaded_file_manager import UploadedFile
 from streamlit.runtime.scriptrunner import add_script_run_ctx, get_script_run_ctx
+from config import COMPRESS_THRESHOLD, user_name, assistant_name, api_host, api_post
 from pub_func import File, FileType, ChatStorage as Streamlit_ChatStorage, storage_add_chat
 from runtime import get_thread_dict, get_channel_manager, get_task_queue, get_update_page_condition
-from langchain_core.messages import AIMessage, HumanMessage, ToolMessage, SystemMessage, BaseMessage
 
 # 创建会话ID和线程ID
 session_id = '1'
@@ -52,109 +48,6 @@ task_queue: BackgroundTaskQueue | None = get_task_queue()
 # 创建更新页面条件
 update_page_condition: Condition = get_update_page_condition()
 
-# 创建agent
-agent = built_agent()
-
-user_name = "远野汉娜"
-assistant_name = "橘雪莉"
-
-#"""以下是组织信息列表逻辑"""
-def _to_messages(history: list[dict[str, Any]], multi_modal_message: MultiModalMessage) -> list[BaseMessage]:
-    global agent
-
-    # 使用open-viking路由
-    viking_result = viking_routing(session_id = session_id, user_input = multi_modal_message.text)
-    files = viking_result.get("file_names", [])
-    context = viking_result.get("context", "")
-
-    #"""将历史对话和当前用户输入拼接成消息队列"""
-    # 加入系统提示
-    messages: list[Any] = [SystemMessage(content = build_system_prompt(selected_file_names = files)+context)]
-
-    # 加入摘要
-    summary:str = load_summary(session_id=session_id)
-    if summary and len(summary) > 0:
-        messages.append(HumanMessage(content=summary))
-
-    for m in history:
-        role = m.get("role")
-        if role == "user":
-            messages.append(HumanMessage(content=m.get("content", "")))
-        elif role == "assistant":
-            messages.append(AIMessage(content=m.get("content", "")))
-        elif role == "tool":
-            messages.append(
-                ToolMessage(
-                    content=m.get("content", ""),
-                    tool_call_id=m.get("tool_call_id", ""),
-                )
-            )
-
-    content_list : list[dict] = [{"type": "text", "text": multi_modal_message.text}]
-    if multi_modal_message.image_base64_list:
-        for image_base64 in multi_modal_message.image_base64_list:
-            content_list.append({"type": "image_url", "image_url": {"url": f"data:image/png;base64,{image_base64}"}})
-            # 切换模型
-            agent = built_agent(model_type = ModelType.VL_MODEL, enable_tool = False)
-
-    messages.append(HumanMessage(content = content_list))
-    return messages
-
-#"""以下是组织信息列表逻辑"""
-current_tool_name: str = ""
-current_tool_id: str = ""
-async def _async_generator(history: list[dict[str, Any]], multi_modal_message: MultiModalMessage, config: dict[str, Any], is_stream: bool = True)-> AsyncGenerator[str, None]:
-    global current_tool_name
-    global current_tool_id
-
-    # 创建消息队列
-    messages: list[BaseMessage] = _to_messages(history, multi_modal_message)
-    messages_dict = {"messages": messages}
-
-    try:
-        if is_stream:
-            yield f"{assistant_name}:"
-            async for chunk in agent.astream(messages_dict, config = config, stream_mode = "messages"):
-                msg_chunk: BaseMessage = chunk[0]
-                if isinstance(msg_chunk, AIMessageChunk):
-                    # 以下是输出工具信息
-                    tool_calls = msg_chunk.tool_calls if msg_chunk.tool_calls and len(msg_chunk.tool_calls) > 0 else msg_chunk.tool_call_chunks
-                    if len(tool_calls) > 0 or current_tool_id.strip():
-                        repeat_flag: bool = True # 防止重复输出工具信息
-                        if len(tool_calls) > 0:
-                            tool_call = tool_calls[0]
-
-                            if tool_call["name"]:
-                                if tool_call["name"].strip() or tool_call["name"].strip() != current_tool_name:
-                                    current_tool_name = tool_call['name']
-
-                            if tool_call["id"]:
-                                if tool_call["id"].strip() or tool_call["id"].strip() != current_tool_id:
-                                    current_tool_id = tool_call['id']
-                                    repeat_flag = False
-
-                        if not repeat_flag:
-                            yield f"\n\n**调用工具 {current_tool_name} 中**"
-
-                    if current_tool_id and msg_chunk.content is not None and msg_chunk.content:
-                        yield f"\n\n**调用工具 {current_tool_name} 结束。**\n\n"
-                        current_tool_id = ""
-                    # 以上是输出工具信息
-
-                    # 以下是对话信息
-                    if len(msg_chunk.content) > 0:
-                        yield msg_chunk.content
-                    # 以上是对话信息
-        else:
-            result = await agent.ainvoke(messages_dict, config = config)
-            yield result["messages"][-1].content
-
-    except requests.exceptions.HTTPError as e:
-        yield f"请求失败: {e.response.text}"
-    except requests.exceptions.Timeout as e:
-        yield f"请求超时: {e.args[0]}"
-#"""以上是组织信息列表逻辑"""
-
 #"""以下是工具函数"""
 def filter_content_for_tts(content: str) -> str:
     #"""
@@ -163,6 +56,15 @@ def filter_content_for_tts(content: str) -> str:
     res = re.sub(r'[（\\(].*?[）\\)]', ' ', content)
     return res
 #"""以上是工具函数"""
+
+async def post_agent_astream(request_json: dict[str, Any]) -> AsyncGenerator[str, None]:
+    with requests.post(f"http://{api_host}:{api_post}/astream", stream=True, json=request_json) as response:
+        for line in response.iter_lines():
+            if line:
+                decoded_line: str = line.decode()
+                if decoded_line.startswith("data: "):
+                    content = decoded_line[6:]
+                    yield content
 
 # streamlit主程序
 def main()-> None:
@@ -237,8 +139,16 @@ def main()-> None:
         # 添加AI消息框UI
         with st_container:
             with st.chat_message(name = "assistant", avatar="./src/avatar/assistant.jpg"):
-                stream = _async_generator(_history, _multi_modal_message, _config)
-                _content = st.write_stream(stream)
+
+                request_json = dict(
+                    session_id = session_id,
+                    history = _history,
+                    multi_modal_message = _multi_modal_message.model_dump(),
+                    config = _config,
+                    is_stream = True,
+                )
+
+                _content = st.write_stream(post_agent_astream(request_json))
 
                 # 去除开头的assistant_name
                 _content = _content[len(f"{assistant_name}:"):]
@@ -297,7 +207,15 @@ if __name__ == "__main__":
             _history = read_session(session_id)
 
             ai_reply: str = ""
-            async for item in _async_generator(_history, user_input, _config, is_stream=False):
+            request_json = dict(
+                session_id=session_id,
+                history=_history,
+                multi_modal_message=user_input,
+                config=_config,
+                is_stream=False,
+            )
+
+            async for item in post_agent_astream(request_json):
                 ai_reply = item
             await channel.send(OutboundMessage(channel="qq", chat_id=message.chat_id, content=ai_reply))
             storage_add_chat(session_id=session_id, name=assistant_name, chat= dict(role="assistant", content=ai_reply))

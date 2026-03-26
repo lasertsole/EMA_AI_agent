@@ -1,23 +1,6 @@
-from pathlib import Path
+from .path import *
+from .character import *
+from .num import *
 
-ROOT_DIR = Path(__file__).parent
-ROOT_DIR = ROOT_DIR / ".."
-ROOT_DIR = ROOT_DIR.resolve()
-
-ENV_PATH = ROOT_DIR / ".env"
-
-MEMORY_DIR = ROOT_DIR / "memory"
-SESSIONS_DIR = ROOT_DIR / "sessions"
-SKILLS_DIR = ROOT_DIR / "skills"
-WORKSPACE_DIR = ROOT_DIR / "workspace"
-KNOWLEDGE_DIR = ROOT_DIR / "knowledge"
-SRC_DIR = ROOT_DIR / "src"
-
-# Compression and RAG thresholds
-COMPRESS_THRESHOLD = 7_000
-MEMORY_THRESHOLD = 10_000
-COMPRESS_RATIO = 0.7 # 压缩比例，值越大，旧消息数组（要被压缩的部分）就越大。
-
-# Additional directories
-MEMORY_INDEX_DIR = MEMORY_DIR / "index"
-KNOWLEDGE_INDEX_DIR = KNOWLEDGE_DIR / "index"
+api_host:str = "127.0.0.1"
+api_post:int = 8080
