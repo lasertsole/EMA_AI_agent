@@ -9,6 +9,7 @@ from pprint import pprint
 from channels import BaseChannel
 from typing import AsyncGenerator
 from type import MultiModalMessage
+from config import COMPRESS_THRESHOLD
 from threading import Thread, Condition
 from agent import built_agent, ModelType
 from channels.manager import ChannelManager
@@ -16,7 +17,6 @@ from tasks.queue import BackgroundTaskQueue
 from langchain.messages import AIMessageChunk
 from models import TTS_Request, fetch_TTS_sound
 from bus import InboundMessage, OutboundMessage
-from config import COMPRESS_THRESHOLD, MEMORY_DIR
 from streamlit.delta_generator import DeltaGenerator
 from workspace.prompt_builder import build_system_prompt
 from streamlit.elements.widgets.chat import ChatInputValue
