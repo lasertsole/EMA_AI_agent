@@ -3,6 +3,7 @@ graph-memory — 知识图谱提取引擎
 """
 
 import json
+from .. import GmNode
 from ..type import GmConfig
 from pydantic import BaseModel
 from typing import List, Dict, Set, Optional, Any, Literal
@@ -258,7 +259,7 @@ class Extractor:
         return self.llm.with_structured_output(ExtractionResult).invoke([SystemMessage(EXTRACT_SYS), HumanMessage(extract_user_prompt(msgs, ", ".join(existing_names)))])
 
 
-    async def finalize(self, session_nodes: List[Dict], graph_summary: str) -> FinalizeResult:
+    async def finalize(self, session_nodes: List[GmNode], graph_summary: str) -> FinalizeResult:
         """
         Session 结束前的最终审查
 

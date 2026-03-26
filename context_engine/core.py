@@ -3,6 +3,7 @@ import math
 import asyncio
 import logging
 from config import SRC_DIR
+from . import GmNode
 from .type import GmConfig
 from .recaller import Recaller
 from .extractor import Extractor
@@ -17,7 +18,7 @@ from store import get_db, deprecate, save_message, get_unextracted, get_by_sessi
 logger = logging.getLogger(__name__)
 
 class SliceLastTurn(TypedDict):
-    messages: List[Any]
+    messages: List[BaseMessage]
     tokens: int
     dropped: int
 
@@ -116,7 +117,7 @@ def slice_last_turn(messages: List[BaseMessage]) -> SliceLastTurn:
     return { "messages": kept, "tokens": tokens, "dropped": dropped }
 
 # ─── 规范化消息 content，确保 OpenClaw 对 content.filter() 不崩 ──
-def normalize_message_content(messages: list[Any]) -> list[Any]:
+def normalize_message_content(messages: list[BaseMessage]) -> list[BaseMessage]:
     """标准化消息内容格式
 
     - 如果 content 是数组 → 修复畸形的 text block
@@ -126,15 +127,7 @@ def normalize_message_content(messages: list[Any]) -> list[Any]:
     result = []
 
     for msg in messages:
-        if not msg or not isinstance(msg, (dict, BaseMessage)):
-            result.append(msg)
-            continue
-
-        # 获取 content 属性（兼容字典和对象）
-        if isinstance(msg, dict):
-            c = msg.get("content")
-        else:
-            c = getattr(msg, "content", None)
+        c = getattr(msg, "content", None)
 
         # 如果 content 是数组 → 修复畸形 block
         if isinstance(c, list):
@@ -207,11 +200,8 @@ def ingest_message(session_id: str, message: BaseMessage)-> None:
     save_message(db, session_id, seq, role, message)
 
 
-async def run_turn_extract(session_id: str, new_messages: list[Any]) -> None:
+async def run_turn_extract(session_id: str) -> None:
     """每轮结束后直接提取当前轮的消息"""
-    if not new_messages:
-        return
-
     try:
         # 获取未提取的消息（包含刚入库的）
         msgs = get_unextracted(db, session_id, 50)
@@ -274,8 +264,7 @@ async def run_turn_extract(session_id: str, new_messages: list[Any]) -> None:
 
 async def assemble(
         session_id: str,
-        messages: list[Any],
-        token_budget: int | None = None
+        messages: list[BaseMessage]
 ) -> dict:
     active_nodes = get_by_session(db, session_id)
     active_edges = []
@@ -340,10 +329,7 @@ async def assemble(
 
 async def compact(
         session_id: str,
-        session_file: str,
-        force: bool = False,
-        current_token_count: int | None = None,
-        token_budget: int | None = None
+        current_token_count: int | None = None
 ) -> dict:
     # compact 仍然保留作为兜底，但主要提取在 after_turn 完成
     msgs = get_unextracted(db, session_id, 50)
@@ -435,7 +421,7 @@ async def after_turn(
     # ★ 每轮直接提取（后台任务）
     async def run_extract():
         try:
-            await run_turn_extract(session_id, new_messages)
+            await run_turn_extract(session_id)
         except Exception as err:
             logger.error(f"[graph-memory] turn extract failed: {err}")
 
@@ -520,7 +506,7 @@ async def session_end(event: dict, ctx: dict) -> None:
 
     try:
         # 获取该 session 的所有节点
-        nodes = get_by_session(db, sid)
+        nodes: List[GmNode] = get_by_session(db, sid)
 
         if nodes:
             # 获取全局 Top 20 节点作为图谱摘要
