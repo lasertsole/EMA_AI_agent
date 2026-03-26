@@ -4,7 +4,7 @@ import asyncio
 import logging
 from config import SRC_DIR
 from .type import GmConfig
-from recaller import Recaller
+from .recaller import Recaller
 from .extractor import Extractor
 from models import simple_chat_model, embed_model
 from typing import TypedDict, List, Any, Dict, Callable
@@ -187,7 +187,7 @@ def normalize_message_content(messages: list[Any]) -> list[Any]:
     return result
 
 
-def ingest_message(session_id: str, message: Any)-> None:
+def ingest_message(session_id: str, message: BaseMessage)-> None:
     """ 存一条消息到 gm_messages（同步，零 LLM）"""
     seq = msg_seq.get(session_id)
     if seq is None:
@@ -203,7 +203,7 @@ def ingest_message(session_id: str, message: Any)-> None:
     seq += 1
     msg_seq[session_id] = seq
 
-    role = getattr(message, 'role', 'unknown') or 'unknown'
+    role = getattr(message, 'type', 'unknown') or 'unknown'
     save_message(db, session_id, seq, role, message)
 
 
@@ -270,13 +270,6 @@ async def run_turn_extract(session_id: str, new_messages: list[Any]) -> None:
             invalidate_graph_cache()
     except Exception as e:
         logger.error(f"[graph-memory] turn extract failed: {e}")
-
-
-async def ingest(session_id: str, message: Any, is_heartbeat: bool = False) -> bool:
-    if is_heartbeat:
-        return False
-    ingest_message(session_id, message)
-    return True
 
 
 async def assemble(
@@ -423,19 +416,13 @@ async def compact(
 
 async def after_turn(
         session_id: str,
-        session_file: str,
-        messages: list[Any],
-        pre_prompt_message_count: int,
-        is_heartbeat: bool = False,
-        auto_compaction_summary: str | None = None,
-        token_budget: int | None = None
+        messages: list[BaseMessage],
 ) -> None:
     """每轮对话后的处理钩子"""
-    if is_heartbeat:
-        return
 
     # 消息入库（同步，零 LLM）
-    new_messages = messages[pre_prompt_message_count:] if pre_prompt_message_count else messages
+    new_messages = slice_last_turn(messages)
+
     for message in new_messages:
         ingest_message(session_id, message)
 

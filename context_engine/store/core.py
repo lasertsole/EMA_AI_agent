@@ -237,12 +237,14 @@ def upsert_edge(
 
 def edges_from(db: sqlite3.Connection, node_id: str) -> list:
     """获取从指定节点出发的所有边"""
+    db.row_factory = sqlite3.Row
     rows = db.execute("SELECT * FROM gm_edges WHERE from_id=?", (node_id,)).fetchall()
     return [to_edge(dict(row)) for row in rows]
 
 
 def edges_to(db: sqlite3.Connection, node_id: str) -> list:
     """获取指向指定节点的所有边"""
+    db.row_factory = sqlite3.Row
     rows = db.execute("SELECT * FROM gm_edges WHERE to_id=?", (node_id,)).fetchall()
     return [to_edge(dict(row)) for row in rows]
 
@@ -252,6 +254,8 @@ _fts5_available: bool | None = None
 
 def fts5_available(db: sqlite3.Connection) -> bool:
     """检查数据库是否支持FTS5全文搜索"""
+    db.row_factory = sqlite3.Row
+
     global _fts5_available
     if _fts5_available is not None:
         return _fts5_available
@@ -267,6 +271,8 @@ def fts5_available(db: sqlite3.Connection) -> bool:
 
 def search_nodes(db: sqlite3.Connection, query: str, limit: int = 6) -> list:
     """搜索节点：优先使用FTS5全文搜索，降级为LIKE模糊匹配"""
+    db.row_factory = sqlite3.Row
+
     # 解析查询词
     terms = [term for term in query.strip().split() if term][:8]
     if not terms:
@@ -303,6 +309,8 @@ def search_nodes(db: sqlite3.Connection, query: str, limit: int = 6) -> list:
 
 def top_nodes(db: sqlite3.Connection, limit: int = 6) -> list:
     """获取热门节点：按pagerank、验证次数和更新时间排序"""
+    db.row_factory = sqlite3.Row
+
     sql = """
         SELECT * FROM gm_nodes WHERE status='active'
         ORDER BY pagerank DESC, validated_count DESC, updated_at DESC LIMIT ?
@@ -318,6 +326,8 @@ def graph_walk(
         max_depth: int,
 ) -> dict[str, list]:
     """使用递归 CTE 进行图遍历，获取种子节点的邻居"""
+    db.row_factory = sqlite3.Row
+
     if not seed_ids:
         return {"nodes": [], "edges": []}
 
@@ -361,6 +371,7 @@ def graph_walk(
 
 def get_by_session(db: sqlite3.Connection, session_id: str) -> list[GmNode]:
     """根据 session ID 获取相关节点"""
+    db.row_factory = sqlite3.Row
     sql = """
         SELECT DISTINCT n.* FROM gm_nodes n, json_each(n.source_sessions) j
         WHERE j.value = ? AND n.status = 'active'
@@ -384,11 +395,13 @@ def save_message(
     db.execute("""
         INSERT OR IGNORE INTO gm_messages (id, session_id, turn_index, role, content, created_at)
         VALUES (?,?,?,?,?,?)
-    """, (uid("m"), sid, turn, role, json.dumps(content), int(time.time() * 1000)))
+    """, (uid("m"), sid, turn, role, json.dumps(content, ensure_ascii=False), int(time.time() * 1000)))
 
 
 def get_messages(db: sqlite3.Connection, sid: str, limit: Optional[int] = None) -> list:
     """获取指定 session 的消息"""
+    db.row_factory = sqlite3.Row
+
     if limit:
         sql = """
             SELECT * FROM gm_messages 
@@ -455,6 +468,7 @@ def get_episodic_messages(
     results = []
     used_chars = 0
 
+    db.row_factory = sqlite3.Row
     for sid in session_ids:
         if used_chars >= max_chars:
             break
@@ -525,6 +539,7 @@ def pending_signals(db: sqlite3.Connection, sid: str) -> list:
     """获取未处理的信号"""
     import json
 
+    db.row_factory = sqlite3.Row
     sql = """
         SELECT * FROM gm_signals 
         WHERE session_id=? AND processed=0 
@@ -554,6 +569,8 @@ def mark_signals_done(db: sqlite3.Connection, sid: str) -> None:
 # ─── 统计 ────────────────────────────────────────────────────
 def get_stats(db: sqlite3.Connection) -> dict:
     """获取图谱统计信息"""
+    db.row_factory = sqlite3.Row
+
     total_nodes = db.execute(
         "SELECT COUNT(*) as c FROM gm_nodes WHERE status='active'"
     ).fetchone()['c']
@@ -607,6 +624,8 @@ def save_vector(
 
     content_hash = hashlib.md5(content.encode()).hexdigest()
 
+    db.row_factory = sqlite3.Row
+
     db.execute("""
         INSERT INTO gm_vectors (node_id, content_hash, embedding) VALUES (?,?,?)
         ON CONFLICT(node_id) DO UPDATE SET content_hash=excluded.content_hash, embedding=excluded.embedding
@@ -615,6 +634,8 @@ def save_vector(
 
 def get_vector_hash(db: sqlite3.Connection, node_id: str) -> Optional[str]:
     """获取向量的内容哈希"""
+    db.row_factory = sqlite3.Row
+
     row = db.execute(
         "SELECT content_hash FROM gm_vectors WHERE node_id=?",
         (node_id,)
@@ -624,6 +645,8 @@ def get_vector_hash(db: sqlite3.Connection, node_id: str) -> Optional[str]:
 
 def get_all_vectors(db: sqlite3.Connection) -> list[dict]:
     """获取所有向量（供去重/聚类用）"""
+    db.row_factory = sqlite3.Row
+
     rows = db.execute("""
         SELECT v.node_id, v.embedding FROM gm_vectors v
         JOIN gm_nodes n ON n.id = v.node_id WHERE n.status = 'active'
@@ -652,6 +675,8 @@ def vector_search_with_score(
 ) -> list[ScoredNode]:
     """向量搜索并返回带余弦相似度的节点"""
     import math
+
+    db.row_factory = sqlite3.Row
 
     rows = db.execute("""
         SELECT v.node_id, v.embedding, n.*
@@ -755,6 +780,7 @@ def upsert_community_summary(
     """插入或更新社区摘要"""
     now = int(time.time() * 1000)
 
+    db.row_factory = sqlite3.Row
     existing = db.execute(
         "SELECT id FROM gm_communities WHERE id=?",
         (summary_id,)
@@ -787,6 +813,8 @@ def get_community_summary(
         summary_id: str
 ) -> Optional[CommunitySummary]:
     """获取社区摘要"""
+    db.row_factory = sqlite3.Row
+
     row = db.execute(
         "SELECT * FROM gm_communities WHERE id=?",
         (summary_id,)
@@ -807,6 +835,8 @@ def get_all_community_summaries(
         db: sqlite3.Connection
 ) -> list[CommunitySummary]:
     """获取所有社区摘要"""
+    db.row_factory = sqlite3.Row
+
     rows = db.execute("""
         SELECT * FROM gm_communities 
         ORDER BY node_count DESC
@@ -841,6 +871,8 @@ def community_vector_search(
     社区向量搜索：用 query 向量匹配社区 embedding，返回按相似度排序的社区
     """
     import math
+
+    db.row_factory = sqlite3.Row
 
     rows = db.execute("""
         SELECT id, summary, node_count, embedding 
@@ -889,6 +921,9 @@ def nodes_by_community_ids(
         return []
 
     placeholders = ",".join("?" * len(community_ids))
+
+    db.row_factory = sqlite3.Row
+
     rows = db.execute(f"""
         SELECT * FROM gm_nodes
         WHERE community_id IN ({placeholders}) AND status='active'
@@ -915,6 +950,7 @@ def nodes_by_community_ids(
 
 def prune_community_summaries(db: sqlite3.Connection) -> int:
     """清除已不存在的社区描述"""
+    db.row_factory = sqlite3.Row
     cursor = db.cursor()
     cursor.execute("""
         DELETE FROM gm_communities WHERE id NOT IN (
