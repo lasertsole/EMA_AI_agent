@@ -24,6 +24,7 @@ from sessions import read_session, viking_routing, load_summary
 from streamlit.runtime.uploaded_file_manager import UploadedFile
 from streamlit.runtime.scriptrunner import add_script_run_ctx, get_script_run_ctx
 from pub_func import File, FileType, ChatStorage as Streamlit_ChatStorage, storage_add_chat
+from runtime import get_thread_dict, get_channel_manager, get_task_queue, get_update_page_condition
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage, SystemMessage, BaseMessage
 
 # 创建会话ID和线程ID
@@ -40,40 +41,15 @@ st_container: DeltaGenerator = st.container()
 streamlit_chatStorage = Streamlit_ChatStorage(session_id = session_id, chats_maxlen = 20)
 
 # 创建线程字典，用于存储多个运行中的线程
-@st.cache_resource
-def get_thread_dict()-> dict[str, Thread]:
-    return {}
 thread_dict: dict[str, Thread] = get_thread_dict()
 
 # 创建频道管理器
-@st.cache_resource
-def get_channel_manager()-> ChannelManager:
-    return ChannelManager()
 channel_manager:ChannelManager = get_channel_manager()
 
-# 启动频道
-if not thread_dict.get("channel_thread"): # 只有线程不存在时才创建和启动，防止僵尸线程
-    channel_thread: Thread = Thread(target=lambda: channel_manager.start_all(), daemon=True)
-    add_script_run_ctx(channel_thread, get_script_run_ctx()) # 添加脚本运行上下文
-    channel_thread.start()
-    thread_dict["channel_thread"] = channel_thread
-
 # 创建任务队列
-@st.cache_resource
-def get_task_queue() -> BackgroundTaskQueue:
-    return BackgroundTaskQueue()
 task_queue: BackgroundTaskQueue | None = get_task_queue()
 
-# 启动任务队列
-if not thread_dict.get("task_queue_thread"): # 只有线程不存在时才创建和启动，防止僵尸线程
-    task_queue_thread: Thread = Thread(target=lambda: task_queue.start(), daemon=True)
-    task_queue_thread.start()
-    thread_dict["task_queue_thread"] = task_queue_thread
-
 # 创建更新页面条件
-@st.cache_resource
-def get_update_page_condition() -> Condition:
-    return Condition()
 update_page_condition: Condition = get_update_page_condition()
 
 # 创建agent
@@ -81,31 +57,6 @@ agent = built_agent()
 
 user_name = "远野汉娜"
 assistant_name = "橘雪莉"
-
-#"""以下是主动记忆功能"""
-def _maybe_extract_memory(text: str) -> str | None:
-    keywords = ["请记住", "记住这个", "记下来", "保存到记忆", "write to memory"]
-    source = text.strip()
-    for kw in keywords:
-        if kw in source:
-            after = source.split(kw, 1)[1].strip()
-            if after.startswith("：") or after.startswith(":"):
-                after = after[1:].strip()
-            return after if after else source
-    return None
-
-def _append_memory(entry: str) -> None:
-    path = MEMORY_DIR / "MEMORY.md"
-
-    # 确保文件存在
-    path.parent.mkdir(parents=True, exist_ok=True)
-
-    if not path.exists():
-        path.write_text("# MEMORY\n", encoding="utf-8")
-    content = path.read_text(encoding="utf-8").rstrip()
-    updated = f"{content}\n\n{entry}\n"
-    path.write_text(updated, encoding="utf-8")
-#"""以上是主动记忆功能"""
 
 #"""以下是组织信息列表逻辑"""
 def _to_messages(history: list[dict[str, Any]], multi_modal_message: MultiModalMessage) -> list[BaseMessage]:
@@ -279,13 +230,6 @@ def main()-> None:
 
         # 将用户消息持久化
         storage_add_chat(session_id=session_id, name=user_name, chat=dict(role = "user", content = _multi_modal_message.text), files=file_list if len(file_list) > 0 else None)
-
-        # 将用户要求的知识存入到MEMORY.MD
-        memory_entry = _maybe_extract_memory(_multi_modal_message.text)
-        if memory_entry:
-            _append_memory(memory_entry)
-            if task_queue:
-                Thread(target=lambda: task_queue.enqueue_memory_index(memory_entry)).start()
 
         with update_page_condition:
             update_page_condition.notify_all()
