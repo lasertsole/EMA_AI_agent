@@ -5,9 +5,10 @@ from typing import Any, Dict, Callable
 from typing import AsyncGenerator
 from pub_func import get_config
 from tasks.queue import BackgroundTaskQueue
-from type import MultiModalMessage
+from type import MultiModalMessage, SessionStatus
 from agent import built_agent, ModelType
 from langchain.messages import AIMessageChunk
+from urllib.parse import unquote_plus
 from workspace.prompt_builder import build_system_prompt
 from sessions import viking_routing, load_summary
 from robyn import Robyn, SSEMessage, SSEResponse, WebSocketDisconnect
@@ -16,6 +17,9 @@ from langchain_core.messages import AIMessage, HumanMessage, ToolMessage, System
 
 # 创建agent
 agent = built_agent()
+
+# 创建websocket和sessionStatus的关系字典
+websocket_id_to_session_status: Dict[str, SessionStatus] = {}
 
 #"""以下是组织信息列表逻辑"""
 def _to_messages(session_id: str, history: list[dict[str, Any]], multi_modal_message: MultiModalMessage) -> list[BaseMessage]:
@@ -183,10 +187,18 @@ async def ws_handler(websocket):
 @ws_handler.on_connect
 def on_connect(websocket):
     print(f"Client {websocket.id} connected")
+    websocket_id_to_session_status[websocket.id] = SessionStatus(ws_connection=websocket)
+
+    query_params = websocket.query_params
+    session_id = query_params.get("session_id", None)
+    channels = query_params.get("channels", None)
+    channels = unquote_plus(channels)
+    channels = json.loads(channels)
 
 @ws_handler.on_close
 async def handle_disconnect(websocket):
     print(f"Client {websocket.id} disconnected")
+    websocket_id_to_session_status.pop(websocket.id, None)
 
 # 创建线程字典，用于存储多个运行中的线程
 thread_dict = {}

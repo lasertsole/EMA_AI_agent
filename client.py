@@ -1,24 +1,26 @@
 import re
+import json
 import base64
 import requests
 from typing import Any
 import streamlit as st
 from typing import List
 from pathlib import Path
-from websocket import WebSocket, create_connection
 from channels import BaseChannel
 from sessions import read_session
-from typing import AsyncGenerator
+from urllib.parse import urlencode
 from type import MultiModalMessage
+from typing import AsyncGenerator, Dict
 from threading import Thread, Condition
 from channels.manager import ChannelManager
 from bus import InboundMessage, OutboundMessage
 from models import TTS_Request, fetch_TTS_sound
+from websocket import WebSocket, create_connection
 from streamlit.delta_generator import DeltaGenerator
 from streamlit.elements.widgets.chat import ChatInputValue
 from streamlit.runtime.uploaded_file_manager import UploadedFile
 from streamlit.runtime.scriptrunner import add_script_run_ctx, get_script_run_ctx
-from config import user_name, assistant_name, api_host, api_post
+from config import ROOT_DIR, user_name, assistant_name, api_host, api_post
 from pub_func import File, FileType, ChatStorage as Streamlit_ChatStorage, storage_add_chat, ws_send
 from runtime import get_channel_manager, get_update_page_condition
 
@@ -34,9 +36,24 @@ streamlit_chatStorage = Streamlit_ChatStorage(session_id = session_id, chats_max
 # 创建频道管理器
 channel_manager:ChannelManager = get_channel_manager()
 
+"""以下是创建websocket连接"""
+channels: List[Dict[str, Any]] = []
+channels_json = Path(ROOT_DIR) / "channels.json"
+if channels_json.exists():
+    config: dict[str, dict[str, Any]] = json.loads(channels_json.read_text())
+    for key, value in config.items():
+        channels.append({"name": key, "subscribe_ids": value})
+
+    ws_query_params = {
+        "session_id": session_id,
+        "channels": json.dumps(list, ensure_ascii=False),
+    }
+    ws_query_string = urlencode(ws_query_params, doseq=True)
+
 @st.cache_resource
 def get_ws() -> WebSocket:
-    return create_connection(f"ws://{api_host}:{api_post}/ws")
+    return create_connection(f"ws://{api_host}:{api_post}/ws?{ws_query_string}")
+"""以上是创建websocket连接"""
 
 # 创建更新页面条件
 update_page_condition: Condition = get_update_page_condition()
