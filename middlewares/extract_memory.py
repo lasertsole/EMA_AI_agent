@@ -1,7 +1,7 @@
 from typing import Any
 from threading import Thread
 from config import MEMORY_DIR
-from runtime import get_task_queue
+from runtime import task_queue
 from langchain_core.messages import HumanMessage
 from langchain.agents.middleware import wrap_model_call, ModelRequest, ModelResponse
 
@@ -44,7 +44,6 @@ async def extract_memory(request: ModelRequest, handler) -> ModelResponse:
             memory_entry = _maybe_extract_memory(usr_input_text)
             if memory_entry:
                 _append_memory(memory_entry)
-                if get_task_queue():
-                    Thread(target=lambda: get_task_queue().enqueue_memory_index(memory_entry)).start()
+                Thread(target=lambda: task_queue.enqueue_memory_index(memory_entry)).start()
 
     return await handler(request)

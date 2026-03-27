@@ -2,7 +2,7 @@ import json
 from typing import Any
 
 from robyn import Robyn, WebSocketDisconnect
-from config import api_host, api_post
+from config import API_HOST, API_PORT
 
 #"""以上是组织信息列表逻辑"""
 app = Robyn(__file__)
@@ -38,4 +38,4 @@ async def ws_handler(websocket):
         print(f"Client {websocket.id} disconnected: {e}")
 
 if __name__ == "__main__":
-    app.start(host = api_host, port = api_post)
+    app.start(host = API_HOST, port = API_PORT)
