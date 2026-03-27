@@ -1,13 +1,17 @@
+import json
+from threading import Thread
 import requests
-from typing import Any
+from typing import Any, Dict, Callable
 from typing import AsyncGenerator
+from pub_func import validate_config
+from tasks.queue import BackgroundTaskQueue
 from type import MultiModalMessage
 from agent import built_agent, ModelType
 from langchain.messages import AIMessageChunk
-from robyn import Robyn, SSEMessage, SSEResponse
-from sessions import viking_routing, load_summary
-from config import assistant_name, api_host, api_post
 from workspace.prompt_builder import build_system_prompt
+from sessions import viking_routing, load_summary
+from robyn import Robyn, SSEMessage, SSEResponse, WebSocketDisconnect
+from config import assistant_name, api_host, api_post, COMPRESS_THRESHOLD
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage, SystemMessage, BaseMessage
 
 # 创建agent
@@ -136,6 +140,94 @@ async def stream_async_events(request):
         return SSEMessage("请提供配置")
 
     return SSEResponse(_async_generator(session_id, history, multi_modal_message, config))
+
+"""以下是用websocket维护状态"""
+ws_event_processor_dict: Dict[str, Callable[[dict[str, Any], str | dict[str, Any]], str]] = {}
+
+async def ws_processor(config: dict[str, Any], event:str, content: str | dict[str, Any])->Any:
+    try:
+        processor: Callable[[dict[str, Any], str | dict[str, Any]], str] | None = ws_event_processor_dict.get(event, None)
+        if processor is None:
+            return None
+
+        return processor(config, content)
+    except Exception as e:
+        print(f"ws_processor error happened: {e}")
+        return None
+
+@app.websocket("/ws")
+async def ws_handler(websocket):
+    try:
+        while True:
+            try:
+                msg: str = await websocket.receive_text()
+                obj: dict[str, Any] = json.loads(msg)
+
+                config: dict[str, Any] = obj.get("config", None)
+                if config is None:
+                    continue
+
+                event: str | None = obj.get("event", None)
+                if event is None:
+                    continue
+
+                content: str | dict[str, Any] | None = obj.get("content", None)
+                if content is None:
+                    continue
+
+                res:Any = await ws_processor(config = config, event = event, content = content)
+
+                await websocket.send_text(json.dumps(res))
+
+            except Exception as e:
+                print(e)
+    except (WebSocketDisconnect, ConnectionResetError, Exception) as e:
+        print(f"Client {websocket.id} disconnected: {e}")
+
+@ws_handler.on_connect
+def on_connect(websocket):
+    print(f"Client {websocket.id} connected")
+
+@ws_handler.on_close
+async def handle_disconnect(websocket):
+    print(f"Client {websocket.id} disconnected")
+
+# 创建线程字典，用于存储多个运行中的线程
+thread_dict = {}
+
+# 启动任务队列
+task_queue: BackgroundTaskQueue = BackgroundTaskQueue()
+task_queue_thread: Thread = Thread(target=lambda: task_queue.start(), daemon=True)
+task_queue_thread.start()
+thread_dict["task_queue_thread"] = task_queue_thread
+
+def enqueue_append_timeline_entry(config: dict[str, Any], content: str | dict[str, Any]) -> str | None:
+    # 添加viking L0 和 L1 索引
+    valid_flag, error_reason = validate_config(config=config)
+    if not valid_flag:
+        return error_reason
+
+    session_id:str = config["configurable"]["session_id"]
+
+    human_content = content.get("human_content", None)
+    if human_content is None:
+        return "human_content is None"
+
+    ai_content = content.get("ai_content", None)
+    if ai_content is None:
+        return "ai_content is None"
+
+    task_queue.enqueue_append_timeline_entry(
+    messages=[HumanMessage(content=human_content), AIMessage(content=ai_content)], session_id=session_id,
+    tool_metas=[])
+
+    # 如果达到压缩阈值，则压缩历史会话
+    total_chars = sum(len(m.get("content", "")) for m in agent.get_state(config=config).values.get("messages", []))
+    if total_chars > COMPRESS_THRESHOLD and task_queue:
+        task_queue.enqueue_compress(session_id)
+
+    return "ok"
+"""以上是用websocket维护状态"""
 
 if __name__ == "__main__":
     app.start(host = api_host, port = api_post)

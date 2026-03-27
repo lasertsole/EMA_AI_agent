@@ -5,23 +5,22 @@ from typing import Any
 import streamlit as st
 from typing import List
 from pathlib import Path
+from websocket import WebSocket, create_connection
 from channels import BaseChannel
 from sessions import read_session
 from typing import AsyncGenerator
 from type import MultiModalMessage
 from threading import Thread, Condition
 from channels.manager import ChannelManager
-from tasks.queue import BackgroundTaskQueue
 from bus import InboundMessage, OutboundMessage
 from models import TTS_Request, fetch_TTS_sound
 from streamlit.delta_generator import DeltaGenerator
 from streamlit.elements.widgets.chat import ChatInputValue
-from langchain_core.messages import AIMessage, HumanMessage
 from streamlit.runtime.uploaded_file_manager import UploadedFile
 from streamlit.runtime.scriptrunner import add_script_run_ctx, get_script_run_ctx
-from config import COMPRESS_THRESHOLD, user_name, assistant_name, api_host, api_post
-from pub_func import File, FileType, ChatStorage as Streamlit_ChatStorage, storage_add_chat
-from runtime import get_thread_dict, get_channel_manager, get_task_queue, get_update_page_condition
+from config import user_name, assistant_name, api_host, api_post
+from pub_func import File, FileType, ChatStorage as Streamlit_ChatStorage, storage_add_chat, ws_send
+from runtime import get_channel_manager, get_update_page_condition
 
 # 创建会话ID和线程ID
 session_id = '1'
@@ -36,14 +35,12 @@ st_container: DeltaGenerator = st.container()
 # streamlit最大显示对话数
 streamlit_chatStorage = Streamlit_ChatStorage(session_id = session_id, chats_maxlen = 20)
 
-# 创建线程字典，用于存储多个运行中的线程
-thread_dict: dict[str, Thread] = get_thread_dict()
-
 # 创建频道管理器
 channel_manager:ChannelManager = get_channel_manager()
 
-# 创建任务队列
-task_queue: BackgroundTaskQueue | None = get_task_queue()
+@st.cache_resource
+def get_ws() -> WebSocket:
+    return create_connection(f"ws://{api_host}:{api_post}/ws")
 
 # 创建更新页面条件
 update_page_condition: Condition = get_update_page_condition()
@@ -175,14 +172,8 @@ def main()-> None:
             storage_add_chat(session_id=session_id, name=assistant_name, chat= dict(role="assistant", content=_content), files = file_list if len(file_list) > 0 else None)
 
             # 添加viking L0 和 L1 索引
-            task_queue.enqueue_append_timeline_entry(
-                messages=[HumanMessage(content=_multi_modal_message.text), AIMessage(content=_content)], session_id = session_id,
-                tool_metas=[])
+            ws_send(ws=get_ws(), session_id=session_id, event="enqueue_append_timeline_entry", content={"human_content": _multi_modal_message.text, "ai_content": _content})
 
-            # 如果达到压缩阈值，则压缩历史会话
-            total_chars = sum(len(m.get("content", "")) for m in _history) + len(_multi_modal_message.text)
-            if total_chars > COMPRESS_THRESHOLD and task_queue:
-                task_queue.enqueue_compress(session_id)
 
         with update_page_condition:
             update_page_condition.notify_all()

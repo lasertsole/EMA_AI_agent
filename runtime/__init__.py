@@ -1,7 +1,6 @@
 import streamlit as st
 from threading import Thread, Condition
 from channels.manager import ChannelManager
-from tasks.queue import BackgroundTaskQueue
 from streamlit.runtime.scriptrunner import add_script_run_ctx, get_script_run_ctx
 
 # 创建线程字典，用于存储多个运行中的线程
@@ -14,21 +13,10 @@ def get_thread_dict()-> dict[str, Thread]:
 def get_channel_manager()-> ChannelManager:
     return ChannelManager()
 
-# 创建任务队列
-@st.cache_resource
-def get_task_queue() -> BackgroundTaskQueue:
-    return BackgroundTaskQueue()
-
 # 创建更新页面条件
 @st.cache_resource
 def get_update_page_condition() -> Condition:
     return Condition()
-
-# 启动任务队列
-if not get_thread_dict().get("task_queue_thread"): # 只有线程不存在时才创建和启动，防止僵尸线程
-    task_queue_thread: Thread = Thread(target=lambda: get_task_queue().start(), daemon=True)
-    task_queue_thread.start()
-    get_thread_dict()["task_queue_thread"] = task_queue_thread
 
 # 启动频道
 if not get_thread_dict().get("channel_thread"): # 只有线程不存在时才创建和启动，防止僵尸线程
