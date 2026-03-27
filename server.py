@@ -3,7 +3,7 @@ from threading import Thread
 import requests
 from typing import Any, Dict, Callable
 from typing import AsyncGenerator
-from pub_func import validate_config
+from pub_func import get_config
 from tasks.queue import BackgroundTaskQueue
 from type import MultiModalMessage
 from agent import built_agent, ModelType
@@ -64,7 +64,7 @@ def _to_messages(session_id: str, history: list[dict[str, Any]], multi_modal_mes
 #"""以下是组织信息列表逻辑"""
 current_tool_name: str = ""
 current_tool_id: str = ""
-async def _async_generator(session_id: str, history: list[dict[str, Any]], multi_modal_message: MultiModalMessage, config: dict[str, Any], is_stream: bool = True)-> AsyncGenerator[str, None]:
+async def _async_generator(session_id: str, history: list[dict[str, Any]], multi_modal_message: MultiModalMessage, is_stream: bool = True)-> AsyncGenerator[str, None]:
     global current_tool_name
     global current_tool_id
 
@@ -75,7 +75,7 @@ async def _async_generator(session_id: str, history: list[dict[str, Any]], multi
     try:
         if is_stream:
             yield SSEMessage(f"{assistant_name}:")
-            async for chunk in agent.astream(messages_dict, config = config, stream_mode = "messages"):
+            async for chunk in agent.astream(messages_dict, config = get_config(session_id), stream_mode = "messages"):
                 msg_chunk: BaseMessage = chunk[0]
                 if isinstance(msg_chunk, AIMessageChunk):
                     # 以下是输出工具信息
@@ -107,7 +107,7 @@ async def _async_generator(session_id: str, history: list[dict[str, Any]], multi
                         yield SSEMessage(msg_chunk.content)
                     # 以上是对话信息
         else:
-            result = await agent.ainvoke(messages_dict, config = config)
+            result = await agent.ainvoke(messages_dict, config = get_config(session_id))
             yield SSEMessage(result["messages"][-1].content)
 
     except requests.exceptions.HTTPError as e:
@@ -135,22 +135,18 @@ async def stream_async_events(request):
         return SSEMessage("请提供用户输入")
     multi_modal_message = MultiModalMessage(**multi_modal_message)
 
-    config:dict[str, Any] = request_json.get("config", None)
-    if not config:
-        return SSEMessage("请提供配置")
-
-    return SSEResponse(_async_generator(session_id, history, multi_modal_message, config))
+    return SSEResponse(_async_generator(session_id, history, multi_modal_message))
 
 """以下是用websocket维护状态"""
-ws_event_processor_dict: Dict[str, Callable[[dict[str, Any], str | dict[str, Any]], str]] = {}
+ws_event_processor_dict: Dict[str, Callable[[str, str | dict[str, Any]], str]] = {}
 
-async def ws_processor(config: dict[str, Any], event:str, content: str | dict[str, Any])->Any:
+async def ws_processor(session_id: str, event:str, content: str | dict[str, Any])->Any:
     try:
-        processor: Callable[[dict[str, Any], str | dict[str, Any]], str] | None = ws_event_processor_dict.get(event, None)
+        processor: Callable[[str, str | dict[str, Any]], str] | None = ws_event_processor_dict.get(event, None)
         if processor is None:
             return None
 
-        return processor(config, content)
+        return processor(session_id, content)
     except Exception as e:
         print(f"ws_processor error happened: {e}")
         return None
@@ -163,8 +159,8 @@ async def ws_handler(websocket):
                 msg: str = await websocket.receive_text()
                 obj: dict[str, Any] = json.loads(msg)
 
-                config: dict[str, Any] = obj.get("config", None)
-                if config is None:
+                session_id: str = obj.get("session_id", None)
+                if session_id is None:
                     continue
 
                 event: str | None = obj.get("event", None)
@@ -175,7 +171,7 @@ async def ws_handler(websocket):
                 if content is None:
                     continue
 
-                res:Any = await ws_processor(config = config, event = event, content = content)
+                res:Any = await ws_processor(session_id = session_id, event = event, content = content)
 
                 await websocket.send_text(json.dumps(res))
 
@@ -201,13 +197,9 @@ task_queue_thread: Thread = Thread(target=lambda: task_queue.start(), daemon=Tru
 task_queue_thread.start()
 thread_dict["task_queue_thread"] = task_queue_thread
 
-def enqueue_append_timeline_entry(config: dict[str, Any], content: str | dict[str, Any]) -> str | None:
+def enqueue_append_timeline_entry(session_id: str, content: str | dict[str, Any]) -> str | None:
     # 添加viking L0 和 L1 索引
-    valid_flag, error_reason = validate_config(config=config)
-    if not valid_flag:
-        return error_reason
-
-    session_id:str = config["configurable"]["session_id"]
+    config = get_config(session_id)
 
     human_content = content.get("human_content", None)
     if human_content is None:
@@ -222,11 +214,13 @@ def enqueue_append_timeline_entry(config: dict[str, Any], content: str | dict[st
     tool_metas=[])
 
     # 如果达到压缩阈值，则压缩历史会话
-    total_chars = sum(len(m.get("content", "")) for m in agent.get_state(config=config).values.get("messages", []))
+    total_chars = sum(len(m.get("content", "")) for m in agent.get_state(config=get_config(session_id)).values.get("messages", []))
     if total_chars > COMPRESS_THRESHOLD and task_queue:
         task_queue.enqueue_compress(session_id)
 
     return "ok"
+
+ws_event_processor_dict["enqueue_append_timeline_entry"] = enqueue_append_timeline_entry
 """以上是用websocket维护状态"""
 
 if __name__ == "__main__":

@@ -22,12 +22,8 @@ from config import user_name, assistant_name, api_host, api_post
 from pub_func import File, FileType, ChatStorage as Streamlit_ChatStorage, storage_add_chat, ws_send
 from runtime import get_channel_manager, get_update_page_condition
 
-# 创建会话ID和线程ID
+# 创建会话ID
 session_id = '1'
-thread_id = 1
-
-# 创建配置参数
-_config: dict[str, Any] = {"configurable": {"thread_id": thread_id, "model_type": "chat_model"}}
 
 # 创建streamlit显示容器
 st_container: DeltaGenerator = st.container()
@@ -141,7 +137,6 @@ def main()-> None:
                     session_id = session_id,
                     history = _history,
                     multi_modal_message = _multi_modal_message.model_dump(),
-                    config = _config,
                     is_stream = True,
                 )
 
@@ -178,8 +173,6 @@ def main()-> None:
         with update_page_condition:
             update_page_condition.notify_all()
 
-    # pprint(sanitize_tool_use_result_pairing(agent.get_state(config=_config).values.get("messages", [])))
-
     # 只在页面状态更新时刷新页面，让主程序挂起以便接收到频道信息
     with update_page_condition:
         update_page_condition.wait()
@@ -202,7 +195,6 @@ if __name__ == "__main__":
                 session_id=session_id,
                 history=_history,
                 multi_modal_message=user_input,
-                config=_config,
                 is_stream=False,
             )
 
