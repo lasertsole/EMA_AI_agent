@@ -17,7 +17,7 @@ from streamlit.elements.widgets.chat import ChatInputValue
 from streamlit.runtime.uploaded_file_manager import UploadedFile
 from config import ROOT_DIR, USER_NAME, ASSISTANT_NAME, API_HOST, API_PORT
 from streamlit.runtime.scriptrunner import add_script_run_ctx, get_script_run_ctx
-from pub_func import File, FileType, ChatStorage as Streamlit_ChatStorage, storage_add_chat, ws_send, process_sse_data
+from pub_func import File, FileType, ChatStorage as Streamlit_ChatStorage, storage_add_chat, process_sse_data
 
 # 创建会话ID
 session_id = '1'
@@ -161,10 +161,6 @@ def main()-> None:
 
             # 将AI消息持久化
             storage_add_chat(session_id=session_id, name=ASSISTANT_NAME, chat= dict(role="assistant", content=_content), files = file_list if len(file_list) > 0 else None)
-
-            # 添加viking L0 和 L1 索引
-            ws_send(ws=ws, session_id=session_id, event="enqueue_append_timeline_entry", content={"human_content": _multi_modal_message.text, "ai_content": _content})
-
 
 # 执行主程序
 if __name__ == "__main__":

@@ -12,13 +12,13 @@ def _current_session_path(session_id: str) -> str:
 
 
 def delete_session(session_id: str) -> None:
-    path = Path(_current_session_path(session_id))
+    path: Path = Path(_current_session_path(session_id))
     if path.exists():
         path.unlink()
 
 
 def read_session(session_id: str) -> list[dict[str, Any]]:
-    path = Path(_current_session_path(session_id))
+    path: Path = Path(_current_session_path(session_id))
 
     if not path.exists():
         return []

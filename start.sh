@@ -89,7 +89,7 @@ echo ""
 # 第三步，打开主程序，并挂置shell前台
 cd "${CURRENT_DIR}"
 source ./.venv/Scripts/activate || { echo "激活虚拟环境失败，脚本已停止"; exit 1; } # 激活虚拟环境
-./.venv/Scripts/python server.py --fast --disable-openapi || { echo "运行服务端时发生错误，脚本已停止"; exit 1; } &
+./.venv/Scripts/python -m server --fast --disable-openapi || { echo "运行服务端时发生错误，脚本已停止"; exit 1; } &
 
 # 第四步，打开主程序，并挂置shell前台
 ./.venv/Scripts/python -m streamlit run client.py || { echo "运行客户端程序时发生错误，脚本已停止"; exit 1; }

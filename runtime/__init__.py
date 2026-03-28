@@ -1,5 +1,4 @@
-import streamlit as st
-from threading import Thread, Condition
+from threading import Thread
 from channels.manager import ChannelManager
 from streamlit.runtime.scriptrunner import add_script_run_ctx, get_script_run_ctx
 
