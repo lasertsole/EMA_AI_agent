@@ -1,10 +1,10 @@
 import requests
 from robyn import SSEMessage
-from pub_func import get_config
 from config import ASSISTANT_NAME
 from type import MultiModalMessage
 from agent import built_agent, ModelType
 from langchain.messages import AIMessageChunk
+from pub_func import get_config, storage_add_chat
 from sessions import viking_routing, load_summary
 from typing import AsyncGenerator, Any, Dict, List
 from workspace.prompt_builder import build_system_prompt
@@ -125,6 +125,10 @@ async def async_generator(session_id: str, history: List[dict[str, Any]], multi_
         yield SSEMessage(f"请求超时: {e.args[0]}")
 
     finally:
+        # 将用户消息持久化
+        storage_add_chat(session_id=session_id, role="user", multi_modal_message=multi_modal_message)
+        storage_add_chat(session_id=session_id, role="assistant", multi_modal_message=MultiModalMessage(text=ai_content, image_base64_list=None))
+
         enqueue_append_timeline_entry(session_id = session_id, human_content = multi_modal_message.text, ai_content = ai_content)
         compress_history(session_id = session_id, all_messages=agent.get_state(config = get_config(session_id)).values.get("messages", []))
 

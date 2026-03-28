@@ -6,7 +6,6 @@ from typing import Any
 import streamlit as st
 from typing import List
 from pathlib import Path
-from threading import Thread
 from urllib.parse import urlencode
 from type import MultiModalMessage
 from typing import AsyncGenerator, Dict
@@ -16,8 +15,7 @@ from streamlit.delta_generator import DeltaGenerator
 from streamlit.elements.widgets.chat import ChatInputValue
 from streamlit.runtime.uploaded_file_manager import UploadedFile
 from config import ROOT_DIR, USER_NAME, ASSISTANT_NAME, API_HOST, API_PORT
-from streamlit.runtime.scriptrunner import add_script_run_ctx, get_script_run_ctx
-from pub_func import File, FileType, ChatStorage as Streamlit_ChatStorage, storage_add_chat, process_sse_data
+from pub_func import ChatStorage as Streamlit_ChatStorage, process_sse_data
 
 # 创建会话ID
 session_id = '1'
@@ -67,7 +65,6 @@ def main()-> None:
     if len(chat_list) == 0:
         hello_chat = dict(role="assistant", content=f"汉娜さん，来茶间聊天吧！")
         chat_list.append(hello_chat)
-        storage_add_chat(session_id=session_id, name=ASSISTANT_NAME, chat=hello_chat)
 
     # 创建历史聊天消息UI列表
     with st_container:
@@ -92,8 +89,6 @@ def main()-> None:
         accept_file=True,
         file_type=["png", "jpg", "jpeg"],
     )
-    # 创建文件列表
-    file_list: list[File] = []
 
     if user_input_obj:
         _multi_modal_message: MultiModalMessage = MultiModalMessage(text=user_input_obj.text)
@@ -118,13 +113,7 @@ def main()-> None:
             base64_string = base64_bytes.decode("utf-8")
             image_base64_list.append(base64_string)
 
-            # 将 图片bytes 放入文件列表
-            file: File = {"content": file_bytes, "type": FileType.IMAGE, "extension": '.jpg'}
-            file_list.append(file)
         _multi_modal_message.image_base64_list = image_base64_list if len(image_base64_list) > 0 else None
-
-        # 将用户消息持久化
-        storage_add_chat(session_id=session_id, name=USER_NAME, chat=dict(role = "user", content = _multi_modal_message.text), files=file_list if len(file_list) > 0 else None)
 
         # 添加AI消息框UI
         with st_container:
@@ -141,9 +130,6 @@ def main()-> None:
                 # 去除开头的ASSISTANT_NAME
                 _content = _content[len(f"{ASSISTANT_NAME}:"):]
 
-                # 重置文件列表
-                file_list = []
-
                 with st.spinner("正在生成语音..."):
                     # 生成语音,当生成失败时跳过生成
                     try:
@@ -154,17 +140,9 @@ def main()-> None:
                         response = fetch_TTS_sound(audio_requires)
                         if response is not None:
                             st.audio(data=response.content, format="audio/ogg")
-                            file: File = {"content": response.content, "type": FileType.AUDIO, "extension": '.wav'}
-                            file_list.append(file)
+
                     except Exception as e:
                         pass
-
-            # 将AI消息持久化
-            storage_add_chat(session_id=session_id, name=ASSISTANT_NAME, chat= dict(role="assistant", content=_content), files = file_list if len(file_list) > 0 else None)
-
 # 执行主程序
 if __name__ == "__main__":
-    # 启动主程序
-    main_thread:Thread = Thread(target=main())
-    add_script_run_ctx(main_thread, get_script_run_ctx())
-    main_thread.start()
+    main()
