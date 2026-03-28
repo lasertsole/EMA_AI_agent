@@ -77,9 +77,9 @@ async def async_generator(session_id: str, history: List[dict[str, Any]], multi_
     ai_content:str = ""
 
     try:
+        yield SSEMessage(f"{ASSISTANT_NAME}:")
+        
         if is_stream:
-            yield SSEMessage(f"{ASSISTANT_NAME}:")
-
             # 用已组装好上下文的agent直接输出
             async for chunk in agent.astream(input=None, config=get_config(session_id), stream_mode="messages"):
                 msg_chunk: BaseMessage = chunk[0]
