@@ -3,10 +3,9 @@ graph-memory — 知识图谱提取引擎
 """
 
 import json
-from .. import GmNode
-from ..type import GmConfig
 from pydantic import BaseModel
-from typing import List, Dict, Set, Optional, Any, Literal
+from ..type import GmConfig, GmNode
+from typing import List, Dict, Set, Optional, Literal
 from langchain_core.messages import SystemMessage, HumanMessage
 
 # ─── 节点/边合法值 ──────────────────────────────────────────────

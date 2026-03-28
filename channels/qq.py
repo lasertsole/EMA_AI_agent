@@ -2,14 +2,14 @@
 
 import asyncio
 import logging
+from pydantic import Field
 from collections import deque
-from typing import TYPE_CHECKING, Any, Literal
-
-from bus.events import OutboundMessage
+from config.schema import Base
 from bus.queue import MessageBus
 from channels.base import BaseChannel
-from config.schema import Base
-from pydantic import Field
+from bus.events import OutboundMessage
+from typing import TYPE_CHECKING, Any, Literal
+
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ def _make_bot_class(channel: "QQChannel") -> "type[botpy.Client]":
             super().__init__(intents=intents, ext_handlers=False)
 
         async def on_ready(self):
-            logger.info("QQ bot ready: {}", self.robot.name)
+            logger.info(f"QQ bot ready: {self.robot.name}")
 
         async def on_c2c_message_create(self, message: "C2CMessage"):
             await channel._on_message(message, is_group=False)
@@ -104,7 +104,7 @@ class QQChannel(BaseChannel):
             try:
                 await self._client.start(appid=self.config.app_id, secret=self.config.secret)
             except Exception as e:
-                logger.warning("QQ bot error: {}", e)
+                logger.warning(f"QQ bot error: {e}")
             if self._running:
                 logger.info("Reconnecting QQ bot in 5 seconds...")
                 await asyncio.sleep(5)
@@ -151,7 +151,7 @@ class QQChannel(BaseChannel):
                     **payload,
                 )
         except Exception as e:
-            logger.error("Error sending QQ message: {}", e)
+            logger.error(f"Error sending QQ message: {e}")
 
     async def _on_message(self, data: "C2CMessage | GroupMessage", is_group: bool = False) -> None:
         """Handle incoming message from QQ."""

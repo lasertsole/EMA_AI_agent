@@ -12,7 +12,7 @@ from typing import TypedDict, List, Any, Dict, Callable
 from .format import sanitize_tool_use_result_pairing, assemble_context
 from langchain_core.messages import BaseMessage, HumanMessage, ToolMessage
 from .graph import invalidate_graph_cache, compute_global_page_rank, detect_communities, summarize_communities, run_maintenance
-from store import get_db, deprecate, save_message, get_unextracted, get_by_session, upsert_node, find_by_id, find_by_name,\
+from .store import get_db, deprecate, save_message, get_unextracted, get_by_session, upsert_node, find_by_id, find_by_name,\
                    upsert_edge, mark_extracted, edges_from, edges_to
 
 logger = logging.getLogger(__name__)
@@ -37,7 +37,7 @@ DEFAULT_CONFIG: GmConfig = GmConfig(
     pagerank_damping = 0.85,
     pagerank_iterations = 20,
     embedding = embed_model,
-    llm = simple_chat_model
+    llm = simple_chat_model.bind()
 )
 
 db = get_db()
@@ -408,6 +408,7 @@ async def after_turn(
 
     # 消息入库（同步，零 LLM）
     new_messages = slice_last_turn(messages)
+    print(new_messages)
 
     for message in new_messages:
         ingest_message(session_id, message)
@@ -422,6 +423,7 @@ async def after_turn(
     async def run_extract():
         try:
             await run_turn_extract(session_id)
+            print(123)
         except Exception as err:
             logger.error(f"[graph-memory] turn extract failed: {err}")
 

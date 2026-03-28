@@ -42,7 +42,7 @@ class ChannelManager:
                     if channel:
                         await func(msg, channel)
                     else:
-                        logger.warning("Channel {} not found", name)
+                        logger.warning(f"Channel {name} not found")
 
     async def _outbound_consume_loop(self):
         while True:
@@ -101,9 +101,9 @@ class ChannelManager:
             try:
                 channel = cls(section, self._bus)
                 self._channels[name] = channel
-                logger.info("{} channel enabled", cls.display_name)
+                logger.info(f"{cls.display_name} channel enabled")
             except Exception as e:
-                logger.warning("{} channel not available: {}", name, e)
+                logger.warning(f"{name} channel not available: {e}")
 
         self._validate_allow_from()
 
@@ -120,7 +120,7 @@ class ChannelManager:
         try:
             await channel.start()
         except Exception as e:
-            logger.error("Failed to start channel {}: {}", name, e)
+            logger.error(f"Failed to start channel {name}: {e}")
 
     def start_all(self) -> None:
         """Start all channels and the outbound dispatcher."""
@@ -138,7 +138,7 @@ class ChannelManager:
 
             # Start channels
             for name, channel in self._channels.items():
-                logger.info("Starting {} channel...", name)
+                logger.info(f"Starting {name} channel...")
                 self._event_loop.create_task(self._start_channel(name, channel))
 
             self._event_loop.run_forever()
@@ -157,7 +157,7 @@ class ChannelManager:
             try:
                 tasks.append(asyncio.create_task(channel.stop()))
             except Exception as e:
-                logger.error("Error stopping {}: {}", name, e)
+                logger.error(f"Error stopping {name}: {e}")
 
         await asyncio.gather(*tasks, return_exceptions=True)
 
@@ -187,9 +187,9 @@ class ChannelManager:
                     try:
                         await channel.send(msg)
                     except Exception as e:
-                        logger.error("Error sending to {}: {}", msg.channel, e)
+                        logger.error(f"Error sending to {msg.channel}: {e}")
                 else:
-                    logger.warning("Unknown channel: {}", msg.channel)
+                    logger.warning(f"Unknown channel: {msg.channel}")
 
             except asyncio.TimeoutError:
                 continue

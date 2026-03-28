@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+from threading import Thread
 from typing import Any, Literal, List
 from langchain_core.messages import BaseMessage
 
@@ -62,3 +63,8 @@ class BackgroundTaskQueue:
         """Enqueue append timeline entry task."""
         coro = self.queue.put(("append_timeline_entry", {"session_id": session_id, "messages": messages, "tool_metas": tool_metas}))
         asyncio.run_coroutine_threadsafe(coro, self._event_loop)
+
+# 启动任务队列
+task_queue: BackgroundTaskQueue = BackgroundTaskQueue()
+task_queue_thread: Thread = Thread(target=lambda: task_queue.start(), daemon=True)
+task_queue_thread.start()

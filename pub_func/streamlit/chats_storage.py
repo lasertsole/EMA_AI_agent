@@ -1,29 +1,14 @@
 import json
 import time
-from enum import Enum
 from pathlib import Path
 from collections import deque
-from pydantic import BaseModel
-from typing import List, Optional, TypedDict, Deque, Any
+from type import Chat, File, FileType
+from typing import List, Optional, Deque, Any
 
 current_dir = Path(__file__).parent.resolve()
 SESSION_FOLDER = (current_dir / '../../src/session').resolve()
 
-class FileType(Enum):
-    AUDIO = "audio"
-    IMAGE = "image"
 
-class Chat(BaseModel):
-    role: str
-    content: str
-    timestamp: str
-    audio_path_list: Optional[List[str]] =  None
-    image_path_list: Optional[List[str]] =  None
-
-class File(TypedDict):
-    content: bytes
-    type: FileType
-    extension: str # 后缀
 
 # 聊天记录存储类
 class ChatStorage:

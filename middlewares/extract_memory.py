@@ -1,7 +1,7 @@
 from typing import Any
 from threading import Thread
 from config import MEMORY_DIR
-from runtime import task_queue
+from tasks.queue import task_queue
 from langchain_core.messages import HumanMessage
 from langchain.agents.middleware import wrap_model_call, ModelRequest, ModelResponse
 

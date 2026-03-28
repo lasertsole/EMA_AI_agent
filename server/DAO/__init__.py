@@ -1,1 +1,1 @@
-from .messages import enqueue_append_timeline_entry, compress_history
+from .messages import enqueue_append_timeline_entry, compress_history, storage_add_chat
