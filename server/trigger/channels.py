@@ -1,9 +1,8 @@
 from threading import Thread
 from channels import BaseChannel
 from sessions import read_session
-from type import MultiModalMessage
-from ..DAO import storage_add_chat
 from typing import AsyncGenerator
+from type import MultiModalMessage
 from server.service import async_generator
 from channels.manager import ChannelManager
 from bus import InboundMessage, OutboundMessage
@@ -20,7 +19,6 @@ async def process_qq_inbound(message: InboundMessage, channel: BaseChannel) -> N
     user_input: MultiModalMessage = MultiModalMessage(text = user_input_text)
     session_id:str = str(string_to_unique_int(message.sender_id))
 
-    storage_add_chat(session_id = session_id, role="user", multi_modal_message = MultiModalMessage(text = user_input_text, image_base64_list = None))
     _history = read_session(session_id)
 
     ai_reply: str = ""
@@ -29,9 +27,6 @@ async def process_qq_inbound(message: InboundMessage, channel: BaseChannel) -> N
         ai_reply += process_sse_data(item)
 
     await channel.send(OutboundMessage(channel="qq", chat_id = message.chat_id, content = ai_reply))
-
-    storage_add_chat(session_id = session_id, role = "assistant", multi_modal_message = MultiModalMessage(text = ai_reply, image_base64_list=None))
-
 
 channel_manager.set_inbound_consumer(
     {
