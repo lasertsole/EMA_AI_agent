@@ -1,5 +1,7 @@
 import requests
 from robyn import SSEMessage
+
+from context_engine import after_turn
 from pub_func import get_config
 from config import ASSISTANT_NAME
 from type import MultiModalMessage
@@ -120,6 +122,11 @@ async def async_generator(session_id: str, history: List[dict[str, Any]], multi_
         yield SSEMessage(f"请求超时: {e.args[0]}")
 
     finally:
+        # 重置工具信息
+        current_tool_name = ""
+        current_tool_id = ""
+
+        # 消息列表所有信息
         all_messages: List[BaseMessage] = agent.get_state(config = get_config(session_id)).values.get("messages", [])
 
         # 将用户消息持久化

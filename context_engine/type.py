@@ -1,7 +1,5 @@
 from enum import Enum
-from pydantic import BaseModel, ConfigDict
-from langchain_core.embeddings import Embeddings
-from langchain_core.language_models import BaseChatModel
+from pydantic import BaseModel
 from typing import Any, List, Optional, Literal, TypedDict
 
 """
@@ -91,15 +89,13 @@ class RecallResult(BaseModel):
 
 # ─── 插件配置 ─────────────────────────────────────────────────
 class GmConfig(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
     db_path: str
     compact_turn_count: int
     recall_max_nodes: int
     recall_max_depth: int
     fresh_tail_count: int
-    embedding: Optional[Embeddings]
-    llm: Optional[BaseChatModel]
+    embedding: Optional[Any]
+    llm: Optional[Any]
     dedup_threshold: float
     pagerank_damping: float
     pagerank_iterations: int

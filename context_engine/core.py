@@ -3,10 +3,9 @@ import math
 import asyncio
 import logging
 from config import SRC_DIR
-from . import GmNode
-from .type import GmConfig
 from .recaller import Recaller
 from .extractor import Extractor
+from .type import GmConfig, GmNode
 from models import simple_chat_model, embed_model
 from typing import TypedDict, List, Any, Dict, Callable
 from .format import sanitize_tool_use_result_pairing, assemble_context
@@ -37,7 +36,7 @@ DEFAULT_CONFIG: GmConfig = GmConfig(
     pagerank_damping = 0.85,
     pagerank_iterations = 20,
     embedding = embed_model,
-    llm = simple_chat_model.bind()
+    llm = simple_chat_model
 )
 
 db = get_db()
@@ -47,7 +46,7 @@ extractor = Extractor(DEFAULT_CONFIG)
 # ── Session运行时状态 ──────────────────────────────────
 msg_seq: Dict[str, int] = {}
 recalled: Dict[str, RecallResult] = {}
-turnCounter = Dict[str, int] = {} # 社区维护计数器
+turnCounter: Dict[str, int] = {} # 社区维护计数器
 
 # ─── 取最后一轮完整用户对话 ─────────────────────────────────
 def estimate_msg_tokens(msg: BaseMessage) -> int:

@@ -13,8 +13,7 @@ def get_db():
         return _db
 
     _db_path.parent.mkdir(parents=True, exist_ok=True)
-
-    _db = sqlite3.connect(_db_path)
+    _db = sqlite3.connect(_db_path, check_same_thread=False)
 
     _db.execute("PRAGMA journal_mode = WAL")
     _db.execute("PRAGMA foreign_keys = ON")
