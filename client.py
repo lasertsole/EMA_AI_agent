@@ -38,12 +38,6 @@ if channels_json.exists():
         "channel_to_subscribe_ids": json.dumps(channels, ensure_ascii=False),
     }
     ws_query_string = urlencode(ws_query_params, doseq=True)
-
-@st.cache_resource
-def get_ws() -> WebSocket:
-    return create_connection(f"ws://{API_HOST}:{API_PORT}/ws?{ws_query_string}")
-
-ws: WebSocket = get_ws()
 #"""以上是创建websocket连接"""
 
 #"""以下是工具函数"""

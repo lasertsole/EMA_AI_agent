@@ -3,9 +3,10 @@ graph-memory — Assemble Context
 """
 
 import math
+from ..type import GmNode, GmEdge
 from datetime import datetime
-from typing import TypedDict, List, Dict, Set, Tuple, Optional, Any, Literal
 from sqlite3 import Connection
+from typing import TypedDict, List, Dict, Set, Optional, Any, Literal
 
 from ..store.core import get_community_summary, get_episodic_messages
 
@@ -141,33 +142,33 @@ def assemble_context(
     Returns:
         包含 XML、system prompt 和 token 数的结果字典
     """
-    active_nodes = params.get('active_nodes', [])
-    active_edges = params.get('active_edges', [])
-    recalled_nodes = params.get('recalled_nodes', [])
-    recalled_edges = params.get('recalled_edges', [])
+    active_nodes: List[GmNode] = params.get('active_nodes', [])
+    active_edges: List[GmEdge] = params.get('active_edges', [])
+    recalled_nodes: List[GmNode] = params.get('recalled_nodes', [])
+    recalled_edges: List[GmEdge] = params.get('recalled_edges', [])
 
     # recall 返回多少节点就放多少，不截断
     node_map: Dict[str, NodeWithSource] = {}
 
     for n in recalled_nodes:
         node_with_src = n.copy()
-        node_with_src['src'] = 'recalled'
-        node_map[n['id']] = node_with_src
+        node_with_src.src = 'recalled'
+        node_map[n.id] = node_with_src
 
     for n in active_nodes:
         node_with_src = n.copy()
         node_with_src['src'] = 'active'
         node_map[n['id']] = node_with_src
 
-    # 排序：本 session > SKILL 优先 > validatedCount > 全局 pagerank 基线
-    TYPE_PRI = {'SKILL': 3, 'TASK': 2, 'EVENT': 1}
+    # 排序：本 session > SKILL 优先 > validated_count > 全局 pagerank 基线
+    type_pri = {'SKILL': 3, 'TASK': 2, 'EVENT': 1}
 
     sorted_nodes = sorted(
         node_map.values(),
         key=lambda n: (
             0 if n['src'] == 'active' else 1,  # active 优先
-            -(TYPE_PRI.get(n['type'], 0)),  # SKILL 优先
-            -n['validated_count'],  # validatedCount 降序
+            -(type_pri.get(n['type'], 0)),  # SKILL 优先
+            -n['validated_count'],  # validated_count 降序
             -n['pagerank']  # pagerank 降序
         )
     )
@@ -193,10 +194,10 @@ def assemble_context(
     seen_edges: Set[str] = set()
     edges = [
         e for e in all_edges
-        if e['from_id'] in selected_ids
-           and e['to_id'] in selected_ids
-           and e['id'] not in seen_edges
-           and not seen_edges.add(e['id'])  # type: ignore
+        if e.from_id in selected_ids
+           and e.to_id in selected_ids
+           and e.id not in seen_edges
+           and not seen_edges.add(e.id)  # type: ignore
     ]
 
     # 按社区分组节点
@@ -271,7 +272,7 @@ def assemble_context(
     xml = f"<knowledge_graph>\n{nodes_xml}{edges_xml}\n</knowledge_graph>"
 
     # 构建 system prompt
-    selected_node_info = [{'type': n['type'], 'src': n['src']} for n in selected]
+    selected_node_info = [SelectedNode(type = n['type'], src = n['src']) for n in selected]
     system_prompt = build_system_prompt_addition(selected_node_info, len(edges))
 
     # ── 溯源选拉：PPR top 3 节点 → 拉原始 user/assistant 对话 ──

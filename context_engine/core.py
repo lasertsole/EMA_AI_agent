@@ -3,10 +3,10 @@ import math
 import asyncio
 import logging
 from config import SRC_DIR
-from . import CommunityResult
 from .recaller import Recaller
 from .extractor import Extractor
 from .type import GmConfig, GmNode
+from . import CommunityResult, UpsertResult
 from models import simple_chat_model, embed_model
 from typing import TypedDict, List, Any, Dict, Callable
 from .format import sanitize_tool_use_result_pairing, assemble_context
@@ -47,7 +47,7 @@ extractor = Extractor(DEFAULT_CONFIG)
 # ── Session运行时状态 ──────────────────────────────────
 msg_seq: Dict[str, int] = {}
 recalled: Dict[str, RecallResult] = {}
-turnCounter: Dict[str, int] = {} # 社区维护计数器
+turn_counter: Dict[str, int] = {} # 社区维护计数器
 
 # ─── 取最后一轮完整用户对话 ─────────────────────────────────
 def estimate_msg_tokens(msg: BaseMessage) -> int:
@@ -170,7 +170,7 @@ def normalize_message_content(messages: list[BaseMessage]) -> list[BaseMessage]:
             if isinstance(msg, dict):
                 new_msg = {**msg, "content": [{"type": "text", "text": ""}]}
             else:
-                new_msg = msg.model_copy(deep=True, update={"content": [{"type": "text", "text": ""}]})
+                new_msg = msg.model_copy(deep=True, update = {"content": [{"type": "text", "text": ""}]})
             result.append(new_msg)
             continue
 
@@ -182,7 +182,10 @@ def normalize_message_content(messages: list[BaseMessage]) -> list[BaseMessage]:
 
 def ingest_message(session_id: str, message: BaseMessage)-> None:
     """ 存一条消息到 gm_messages（同步，零 LLM）"""
+    global msg_seq
+
     seq = msg_seq.get(session_id)
+
     if seq is None:
         # 首次入库：从数据库读取当前最大 turn_index，避免重启后 turn_index 重叠
         cursor = db.cursor()
@@ -197,69 +200,68 @@ def ingest_message(session_id: str, message: BaseMessage)-> None:
     msg_seq[session_id] = seq
 
     role = getattr(message, 'type', 'unknown') or 'unknown'
-    save_message(db, session_id, seq, role, message)
+    content: str | List[dict[str, Any]] = getattr(message, 'content', '')
+
+    save_message(db, session_id, seq, role, content)
 
 
 async def run_turn_extract(session_id: str) -> None:
     """每轮结束后直接提取当前轮的消息"""
-    try:
-        # 获取未提取的消息（包含刚入库的）
-        msgs = get_unextracted(db, session_id, 50)
-        if not msgs:
-            return
+    # 获取未提取的消息（包含刚入库的）
+    msgs = get_unextracted(db, session_id, 50)
+    if not msgs:
+        return
 
-        existing = [node["name"] for node in get_by_session(db, session_id)]
-        result = await extractor.extract(messages= msgs, existing_names = existing)
+    existing = [node.name for node in get_by_session(db, session_id)]
+    result = await extractor.extract(messages=msgs, existing_names=existing)
 
-        name_to_id: Dict[str, str] = {}
-        for nc in getattr(result, "nodes", []):
-            upsert_result = upsert_node(
+    name_to_id: Dict[str, str] = {}
+    for nc in getattr(result, "nodes", []):
+        upsert_result: UpsertResult = upsert_node(
+            db=db,
+            c={
+                "type": nc.type,
+                "name": nc.name,
+                "description": nc.description,
+                "content": nc.content,
+            },
+            session_id=session_id
+        )
+        node = upsert_result["node"]
+        name_to_id[node.name] = node.id
+
+        # 异步生成 embedding，不阻塞主流程
+        asyncio.create_task(recaller.sync_embed(node))
+
+    for ec in getattr(result, "edges", []):
+        from_id = name_to_id.get(ec.from_node)
+        if from_id is None:
+            found = find_by_id(db, ec.from_node)
+            from_id = found.id if found else None
+
+        to_id = name_to_id.get(ec.to_node)
+        if to_id is None:
+            found = find_by_name(db, ec.to_node)
+            to_id = found.id if found else None
+
+        if from_id and to_id:
+            upsert_edge(
                 db,
-                {
-                    "type": nc["type"],
-                    "name": nc["name"],
-                    "description": nc["description"],
-                    "content": nc["content"],
-                },
-                session_id
+                edge_data = {
+                    "from_id": from_id,
+                    "to_id": to_id,
+                    "type": ec.type,
+                    "instruction": ec.instruction,
+                    "condition": ec.condition,
+                    "session_id": session_id,
+                }
             )
-            node = upsert_result["node"]
-            name_to_id[node["name"]] = node["id"]
 
-            # 异步生成 embedding，不阻塞主流程
-            asyncio.create_task(recaller.sync_embed(node))
+    max_turn = max(msg["turn_index"] for msg in msgs)
+    mark_extracted(db, session_id, max_turn)
 
-        for ec in getattr(result, "edges", []):
-            from_id = name_to_id.get(ec["from_node"])
-            if from_id is None:
-                found = find_by_id(db, ec["from_node"])
-                from_id = found["id"] if found else None
-
-            to_id = name_to_id.get(ec["to_node"])
-            if to_id is None:
-                found = find_by_name(db, ec["to_node"])
-                to_id = found["id"] if found else None
-
-            if from_id and to_id:
-                upsert_edge(
-                    db,
-                    {
-                        "from_id": from_id,
-                        "to_id": to_id,
-                        "type": ec["type"],
-                        "instruction": ec["instruction"],
-                        "condition": ec["condition"],
-                        "session_id": session_id,
-                    }
-                )
-
-        max_turn = max(msg["turn_index"] for msg in msgs)
-        mark_extracted(db, session_id, max_turn)
-
-        if getattr(result, "nodes", None) or getattr(result, "edges", None):
-            invalidate_graph_cache()
-    except Exception as e:
-        logger.error(f"[graph-memory] turn extract failed: {e}")
+    if getattr(result, "nodes", None) or getattr(result, "edges", None):
+        invalidate_graph_cache()
 
 
 async def assemble(
@@ -269,8 +271,8 @@ async def assemble(
     active_nodes = get_by_session(db, session_id)
     active_edges = []
     for node in active_nodes:
-        active_edges.extend(edges_from(db, node["id"]))
-        active_edges.extend(edges_to(db, node["id"]))
+        active_edges.extend(edges_from(db, node.id))
+        active_edges.extend(edges_to(db, node.id))
 
     rec = recalled.get(session_id, {"nodes": [], "edges": []})
     total_gm_nodes = len(active_nodes) + len(rec["nodes"])
@@ -338,7 +340,7 @@ async def compact(
         return {"ok": True, "compacted": False, "reason": "no messages"}
 
     try:
-        existing = [node["name"] for node in get_by_session(db, session_id)]
+        existing = [node.name for node in get_by_session(db, session_id)]
         result = await extractor.extract(messages=msgs, existing_names=existing)
 
         name_to_id: Dict[str, str] = {}
@@ -346,29 +348,29 @@ async def compact(
             upsert_result = upsert_node(
                 db,
                 {
-                    "type": nc["type"],
-                    "name": nc["name"],
-                    "description": nc["description"],
-                    "content": nc["content"],
+                    "type": nc.type,
+                    "name": nc.name,
+                    "description": nc.description,
+                    "content": nc.content,
                 },
                 session_id
             )
             node = upsert_result["node"]
-            name_to_id[node["name"]] = node["id"]
+            name_to_id[node.name] = node.id
 
             # 异步生成 embedding，不阻塞主流程
             asyncio.create_task(recaller.sync_embed(node))
 
         for ec in getattr(result, "edges", []):
-            from_id = name_to_id.get(ec["from_node"])
+            from_id = name_to_id.get(ec.from_node)
             if from_id is None:
-                found = find_by_name(db, ec["from_node"])
-                from_id = found["id"] if found else None
+                found = find_by_name(db, ec.from_node)
+                from_id = found.id if found else None
 
-            to_id = name_to_id.get(ec["to_node"])
+            to_id = name_to_id.get(ec.to_node)
             if to_id is None:
-                found = find_by_name(db, ec["to_node"])
-                to_id = found["id"] if found else None
+                found = find_by_name(db, ec.to_node)
+                to_id = found.id if found else None
 
             if from_id and to_id:
                 upsert_edge(
@@ -407,29 +409,20 @@ async def after_turn(
     """每轮对话后的处理钩子"""
 
     # 消息入库（同步，零 LLM）
-    new_messages = slice_last_turn(messages)
+    new_messages = slice_last_turn(messages).get("messages", [])
 
     for message in new_messages:
         ingest_message(session_id, message)
 
-    total_msgs = msg_seq.get(session_id, 0)
-    logger.info(
-        f"[graph-memory] after_turn sid={session_id[:8]} "
-        f"new_msgs={len(new_messages)} total_msgs={total_msgs}"
-    )
-
     # ★ 每轮直接提取（后台任务）
     async def run_extract():
-        try:
-            await run_turn_extract(session_id)
-        except Exception as err:
-            logger.error(f"[graph-memory] turn extract failed: {err}")
+        await run_turn_extract(session_id)
 
     asyncio.create_task(run_extract())
 
     # ★ 社区维护：每 N 轮触发一次（纯计算，<5ms）
-    turns = turnCounter.get(session_id, 0) + 1
-    turnCounter[session_id] = turns
+    turns = turn_counter.get(session_id, 0) + 1
+    turn_counter[session_id] = turns
     maintain_interval = getattr(DEFAULT_CONFIG, 'compact_turn_count', 7)
 
     if turns % maintain_interval == 0:
@@ -485,19 +478,19 @@ async def dispose() -> None:
 async def session_end(event: dict, ctx: dict) -> None:
     """Session 结束时的清理和知识固化操作"""
     # 获取 session ID（兼容多种字段名）
-    sid = (
+    session_id = (
             ctx.get("sessionKey")
             or ctx.get("sessionId")
             or event.get("sessionKey")
             or event.get("sessionId")
     )
 
-    if not sid:
+    if not session_id:
         return
 
     try:
         # 获取该 session 的所有节点
-        nodes: List[GmNode] = get_by_session(db, sid)
+        nodes: List[GmNode] = get_by_session(db, session_id)
 
         if nodes:
             # 获取全局 Top 20 节点作为图谱摘要
@@ -533,7 +526,7 @@ async def session_end(event: dict, ctx: dict) -> None:
                             "description": nc.description or "",
                             "content": nc.content,
                         },
-                        sid
+                        session_id
                     )
 
             # 处理新边
@@ -545,11 +538,11 @@ async def session_end(event: dict, ctx: dict) -> None:
                     upsert_edge(
                         db,
                         {
-                            "from_id": from_node["id"],
-                            "to_id": to_node["id"],
+                            "from_id": from_node.id,
+                            "to_id": to_node.id,
                             "type": ec.type,
                             "instruction": ec.instruction,
-                            "session_id": sid,
+                            "session_id": session_id,
                         }
                     )
 
@@ -579,6 +572,6 @@ async def session_end(event: dict, ctx: dict) -> None:
         logger.error(f"[graph-memory] session_end error: {err}")
     finally:
         # 清理 Session 状态
-        msg_seq.pop(sid, None)
-        recalled.pop(sid, None)
-        turnCounter.pop(sid, None)
+        msg_seq.pop(session_id, None)
+        recalled.pop(session_id, None)
+        turn_counter.pop(session_id, None)

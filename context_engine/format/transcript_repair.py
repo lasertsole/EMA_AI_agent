@@ -65,10 +65,7 @@ def extract_tool_calls_from_assistant(msg: AIMessage) -> List[ToolCallLike]:
         block_type = block.get('type')
 
         if isinstance(block_type, str) and block_type == "tool_call":
-            calls.append({
-                'id': call_id,
-                'name': block.get('name') if isinstance(block.get('name'), str) else None,
-            })
+            calls.append(ToolCallLike(id = call_id, name = block.get('name') if isinstance(block.get('name'), str) else None, error=None))
 
     return calls
 

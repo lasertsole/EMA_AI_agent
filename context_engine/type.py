@@ -1,6 +1,6 @@
 from enum import Enum
 from pydantic import BaseModel
-from typing import Any, List, Optional, Literal, TypedDict
+from typing import Any, List, Optional, Literal
 
 """
     graph-memory 类型定义
@@ -17,7 +17,7 @@ class NodeStatus(Enum):
     ACTIVE = "active"
     DEPRECATED = "deprecated"
 
-class Node(TypedDict):
+class Node(BaseModel):
     type: NodeType
     name: str
     description: str

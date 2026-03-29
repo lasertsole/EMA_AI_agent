@@ -86,14 +86,7 @@ def load_graph(db: Connection) -> GraphStructure:
         adj[from_id].append(to_id)
         adj[to_id].append(from_id)
 
-    _cached = {
-        'node_ids': node_ids,
-        'adj': adj,
-        'n': len(node_ids),
-        'cached_at': int(time.time() * 1000),
-    }
-
-    return _cached
+    return GraphStructure(node_ids=node_ids, adj=adj, n=len(node_ids), cached_at=int(time.time() * 1000))
 
 
 def invalidate_graph_cache() -> None:
@@ -138,8 +131,8 @@ def personalized_page_rank(
     adj = graph['adj']
     n = graph['n']
 
-    damping = cfg.get('pagerank_damping', 0.85)
-    iterations = cfg.get('pagerank_iterations', 20)
+    damping = getattr(cfg, 'pagerank_damping', 0.85)
+    iterations = getattr(cfg, 'pagerank_iterations', 20)
 
     if n == 0 or not seed_ids:
         return {'scores': {}}
@@ -230,8 +223,8 @@ def compute_global_page_rank(db: Connection, cfg: GmConfig) -> GlobalPageRankRes
     adj = graph['adj']
     n = graph['n']
 
-    damping = cfg.get('pagerank_damping', 0.85)
-    iterations = cfg.get('pagerank_iterations', 20)
+    damping = getattr(cfg, 'pagerank_damping', 0.85)
+    iterations = getattr(cfg, 'pagerank_iterations', 20)
 
     if n == 0:
         return {'scores': {}, 'top_k': []}

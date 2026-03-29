@@ -4,7 +4,7 @@ import time
 import random
 import string
 import sqlite3
-from typing import Any, Optional, List, TypedDict
+from typing import Any, Optional, List, TypedDict, Set
 from ..type import GmNode, GmEdge
 
 # ─── 工具 ─────────────────────────────────────────────────────
@@ -89,23 +89,26 @@ def upsert_node(db: sqlite3.Connection, c: dict, session_id: str) -> UpsertResul
     now = int(time.time() * 1000)
 
     if ex:
-        old_sessions = json.loads(ex.get('source_sessions', '[]'))
-        sessions_set = set(old_sessions)
+        print(ex)
+        old_sessions: List[str] = getattr(ex, 'source_sessions', [])
+        sessions_set: Set[str] = set(old_sessions)
         sessions_set.add(session_id)
-        sessions_json = json.dumps(list(sessions_set))
+        sessions_json:str = json.dumps(list(sessions_set))
 
-        content = c['content'] if len(c['content']) > len(ex['content']) else ex['content']
-        desc = c['description'] if len(c['description']) > len(ex['description']) else ex['description']
-        count = ex['validated_count'] + 1
+        content = c['content'] if len(c['content']) > len(ex.content) else ex.content
+        desc = c['description'] if len(c['description']) > len(ex.description) else ex.description
+        count = ex.validated_count + 1
 
         with db:
             db.execute("""
                 UPDATE gm_nodes 
                 SET content=?, description=?, validated_count=?, source_sessions=?, updated_at=? 
                 WHERE id=?
-            """, (content, desc, count, sessions_json, now, ex['id']))
+            """, (content, desc, count, sessions_json, now, ex.id))
 
-        ex.update({"content": content, "description": desc, "validated_count": count})
+        ex = ex.model_copy(update = {"content": content, "description": desc, "validated_count": count})
+        db.commit()
+
         return {"node": ex, "isNew": False}
 
     new_id = uid("n")
@@ -117,6 +120,7 @@ def upsert_node(db: sqlite3.Connection, c: dict, session_id: str) -> UpsertResul
             (id, type, name, description, content, status, validated_count, source_sessions, created_at, updated_at)
             VALUES (?,?,?,?,?, 'active', 1, ?, ?, ?)
         """, (new_id, c['type'], name, c['description'], c['content'], sessions_json, now, now))
+        db.commit()
 
     return {"node": find_by_name(db, name), "isNew": True}
 
@@ -127,7 +131,7 @@ def deprecate(db: sqlite3.Connection, node_id: str) -> None:
         "UPDATE gm_nodes SET status='deprecated', updated_at=? WHERE id=?",
         (int(time.time() * 1000), node_id)
     )
-
+    db.commit()
 
 # 合并两个节点：keepId 保留，mergeId 标记 deprecated，边迁移
 def merge_nodes(db: sqlite3.Connection, keep_id: str, merge_id: str) -> None:
@@ -167,6 +171,8 @@ def merge_nodes(db: sqlite3.Connection, keep_id: str, merge_id: str) -> None:
         )
     """)
 
+    db.commit()
+
     # 最后将被合并的节点标记为已弃用
     deprecate(db, merge_id)
 
@@ -177,9 +183,9 @@ def update_pageranks(db: sqlite3.Connection, scores: dict) -> None:
         db.execute("BEGIN")
         for node_id, score in scores.items():
             cursor.execute("UPDATE gm_nodes SET pagerank=? WHERE id=?", (score, node_id))
-        db.execute("COMMIT")
+        db.commit()
     except Exception as e:
-        db.execute("ROLLBACK")
+        db.rollback()
         raise e
 
 
@@ -207,7 +213,7 @@ def upsert_edge(
     # 检查是否已存在相同的边（from_id, to_id, type）
     existing = db.execute(
         "SELECT id FROM gm_edges WHERE from_id=? AND to_id=? AND type=?",
-        (edge_data['fromId'], edge_data['toId'], edge_data['type'])
+        (edge_data['from_id'], edge_data['to_id'], edge_data['type'])
     ).fetchone()
 
     if existing:
@@ -224,15 +230,16 @@ def upsert_edge(
             VALUES (?,?,?,?,?,?,?,?)""",
             (
                 uid("e"),  # 生成唯一ID
-                edge_data['fromId'],
-                edge_data['toId'],
+                edge_data['from_id'],
+                edge_data['to_id'],
                 edge_data['type'],
                 edge_data['instruction'],
                 edge_data.get('condition'),  # 使用get避免KeyError
-                edge_data['sessionId'],
+                edge_data['session_id'],
                 int(time.time() * 1000)  # 当前时间戳
             )
         )
+    db.commit()
 
 
 def edges_from(db: sqlite3.Connection, node_id: str) -> list:
@@ -383,7 +390,7 @@ def get_by_session(db: sqlite3.Connection, session_id: str) -> list[GmNode]:
 # ─── 消息 CRUD ───────────────────────────────────────────────
 def save_message(
         db: sqlite3.Connection,
-        sid: str,
+        session_id: str,
         turn: int,
         role: str,
         content: Any
@@ -395,10 +402,10 @@ def save_message(
     db.execute("""
         INSERT OR IGNORE INTO gm_messages (id, session_id, turn_index, role, content, created_at)
         VALUES (?,?,?,?,?,?)
-    """, (uid("m"), sid, turn, role, json.dumps(content, ensure_ascii=False), int(time.time() * 1000)))
+    """, (uid("m"), session_id, turn, role, json.dumps(content, ensure_ascii=False), int(time.time() * 1000)))
+    db.commit()
 
-
-def get_messages(db: sqlite3.Connection, sid: str, limit: Optional[int] = None) -> list:
+def get_messages(db: sqlite3.Connection, session_id: str, limit: Optional[int] = None) -> list:
     """获取指定 session 的消息"""
     db.row_factory = sqlite3.Row
 
@@ -409,19 +416,19 @@ def get_messages(db: sqlite3.Connection, sid: str, limit: Optional[int] = None) 
             ORDER BY turn_index DESC 
             LIMIT ?
         """
-        rows = db.execute(sql, (sid, limit)).fetchall()
+        rows = db.execute(sql, (session_id, limit)).fetchall()
     else:
         sql = """
             SELECT * FROM gm_messages 
             WHERE session_id=? 
             ORDER BY turn_index
         """
-        rows = db.execute(sql, (sid,)).fetchall()
+        rows = db.execute(sql, (session_id,)).fetchall()
 
     return [dict(row) for row in rows]
 
 
-def get_unextracted(db: sqlite3.Connection, sid: str, limit: int) -> list:
+def get_unextracted(db: sqlite3.Connection, session_id: str, limit: int) -> list:
     """获取未提取的消息"""
     db.row_factory = sqlite3.Row
 
@@ -431,18 +438,18 @@ def get_unextracted(db: sqlite3.Connection, sid: str, limit: int) -> list:
         ORDER BY turn_index 
         LIMIT ?
     """
-    rows = db.execute(sql, (sid, limit)).fetchall()
+    rows = db.execute(sql, (session_id, limit)).fetchall()
     return [dict(row) for row in rows]
 
 
-def mark_extracted(db: sqlite3.Connection, sid: str, up_to_turn: int) -> None:
+def mark_extracted(db: sqlite3.Connection, session_id: str, up_to_turn: int) -> None:
     """标记消息已提取"""
     db.execute("""
         UPDATE gm_messages 
         SET extracted=1 
         WHERE session_id=? AND turn_index<=?
-    """, (sid, up_to_turn))
-
+    """, (session_id, up_to_turn))
+    db.commit()
 
 def get_episodic_messages(
         db: sqlite3.Connection,
@@ -460,7 +467,7 @@ def get_episodic_messages(
         max_chars: 总字符上限
 
     Returns:
-        包含 sessionId, turnIndex, role, text, createdAt 的字典列表
+        包含 session_id, turnIndex, role, text, createdAt 的字典列表
     """
     import json
 
@@ -471,7 +478,7 @@ def get_episodic_messages(
     used_chars = 0
 
     db.row_factory = sqlite3.Row
-    for sid in session_ids:
+    for session_id in session_ids:
         if used_chars >= max_chars:
             break
 
@@ -481,7 +488,7 @@ def get_episodic_messages(
             ORDER BY ABS(created_at - ?) ASC
             LIMIT 6
         """
-        rows = db.execute(sql, (sid, near_time)).fetchall()
+        rows = db.execute(sql, (session_id, near_time)).fetchall()
 
         for r in rows:
             if used_chars >= max_chars:
@@ -513,7 +520,7 @@ def get_episodic_messages(
 
             truncated = text[:max_chars - used_chars]
             results.append({
-                'session_id': sid,
+                'session_id': session_id,
                 'turn_index': row_dict['turn_index'],
                 'role': row_dict['role'],
                 'text': truncated,
@@ -525,7 +532,7 @@ def get_episodic_messages(
 
 
 # ─── 信号 CRUD ───────────────────────────────────────────────
-def save_signal(db: sqlite3.Connection, sid: str, signal_data: dict) -> None:
+def save_signal(db: sqlite3.Connection, session_id: str, signal_data: dict) -> None:
     """保存信号到数据库"""
     import json
     import time
@@ -533,11 +540,11 @@ def save_signal(db: sqlite3.Connection, sid: str, signal_data: dict) -> None:
     db.execute("""
         INSERT INTO gm_signals (id, session_id, turn_index, type, data, created_at)
         VALUES (?,?,?,?,?,?)
-    """, (uid("s"), sid, signal_data['turnIndex'], signal_data['type'],
+    """, (uid("s"), session_id, signal_data['turnIndex'], signal_data['type'],
           json.dumps(signal_data['data']), int(time.time() * 1000)))
+    db.commit()
 
-
-def pending_signals(db: sqlite3.Connection, sid: str) -> list:
+def pending_signals(db: sqlite3.Connection, session_id: str) -> list:
     """获取未处理的信号"""
     import json
 
@@ -547,7 +554,7 @@ def pending_signals(db: sqlite3.Connection, sid: str) -> list:
         WHERE session_id=? AND processed=0 
         ORDER BY turn_index
     """
-    rows = db.execute(sql, (sid,)).fetchall()
+    rows = db.execute(sql, (session_id,)).fetchall()
 
     return [
         {
@@ -559,14 +566,14 @@ def pending_signals(db: sqlite3.Connection, sid: str) -> list:
     ]
 
 
-def mark_signals_done(db: sqlite3.Connection, sid: str) -> None:
+def mark_signals_done(db: sqlite3.Connection, session_id: str) -> None:
     """标记信号处理完成"""
     db.execute("""
         UPDATE gm_signals 
         SET processed=1 
         WHERE session_id=?
-    """, (sid,))
-
+    """, (session_id,))
+    db.commit()
 
 # ─── 统计 ────────────────────────────────────────────────────
 def get_stats(db: sqlite3.Connection) -> dict:
@@ -632,7 +639,7 @@ def save_vector(
         INSERT INTO gm_vectors (node_id, content_hash, embedding) VALUES (?,?,?)
         ON CONFLICT(node_id) DO UPDATE SET content_hash=excluded.content_hash, embedding=excluded.embedding
     """, (node_id, content_hash, json.dumps(vec)))
-
+    db.commit()
 
 def get_vector_hash(db: sqlite3.Connection, node_id: str) -> Optional[str]:
     """获取向量的内容哈希"""
@@ -809,6 +816,7 @@ def upsert_community_summary(
         """, (summary_id, summary_text, node_count,
               json.dumps(embedding) if embedding else None, now, now))
 
+    db.commit()
 
 def get_community_summary(
         db: sqlite3.Connection,
@@ -825,13 +833,13 @@ def get_community_summary(
     if not row:
         return None
 
-    return {
-        'id': row['id'],
-        'summary': row['summary'],
-        'node_count': row['node_count'],
-        'created_at': row['created_at'],
-        'updated_at': row['updated_at']
-    }
+    return CommunitySummary(
+        id = row['id'],
+        summary = row['summary'],
+        node_count = row['node_count'],
+        created_at = row['created_at'],
+        updated_at = row['updated_at']
+    )
 
 def get_all_community_summaries(
         db: sqlite3.Connection

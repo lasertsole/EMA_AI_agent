@@ -3,9 +3,9 @@ from robyn import SSEMessage
 from pub_func import get_config
 from config import ASSISTANT_NAME
 from type import MultiModalMessage
-from context_engine import after_turn
 from agent import built_agent, ModelType
 from langchain.messages import AIMessageChunk
+from context_engine import after_turn, assemble
 from sessions import viking_routing, load_summary
 from typing import AsyncGenerator, Any, Dict, List
 from langgraph.graph.state import CompiledStateGraph
@@ -14,39 +14,45 @@ from ..DAO import enqueue_append_timeline_entry, compress_history, storage_add_c
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage, SystemMessage, BaseMessage, ToolCall, ToolCallChunk
 
 """以下是组装自带上下文的agent逻辑"""
-def _assemble_agent(session_id: str, history: List[dict[str, Any]], multi_modal_message: MultiModalMessage) -> CompiledStateGraph:
+async def _assemble_agent(session_id: str, history: List[dict[str, Any]], multi_modal_message: MultiModalMessage) -> CompiledStateGraph:
+    # 将List[dict[str, Any]]转换为List[BaseMessage]
+    mes_history: List[BaseMessage] = []
+    for m in history:
+        role:str = m.get("role")
+        if role == "user":
+            mes_history.append(HumanMessage(content=m.get("content", "")))
+        elif role == "assistant":
+            mes_history.append(AIMessage(content=m.get("content", "")))
+        elif role == "tool":
+            mes_history.append(
+                ToolMessage(
+                    content=m.get("content", ""),
+                    tool_call_id=m.get("tool_call_id", ""),
+                )
+            )
+
     # 创建agent
     agent: CompiledStateGraph = built_agent()
 
     user_input:str = multi_modal_message.text
+
+    # await assemble(session_id = session_id, messages = mes_history)
 
     # 使用open-viking路由
     viking_result: Dict[str, Any] = viking_routing(session_id = session_id, user_input = user_input)
     files: List[str] = viking_result.get("file_names", [])
     context:str = viking_result.get("context", "")
 
-    #"""将历史对话和当前用户输入拼接成消息队列"""
     # 加入系统提示
-    messages: List[Any] = [SystemMessage(content = build_system_prompt(selected_file_names = files) + context)]
+    messages: List[BaseMessage] = [SystemMessage(content = build_system_prompt(selected_file_names = files) + context)]
 
     # 加入摘要
     summary:str = load_summary(session_id=session_id)
     if summary and len(summary) > 0:
         messages.append(HumanMessage(content=summary))
 
-    for m in history:
-        role:str = m.get("role")
-        if role == "user":
-            messages.append(HumanMessage(content=m.get("content", "")))
-        elif role == "assistant":
-            messages.append(AIMessage(content=m.get("content", "")))
-        elif role == "tool":
-            messages.append(
-                ToolMessage(
-                    content=m.get("content", ""),
-                    tool_call_id=m.get("tool_call_id", ""),
-                )
-            )
+    # 消息列表中加入历史对话
+    messages += mes_history
 
     content_list:List[dict[str, str]] = [{"type": "text", "text": multi_modal_message.text}]
     if multi_modal_message.image_base64_list:
@@ -72,7 +78,7 @@ async def async_generator(session_id: str, history: List[dict[str, Any]], multi_
     global current_tool_id
 
     # 创建已经组装好上下文的agent
-    agent = _assemble_agent(session_id, history, multi_modal_message)
+    agent = await _assemble_agent(session_id, history, multi_modal_message)
 
     ai_content:str = ""
 
@@ -131,6 +137,9 @@ async def async_generator(session_id: str, history: List[dict[str, Any]], multi_
     except requests.exceptions.Timeout as e:
         yield SSEMessage(f"请求超时: {e.args[0]}")
 
+    except Exception as e:
+        raise Exception(e)
+
     finally:
         # 重置工具信息
         current_tool_name = ""
@@ -139,13 +148,13 @@ async def async_generator(session_id: str, history: List[dict[str, Any]], multi_
         # 消息列表所有信息
         all_messages: List[BaseMessage] = agent.get_state(config = get_config(session_id)).values.get("messages", [])
 
+        await after_turn(session_id = session_id, messages = all_messages)
+
         # 将用户消息持久化
         storage_add_chat(session_id = session_id, role = "user", multi_modal_message = multi_modal_message)
         storage_add_chat(session_id = session_id, role = "assistant", multi_modal_message = MultiModalMessage(text=ai_content, image_base64_list=None))
 
         #enqueue_append_timeline_entry(session_id = session_id, human_content = multi_modal_message.text, ai_content = ai_content)
         compress_history(session_id = session_id, all_messages = all_messages)
-
-        await after_turn(session_id = session_id, messages = all_messages)
 
 """以上是返回信息逻辑"""

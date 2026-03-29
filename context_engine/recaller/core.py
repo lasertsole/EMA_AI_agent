@@ -20,7 +20,7 @@ from ..type import GmConfig, GmNode, GmEdge
 from langchain_core.embeddings import Embeddings
 from ..graph.community import get_community_peers
 from ..graph.pagerank import personalized_page_rank
-from typing import TypedDict, List, Dict, Set, Optional, Any, Callable, Awaitable
+from typing import TypedDict, List, Dict, Set, Optional, Callable, Awaitable
 from ..store.core import (
     search_nodes, vector_search_with_score,
     graph_walk, community_representatives,
@@ -79,7 +79,7 @@ class Recaller:
         Returns:
             召回结果（节点、边、token 估算）
         """
-        limit = self.cfg.get('recall_max_nodes', 6)
+        limit = getattr(self.cfg, 'recall_max_nodes', 6)
 
         # ── 两条路径各自独立跑满，不分配额 ──────────────────
         precise = await self._recall_precise(query, limit)
@@ -90,9 +90,9 @@ class Recaller:
 
         if os.environ.get('GM_DEBUG'):
             communities = {
-                n.get('community_id')
+                n.community_id
                 for n in merged['nodes']
-                if n.get('community_id')
+                if n.community_id
             }
 
             print(
@@ -147,20 +147,20 @@ class Recaller:
         if not seeds:
             return {'nodes': [], 'edges': [], 'token_estimate': 0}
 
-        seed_ids = [n['id'] for n in seeds]
+        seed_ids = [n.id for n in seeds]
 
         # 社区扩展
         expanded_ids: Set[str] = set(seed_ids)
 
         for seed in seeds:
-            peers = get_community_peers(self.db, seed['id'], 2)
+            peers = get_community_peers(self.db, seed.id, 2)
             expanded_ids.update(peers)
 
         # 图遍历拿三元组
         walk_result = graph_walk(
             self.db,
             list(expanded_ids),
-            self.cfg.get('recall_max_depth', 2),
+            getattr(self.cfg, 'recall_max_hops', 2)
         )
 
         nodes = walk_result['nodes']
@@ -245,7 +245,7 @@ class Recaller:
         if not seeds:
             return {'nodes': [], 'edges': [], 'token_estimate': 0}
 
-        seed_ids = [n['id'] for n in seeds]
+        seed_ids = [n.id for n in seeds]
 
         walk_result = graph_walk(self.db, seed_ids, 1)
         nodes = walk_result['nodes']
@@ -255,7 +255,7 @@ class Recaller:
             return {'nodes': [], 'edges': [], 'token_estimate': 0}
 
         # 个性化 PageRank 排序
-        candidate_ids = [n['id'] for n in nodes]
+        candidate_ids = [n.id for n in nodes]
         ppr_result = personalized_page_rank(
             self.db, seed_ids, candidate_ids, self.cfg
         )
@@ -312,24 +312,24 @@ class Recaller:
 
         # 精确路径全部入场
         for n in precise['nodes']:
-            node_map[n['id']] = n
+            node_map[n.id] = n
 
         for e in precise['edges']:
-            edge_map[e['id']] = e
+            edge_map[e.id] = e
 
         # 泛化路径去重后全部入场
         for n in generalized['nodes']:
-            if n['id'] not in node_map:
-                node_map[n['id']] = n
+            if n.id not in node_map:
+                node_map[n.id] = n
 
         # 合并边：两端都在最终节点集中的边才保留
         final_ids = set(node_map.keys())
 
         for e in generalized['edges']:
-            if (e['id'] not in edge_map and
-                e['from_id'] in final_ids and
-                e['to_id'] in final_ids):
-                edge_map[e['id']] = e
+            if (e.id not in edge_map and
+                e.from_id in final_ids and
+                e.to_id in final_ids):
+                edge_map[e.id] = e
 
         nodes = list(node_map.values())
         edges = list(edge_map.values())
@@ -351,7 +351,7 @@ class Recaller:
             估算的 token 数
         """
         total_chars = sum(
-            len(n.get('content', '')) + len(n.get('description', ''))
+            len(getattr(n, 'content', '')) + len(getattr(n, 'description', ''))
             for n in nodes
         )
         return math.ceil(total_chars / 3)
@@ -375,14 +375,14 @@ class Recaller:
             return
 
         try:
-            name = node.get('name', '')
-            description = node.get('description', '')
+            name = getattr(node, 'name', '')
+            description =getattr(node, 'description', '')
             text = f"{name}: {description}\n{content[:500]}"
 
             vec = await self.embed.aembed_query(text)
 
             if vec:
-                save_vector(self.db, node['id'], content, vec)
+                save_vector(self.db, getattr(node, 'id', ''), content, vec)
 
         except Exception:
             # 不影响主流程

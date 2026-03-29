@@ -11,13 +11,6 @@ from bus.events import InboundMessage, OutboundMessage
 logger = logging.getLogger(__name__)
 
 class BaseChannel(ABC):
-    """
-    Abstract base class for chat channel implementations.
-
-    Each channel (Telegram, Discord, etc.) should implement this interface
-    to integrate with the nanobot message bus.
-    """
-
     name: str = "base"
     display_name: str = "Base"
 

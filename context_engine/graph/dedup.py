@@ -87,7 +87,7 @@ def detect_duplicates(db: Connection, cfg: GmConfig) -> List[DuplicatePair]:
     if len(vectors_data) < 2:
         return []
 
-    threshold = cfg.get('dedup_threshold', 0.90)
+    threshold = getattr(cfg, 'dedup_threshold', 0.90)
     pairs: List[DuplicatePair] = []
 
     for i in range(len(vectors_data)):
@@ -103,10 +103,10 @@ def detect_duplicates(db: Connection, cfg: GmConfig) -> List[DuplicatePair]:
 
                 if node_a and node_b:
                     pairs.append({
-                        'node_a': node_a['id'],
-                        'node_b': node_b['id'],
-                        'name_a': node_a['name'],
-                        'name_b': node_b['name'],
+                        'node_a': node_a.id,
+                        'node_b': node_b.id,
+                        'name_a': node_a.name,
+                        'name_b': node_b.name,
                         'similarity': sim,
                     })
 
@@ -147,27 +147,27 @@ def dedup(db: Connection, cfg: GmConfig) -> DedupResult:
             continue
 
         # 只合并同类型节点
-        if node_a['type'] != node_b['type']:
+        if node_a.type != node_b.type:
             continue
 
         # 决定保留哪个节点
         keep_id: str
         merge_id: str
 
-        if node_a['validated_count'] > node_b['validated_count']:
-            keep_id = node_a['id']
-            merge_id = node_b['id']
-        elif node_b['validated_count'] > node_a['validated_count']:
-            keep_id = node_b['id']
-            merge_id = node_a['id']
+        if node_a.validated_count > node_b.validated_count:
+            keep_id = node_a.id
+            merge_id = node_b.id
+        elif node_b.validated_count > node_a.validated_count:
+            keep_id = node_b.id
+            merge_id = node_a.id
         else:
             # validated_count 相同则保留更新更近的
-            if node_a['updated_at'] >= node_b['updated_at']:
-                keep_id = node_a['id']
-                merge_id = node_b['id']
+            if node_a.updated_at >= node_b.updated_at:
+                keep_id = node_a.id
+                merge_id = node_b.id
             else:
-                keep_id = node_b['id']
-                merge_id = node_a['id']
+                keep_id = node_b.id
+                merge_id = node_a.id
 
         merge_nodes(db, keep_id, merge_id)
         consumed.add(merge_id)
