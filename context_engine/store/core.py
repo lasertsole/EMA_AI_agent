@@ -423,6 +423,8 @@ def get_messages(db: sqlite3.Connection, sid: str, limit: Optional[int] = None) 
 
 def get_unextracted(db: sqlite3.Connection, sid: str, limit: int) -> list:
     """获取未提取的消息"""
+    db.row_factory = sqlite3.Row
+
     sql = """
         SELECT * FROM gm_messages 
         WHERE session_id=? AND extracted=0 

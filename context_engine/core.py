@@ -3,6 +3,7 @@ import math
 import asyncio
 import logging
 from config import SRC_DIR
+from . import CommunityResult
 from .recaller import Recaller
 from .extractor import Extractor
 from .type import GmConfig, GmNode
@@ -10,7 +11,7 @@ from models import simple_chat_model, embed_model
 from typing import TypedDict, List, Any, Dict, Callable
 from .format import sanitize_tool_use_result_pairing, assemble_context
 from langchain_core.messages import BaseMessage, HumanMessage, ToolMessage
-from .graph import invalidate_graph_cache, compute_global_page_rank, detect_communities, summarize_communities, run_maintenance
+from .graph import invalidate_graph_cache, detect_communities, summarize_communities, run_maintenance
 from .store import get_db, deprecate, save_message, get_unextracted, get_by_session, upsert_node, find_by_id, find_by_name,\
                    upsert_edge, mark_extracted, edges_from, edges_to
 
@@ -211,7 +212,7 @@ async def run_turn_extract(session_id: str) -> None:
         result = await extractor.extract(messages= msgs, existing_names = existing)
 
         name_to_id: Dict[str, str] = {}
-        for nc in result["nodes"]:
+        for nc in getattr(result, "nodes", []):
             upsert_result = upsert_node(
                 db,
                 {
@@ -228,7 +229,7 @@ async def run_turn_extract(session_id: str) -> None:
             # 异步生成 embedding，不阻塞主流程
             asyncio.create_task(recaller.sync_embed(node))
 
-        for ec in result["edges"]:
+        for ec in getattr(result, "edges", []):
             from_id = name_to_id.get(ec["from_node"])
             if from_id is None:
                 found = find_by_id(db, ec["from_node"])
@@ -255,7 +256,7 @@ async def run_turn_extract(session_id: str) -> None:
         max_turn = max(msg["turn_index"] for msg in msgs)
         mark_extracted(db, session_id, max_turn)
 
-        if result["nodes"] or result["edges"]:
+        if getattr(result, "nodes", None) or getattr(result, "edges", None):
             invalidate_graph_cache()
     except Exception as e:
         logger.error(f"[graph-memory] turn extract failed: {e}")
@@ -316,7 +317,7 @@ async def assemble(
     if filtered_parts:
         system_prompt_addition = "\n\n".join(filtered_parts)
 
-    result = {
+    result: Dict[str, Any] = {
         "messages": normalize_message_content(repaired),
         "estimated_tokens": gm_tokens + last_turn["tokens"],
     }
@@ -341,7 +342,7 @@ async def compact(
         result = await extractor.extract(messages=msgs, existing_names=existing)
 
         name_to_id: Dict[str, str] = {}
-        for nc in result["nodes"]:
+        for nc in getattr(result, "nodes", []):
             upsert_result = upsert_node(
                 db,
                 {
@@ -358,7 +359,7 @@ async def compact(
             # 异步生成 embedding，不阻塞主流程
             asyncio.create_task(recaller.sync_embed(node))
 
-        for ec in result["edges"]:
+        for ec in getattr(result, "edges", []):
             from_id = name_to_id.get(ec["from_node"])
             if from_id is None:
                 found = find_by_name(db, ec["from_node"])
@@ -389,8 +390,8 @@ async def compact(
             "ok": True,
             "compacted": True,
             "result": {
-                "summary": f"extracted {len(result['nodes'])} nodes, "
-                           f"{len(result['edges'])} edges",
+                "summary": f"extracted {len(getattr(result, "nodes", []))} nodes, "
+                           f"{len(getattr(result, "edges", []))} edges",
                 "tokens_before": current_token_count if current_token_count else 0,
             },
         }
@@ -407,7 +408,6 @@ async def after_turn(
 
     # 消息入库（同步，零 LLM）
     new_messages = slice_last_turn(messages)
-    print(new_messages)
 
     for message in new_messages:
         ingest_message(session_id, message)
@@ -422,7 +422,6 @@ async def after_turn(
     async def run_extract():
         try:
             await run_turn_extract(session_id)
-            print(123)
         except Exception as err:
             logger.error(f"[graph-memory] turn extract failed: {err}")
 
@@ -436,16 +435,7 @@ async def after_turn(
     if turns % maintain_interval == 0:
         try:
             invalidate_graph_cache()
-            pr = compute_global_page_rank(db, DEFAULT_CONFIG)
-            comm = detect_communities(db)
-
-            # 提取 top 3 节点名称
-            top_names = [n["name"] for n in pr["top_k"][:3]]
-            logger.info(
-                f"[graph-memory] periodic maintenance (turn {turns}): "
-                f"pagerank top={', '.join(top_names)}, "
-                f"communities={comm['count']}"
-            )
+            comm: CommunityResult = detect_communities(db)
 
             # 每次社区检测后立即生成摘要（需要 LLM），确保泛化召回可用
             if comm["communities"] and len(comm["communities"]) > 0:
