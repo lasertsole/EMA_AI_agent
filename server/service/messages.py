@@ -148,13 +148,13 @@ async def async_generator(session_id: str, history: List[dict[str, Any]], multi_
         # 消息列表所有信息
         all_messages: List[BaseMessage] = agent.get_state(config = get_config(session_id)).values.get("messages", [])
 
-        await after_turn(session_id = session_id, messages = all_messages)
+        # await after_turn(session_id = session_id, messages = all_messages)
 
         # 将用户消息持久化
         storage_add_chat(session_id = session_id, role = "user", multi_modal_message = multi_modal_message)
         storage_add_chat(session_id = session_id, role = "assistant", multi_modal_message = MultiModalMessage(text=ai_content, image_base64_list=None))
 
-        #enqueue_append_timeline_entry(session_id = session_id, human_content = multi_modal_message.text, ai_content = ai_content)
+        enqueue_append_timeline_entry(session_id = session_id, human_content = multi_modal_message.text, ai_content = ai_content)
         compress_history(session_id = session_id, all_messages = all_messages)
 
 """以上是返回信息逻辑"""
