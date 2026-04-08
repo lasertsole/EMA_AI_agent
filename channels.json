@@ -1,0 +1,8 @@
+{
+  "qq":{
+    "enabled": false,
+    "allow_from": ["*"],
+    "appId": "102821758",
+    "secret": "sDZwJh5UtJjAb3WzTxSxTzW3bAjJtU5h"
+  }
+}
