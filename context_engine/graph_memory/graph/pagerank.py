@@ -68,7 +68,7 @@ def load_graph(db: Connection) -> GraphStructure:
     cursor = db.cursor()
 
     # 读取活跃节点
-    cursor.execute("SELECT id FROM gm_nodes WHERE status='active'")
+    cursor.execute("SELECT id FROM gm_nodes")
     node_rows = cursor.fetchall()
     node_ids = {row[0] for row in node_rows}
 
@@ -230,7 +230,7 @@ def compute_global_page_rank(db: Connection, cfg: GmConfig) -> GlobalPageRankRes
 
     # 获取节点名称映射
     cursor = db.cursor()
-    cursor.execute("SELECT id, name FROM gm_nodes WHERE status='active'")
+    cursor.execute("SELECT id, name FROM gm_nodes")
     name_rows = cursor.fetchall()
     name_map = {row[0]: row[1] for row in name_rows}
 

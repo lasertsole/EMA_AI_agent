@@ -13,10 +13,6 @@ class NodeType(Enum):
     SKILL = "SKILL"
     EVENT = "EVENT"
 
-class NodeStatus(Enum):
-    ACTIVE = "active"
-    DEPRECATED = "deprecated"
-
 class Node(BaseModel):
     type: NodeType
     name: str
@@ -25,7 +21,6 @@ class Node(BaseModel):
 
 class GmNode(Node):
     id: str
-    status: NodeStatus
     validated_count: int
     source_sessions: List[str]
     community_id: str | None

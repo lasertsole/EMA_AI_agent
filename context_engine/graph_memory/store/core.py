@@ -21,7 +21,6 @@ def to_node(r: dict[str, Any])->GmNode:
         name = r["name"],
         description = r["description"] if r["description"] is not None else "",
         content = r["content"],
-        status = r["status"],
         validated_count = r["validated_count"],
         source_sessions = json.loads(r["source_sessions"] if r["source_sessions"] is not None else "[]"),
         community_id = r["community_id"],
@@ -70,7 +69,7 @@ def find_by_id(db: sqlite3.Connection, id: str) -> Optional[GmNode]:
 
 def all_active_nodes(db: sqlite3.Connection) -> List[GmNode]:
     db.row_factory = sqlite3.Row
-    rows = db.execute("SELECT * FROM gm_nodes WHERE status='active'").fetchall()
+    rows = db.execute("SELECT * FROM gm_nodes").fetchall()
     return [to_node(row) for row in rows]
 
 def all_edges(db: sqlite3.Connection) -> List[GmEdge]:
@@ -116,23 +115,25 @@ def upsert_node(db: sqlite3.Connection, c: dict, session_id: str) -> UpsertResul
     with db:
         db.execute("""
             INSERT INTO gm_nodes 
-            (id, type, name, description, content, status, validated_count, source_sessions, created_at, updated_at)
-            VALUES (?,?,?,?,?, 'active', 1, ?, ?, ?)
+            (id, type, name, description, content, validated_count, source_sessions, created_at, updated_at)
+            VALUES (?,?,?,?,?, 1, ?, ?, ?)
         """, (new_id, c['type'], name, c['description'], c['content'], sessions_json, now, now))
         db.commit()
 
     return {"node": find_by_name(db, name), "isNew": True}
 
 
-def deprecate(db: sqlite3.Connection, node_id: str) -> None:
-    """将指定节点标记为已弃用"""
-    db.execute(
-        "UPDATE gm_nodes SET status='deprecated', updated_at=? WHERE id=?",
-        (int(time.time() * 1000), node_id)
-    )
+def delete_node(db: sqlite3.Connection, node_id: str) -> None:
+    """将指定节点硬删除"""
+    # 1. 先删除所有与该节点相关的边（from_id 或 to_id 等于该节点）
+    db.execute("DELETE FROM gm_edges WHERE from_id=? OR to_id=?", (node_id, node_id))
+
+    # 2. 再删除节点本身
+    db.execute("DELETE FROM gm_nodes WHERE id=?", (node_id,))
+
     db.commit()
 
-# 合并两个节点：keepId 保留，mergeId 标记 deprecated，边迁移
+# 合并两个节点：keepId 保留，mergeId 删除，边迁移
 def merge_nodes(db: sqlite3.Connection, keep_id: str, merge_id: str) -> None:
     """
     合并两个节点：保留 keep_id，将 merge_id 标记为已弃用，并迁移其边关系
@@ -172,8 +173,8 @@ def merge_nodes(db: sqlite3.Connection, keep_id: str, merge_id: str) -> None:
 
     db.commit()
 
-    # 最后将被合并的节点标记为已弃用
-    deprecate(db, merge_id)
+    # 最后将被合并的节点删除
+    delete_node(db, merge_id)
 
 def update_pageranks(db: sqlite3.Connection, scores: dict) -> None:
     """批量更新 PageRank 分数"""
@@ -291,7 +292,7 @@ def search_nodes(db: sqlite3.Connection, query: str, limit: int = 6) -> list:
             sql = """
                 SELECT n.*, rank FROM gm_nodes_fts fts
                 JOIN gm_nodes n ON n.rowid = fts.rowid
-                WHERE gm_nodes_fts MATCH ? AND n.status = 'active'
+                WHERE gm_nodes_fts MATCH ?
                 ORDER BY rank LIMIT ?
             """
             rows = db.execute(sql, (fts_query, limit)).fetchall()
@@ -306,7 +307,7 @@ def search_nodes(db: sqlite3.Connection, query: str, limit: int = 6) -> list:
     like_values = [f"%{term}%" for term in terms for _ in range(3)]  # 每个term对应name/desc/content
 
     sql = f"""
-        SELECT * FROM gm_nodes WHERE status='active' AND ({where_conditions})
+        SELECT * FROM gm_nodes WHERE ({where_conditions})
         ORDER BY pagerank DESC, validated_count DESC, updated_at DESC LIMIT ?
     """
     rows = db.execute(sql, (*like_values, limit)).fetchall()
@@ -318,7 +319,7 @@ def top_nodes(db: sqlite3.Connection, limit: int = 6) -> list:
     db.row_factory = sqlite3.Row
 
     sql = """
-        SELECT * FROM gm_nodes WHERE status='active'
+        SELECT * FROM gm_nodes
         ORDER BY pagerank DESC, validated_count DESC, updated_at DESC LIMIT ?
     """
     rows = db.execute(sql, (limit,)).fetchall()
@@ -341,7 +342,7 @@ def graph_walk(
 
     walk_sql = f"""
         WITH RECURSIVE walk(node_id, depth) AS (
-            SELECT id, 0 FROM gm_nodes WHERE id IN ({placeholders}) AND status='active'
+            SELECT id, 0 FROM gm_nodes WHERE id IN ({placeholders})
             UNION
             SELECT
                 CASE WHEN e.from_id = w.node_id THEN e.to_id ELSE e.from_id END,
@@ -362,7 +363,7 @@ def graph_walk(
     np = ",".join("?" * len(node_ids))
 
     nodes_sql = f"""
-        SELECT * FROM gm_nodes WHERE id IN ({np}) AND status='active'
+        SELECT * FROM gm_nodes WHERE id IN ({np})
     """
     nodes = [to_node(dict(row)) for row in db.execute(nodes_sql, (*node_ids,)).fetchall()]
 
@@ -380,7 +381,7 @@ def get_by_session(db: sqlite3.Connection, session_id: str) -> list[GmNode]:
     db.row_factory = sqlite3.Row
     sql = """
         SELECT DISTINCT n.* FROM gm_nodes n, json_each(n.source_sessions) j
-        WHERE j.value = ? AND n.status = 'active'
+        WHERE j.value = ?
     """
     rows = db.execute(sql, (session_id,)).fetchall()
     return [to_node(dict(row)) for row in rows]
@@ -574,14 +575,13 @@ def get_stats(db: sqlite3.Connection) -> dict:
     db.row_factory = sqlite3.Row
 
     total_nodes = db.execute(
-        "SELECT COUNT(*) as c FROM gm_nodes WHERE status='active'"
+        "SELECT COUNT(*) as c FROM gm_nodes"
     ).fetchone()['c']
 
     by_type = {}
     type_rows = db.execute("""
         SELECT type, COUNT(*) as c 
         FROM gm_nodes 
-        WHERE status='active' 
         GROUP BY type
     """).fetchall()
     for row in type_rows:
@@ -601,7 +601,7 @@ def get_stats(db: sqlite3.Connection) -> dict:
     communities = db.execute("""
         SELECT COUNT(DISTINCT community_id) as c 
         FROM gm_nodes 
-        WHERE status='active' AND community_id IS NOT NULL
+        WHERE community_id IS NOT NULL
     """).fetchone()['c']
 
     return {
@@ -651,7 +651,7 @@ def get_all_vectors(db: sqlite3.Connection) -> list[dict]:
 
     rows = db.execute("""
         SELECT v.node_id, v.embedding FROM gm_vectors v
-        JOIN gm_nodes n ON n.id = v.node_id WHERE n.status = 'active'
+        JOIN gm_nodes n ON n.id = v.node_id
     """).fetchall()
 
     return [
@@ -683,7 +683,6 @@ def vector_search_with_score(
     rows = db.execute("""
         SELECT v.node_id, v.embedding, n.*
         FROM gm_vectors v JOIN gm_nodes n ON n.id = v.node_id
-        WHERE n.status = 'active'
     """).fetchall()
     # print("rows", rows)
     if not rows:
@@ -734,7 +733,7 @@ def community_representatives(
     """
     rows = db.execute("""
         SELECT * FROM gm_nodes
-        WHERE status = 'active' AND community_id IS NOT NULL
+        WHERE community_id IS NOT NULL
         ORDER BY community_id, updated_at DESC
     """).fetchall()
 
@@ -929,7 +928,7 @@ def nodes_by_community_ids(
 
     rows = db.execute(f"""
         SELECT * FROM gm_nodes
-        WHERE community_id IN ({placeholders}) AND status='active'
+        WHERE community_id IN ({placeholders})
         ORDER BY community_id, updated_at DESC
     """, (*community_ids,)).fetchall()
 
@@ -958,7 +957,7 @@ def prune_community_summaries(db: sqlite3.Connection) -> int:
     cursor.execute("""
         DELETE FROM gm_communities WHERE id NOT IN (
             SELECT DISTINCT community_id FROM gm_nodes 
-            WHERE community_id IS NOT NULL AND status='active'
+            WHERE community_id IS NOT NULL
         )
     """)
     db.commit()

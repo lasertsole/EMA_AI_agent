@@ -48,7 +48,6 @@ def m1_core(db: sqlite3.Connection) -> None:
             name            TEXT NOT NULL,
             description     TEXT NOT NULL DEFAULT '',
             content         TEXT NOT NULL,
-            status          TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('active','deprecated')),
             validated_count INTEGER NOT NULL DEFAULT 1,
             source_sessions TEXT NOT NULL DEFAULT '[]',
             community_id    TEXT,
@@ -57,7 +56,6 @@ def m1_core(db: sqlite3.Connection) -> None:
             updated_at      INTEGER NOT NULL
         );
         CREATE UNIQUE INDEX IF NOT EXISTS ux_gm_nodes_name ON gm_nodes(name);
-        CREATE INDEX IF NOT EXISTS ix_gm_nodes_type_status ON gm_nodes(type, status);
         CREATE INDEX IF NOT EXISTS ix_gm_nodes_community ON gm_nodes(community_id);
 
         CREATE TABLE IF NOT EXISTS gm_edges (

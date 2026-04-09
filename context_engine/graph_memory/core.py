@@ -17,7 +17,7 @@ from .format import sanitize_tool_use_result_pairing, assemble_context
 from pub_func.extract_text_from_content import extract_text_from_content
 from .graph import (invalidate_graph_cache, detect_communities, summarize_communities, run_maintenance, CommunityResult,
                     MaintenanceResult)
-from .store import (get_db, deprecate, save_message, get_unextracted, get_by_session, upsert_node, find_by_id, find_by_name,
+from .store import (get_db, delete_node, save_message, get_unextracted, get_by_session, upsert_node, find_by_id, find_by_name,
                    upsert_edge, mark_extracted, edges_from, edges_to, UpsertResult)
 
 logger = logging.getLogger(__name__)
@@ -386,7 +386,7 @@ async def rectification_and_standardization(session_id: str) -> None:
             db.row_factory = sqlite3.Row
             cursor = db.cursor()
             cursor.execute(
-                "SELECT name, type, validated_count, pagerank FROM gm_nodes WHERE status='active' ORDER BY pagerank DESC LIMIT 20"
+                "SELECT name, type, validated_count, pagerank FROM gm_nodes ORDER BY pagerank DESC LIMIT 20"
             )
             top_nodes: List[dict[str, Any]] = [dict(r) for r in cursor.fetchall()]
 
@@ -441,7 +441,7 @@ async def rectification_and_standardization(session_id: str) -> None:
 
             # 标记失效节点
             for node_id in fin.invalidations:
-                deprecate(db, node_id)
+                delete_node(db, node_id)
 
         # 执行图谱维护
         embed: Embeddings | None = getattr(recaller, "embed", None)

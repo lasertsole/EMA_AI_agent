@@ -5,7 +5,7 @@ graph_memory — Assemble Context
 import math
 from datetime import datetime
 from sqlite3 import Connection
-from ..type import GmNode, GmEdge, NodeType, NodeStatus
+from ..type import GmNode, GmEdge, NodeType
 from typing import TypedDict, List, Dict, Set, Optional, Literal
 from ..store.core import get_community_summary, get_episodic_messages
 
@@ -144,7 +144,8 @@ def assemble_context(
     # 排序：本 sessions > SKILL 优先 > validated_count > 全局 pagerank 基线
     type_pri: Dict[NodeType, int] = {NodeType.SKILL: 3, NodeType.TASK: 2, NodeType.EVENT: 1}
 
-    sorted_nodes = sorted(
+    # recall 返回的已经是 PPR 排序过的，全量放入
+    selected = sorted(
         node_map.values(),
         key=lambda n: (
             0 if n.src == 'active' else 1,  # active 优先
@@ -154,8 +155,6 @@ def assemble_context(
         )
     )
 
-    # recall 返回的已经是 PPR 排序过的，全量放入
-    selected: List[NodeWithSource] = [n for n in sorted_nodes if n.status == NodeStatus.ACTIVE]
 
     if not selected:
         return {

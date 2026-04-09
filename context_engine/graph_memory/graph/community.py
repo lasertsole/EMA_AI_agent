@@ -53,7 +53,7 @@ def detect_communities(db: Connection, max_iter: int = 50) -> CommunityResult:
     """
     # 读取活跃节点
     cursor = db.cursor()
-    cursor.execute("SELECT id FROM gm_nodes WHERE status='active'")
+    cursor.execute("SELECT id FROM gm_nodes")
     node_rows = cursor.fetchall()
 
     if not node_rows:
@@ -169,7 +169,7 @@ def get_community_peers(
     """
     cursor = db.cursor()
     cursor.execute(
-        "SELECT community_id FROM gm_nodes WHERE id=? AND status='active'",
+        "SELECT community_id FROM gm_nodes WHERE id=?",
         (node_id,)
     )
     row = cursor.fetchone()
@@ -181,7 +181,7 @@ def get_community_peers(
 
     cursor.execute("""
         SELECT id FROM gm_nodes
-        WHERE community_id=? AND id!=? AND status='active'
+        WHERE community_id=? AND id!=?
         ORDER BY validated_count DESC, updated_at DESC
         LIMIT ?
     """, (community_id, node_id, limit))
@@ -235,7 +235,7 @@ async def summarize_communities(
         db.row_factory = sqlite3.Row
         cursor.execute(f"""
             SELECT name, type, description FROM gm_nodes
-            WHERE id IN ({placeholders}) AND status='active'
+            WHERE id IN ({placeholders})
             ORDER BY validated_count DESC
             LIMIT 10
         """, (*member_ids,))

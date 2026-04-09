@@ -3,8 +3,8 @@ graph_memory — 知识图谱提取引擎
 """
 
 import json
-from pydantic import BaseModel
 from ..type import GmConfig, GmNode
+from pydantic import BaseModel, Field
 from typing import List, Dict, Set, Optional, Literal
 from langchain_core.messages import SystemMessage, HumanMessage
 
@@ -95,22 +95,22 @@ EXTRACT_SYS = """你是 graph_memory 知识图谱提取引擎，从 AI Agent 对
 
 2. 关系提取：
    2.1 识别节点之间直接、明确的关系，只允许以下 5 种边类型。
-   2.2 每条边必须包含 from、to、type、instruction 四个字段，缺一不可。
+   2.2 每条边必须包含 from_node、to_node、type、instruction 四个字段，缺一不可。
    2.3 边类型定义与方向约束（严格遵守，不得混用）：
 
        USED_SKILL
          方向：TASK → SKILL（且仅限此方向）
          含义：任务执行过程中使用了该技能
          instruction：写第几步用的、怎么调用的、传了什么参数
-         判定：from 节点是 TASK，to 节点是 SKILL
+         判定：from_node 节点是 TASK，to_node 节点是 SKILL
 
        SOLVED_BY
          方向：EVENT → SKILL 或 SKILL → SKILL
          含义：该报错/问题被该技能解决
          instruction：写具体执行了什么命令/操作来解决
          condition（必填）：写什么错误或条件触发了这个解决方案
-         判定：from 节点是 EVENT 或 SKILL，to 节点是 SKILL
-         注意：TASK 节点不能作为 SOLVED_BY 的 from，TASK 使用技能必须用 USED_SKILL
+         判定：from_node 节点是 EVENT 或 SKILL，to_node 节点是 SKILL
+         注意：TASK 节点不能作为 SOLVED_BY 的 from_node，TASK 使用技能必须用 USED_SKILL
 
        REQUIRES
          方向：SKILL → SKILL
@@ -128,9 +128,9 @@ EXTRACT_SYS = """你是 graph_memory 知识图谱提取引擎，从 AI Agent 对
          instruction：写冲突的具体表现、应该选哪个
 
    2.4 关系方向选择决策树（按此顺序判定）：
-       a. from 是 TASK，to 是 SKILL → 必须用 USED_SKILL
-       b. from 是 EVENT，to 是 SKILL → 必须用 SOLVED_BY
-       c. from 和 to 都是 SKILL → 根据语义选 SOLVED_BY / REQUIRES / PATCHES / CONFLICTS_WITH
+       a. from_node 是 TASK，to_node 是 SKILL → 必须用 USED_SKILL
+       b. from_node 是 EVENT，to_node 是 SKILL → 必须用 SOLVED_BY
+       c. from_node 和 to_node 都是 SKILL → 根据语义选 SOLVED_BY / REQUIRES / PATCHES / CONFLICTS_WITH
        d. 不存在其他合法组合，不符合以上任何一条的关系不要提取
 
 3. 提取策略（宁多勿漏）：
@@ -150,14 +150,14 @@ EXTRACT_SYS = """你是 graph_memory 知识图谱提取引擎，从 AI Agent 对
 对话摘要：用户要求抓取 B 站弹幕，Agent 使用 bili-tool 的 danmaku 子命令完成。
 
 输出：
-{"nodes":[{"type":"TASK","name":"extract-bilibili-danmaku","description":"从 B 站视频中批量抓取弹幕数据","content":"extract-bilibili-danmaku\n目标：从指定 B 站视频抓取全部弹幕\n执行步骤:\n1. 获取视频 BV 号\n2. 调用 bili-tool danmaku --bv BVxxx\n3. 输出 JSON 格式弹幕列表\n结果：成功抓取 2341 条弹幕"},{"type":"SKILL","name":"bili-tool-danmaku","description":"使用 bili-tool 抓取 B 站视频弹幕","content":"bili-tool-danmaku\n触发条件：需要抓取 B 站视频弹幕时\n执行步骤:\n1. pip install bilibili-api-python\n2. python bili_tool.py danmaku --bv BVxxx --output danmaku.json\n常见错误:\n- cookie 过期 -> 重新获取 SESSDATA"}],"edges":[{"from":"extract-bilibili-danmaku","to":"bili-tool-danmaku","type":"USED_SKILL","instruction":"第 2 步调用 bili-tool danmaku 子命令，传入 --bv 和 --output 参数"}]}
+{"nodes":[{"type":"TASK","name":"extract-bilibili-danmaku","description":"从 B 站视频中批量抓取弹幕数据","content":"extract-bilibili-danmaku\n目标：从指定 B 站视频抓取全部弹幕\n执行步骤:\n1. 获取视频 BV 号\n2. 调用 bili-tool danmaku --bv BVxxx\n3. 输出 JSON 格式弹幕列表\n结果：成功抓取 2341 条弹幕"},{"type":"SKILL","name":"bili-tool-danmaku","description":"使用 bili-tool 抓取 B 站视频弹幕","content":"bili-tool-danmaku\n触发条件：需要抓取 B 站视频弹幕时\n执行步骤:\n1. pip install bilibili-api-python\n2. python bili_tool.py danmaku --bv BVxxx --output danmaku.json\n常见错误:\n- cookie 过期 -> 重新获取 SESSDATA"}],"edges":[{"from_node":"extract-bilibili-danmaku","to_node":"bili-tool-danmaku","type":"USED_SKILL","instruction":"第 2 步调用 bili-tool danmaku 子命令，传入 --bv 和 --output 参数"}]}
 
 示例 2（EVENT + SKILL + SOLVED_BY 边）：
 
 对话摘要：执行 PaddleOCR 时报 libGL 缺失，通过 apt 安装解决。
 
 输出：
-{"nodes":[{"type":"EVENT","name":"importerror-libgl1","description":"导入 cv2/paddleocr 时报 libGL.so.1 缺失","content":"importerror-libgl1\n现象：ImportError: libGL.so.1: cannot open shared object file\n原因：OpenCV 依赖系统级 libGL 库，conda/pip 不自动安装\n解决方法：apt install -y libgl1-mesa-glx"},{"type":"SKILL","name":"apt-install-libgl1","description":"安装 libgl1 解决 OpenCV 系统依赖缺失","content":"apt-install-libgl1\n触发条件：ImportError: libGL.so.1\n执行步骤:\n1. sudo apt update\n2. sudo apt install -y libgl1-mesa-glx\n常见错误:\n- Permission denied -> 加 sudo"}],"edges":[{"from":"importerror-libgl1","to":"apt-install-libgl1","type":"SOLVED_BY","instruction":"执行 sudo apt install -y libgl1-mesa-glx","condition":"报 ImportError: libGL.so.1 时"}]}"""
+{"nodes":[{"type":"EVENT","name":"importerror-libgl1","description":"导入 cv2/paddleocr 时报 libGL.so.1 缺失","content":"importerror-libgl1\n现象：ImportError: libGL.so.1: cannot open shared object file\n原因：OpenCV 依赖系统级 libGL 库，conda/pip 不自动安装\n解决方法：apt install -y libgl1-mesa-glx"},{"type":"SKILL","name":"apt-install-libgl1","description":"安装 libgl1 解决 OpenCV 系统依赖缺失","content":"apt-install-libgl1\n触发条件：ImportError: libGL.so.1\n执行步骤:\n1. sudo apt update\n2. sudo apt install -y libgl1-mesa-glx\n常见错误:\n- Permission denied -> 加 sudo"}],"edges":[{"from_node":"importerror-libgl1","to_node":"apt-install-libgl1","type":"SOLVED_BY","instruction":"执行 sudo apt install -y libgl1-mesa-glx","condition":"报 ImportError: libGL.so.1 时"}]}"""
 
 
 # ─── 提取 User Prompt ───────────────────────────────────────────
