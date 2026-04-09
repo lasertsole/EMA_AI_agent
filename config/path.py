@@ -10,7 +10,6 @@ INTERPRETER_PATH = ROOT_DIR / ".venv/Scripts/python"
 CONTEXT_ENGINE_PATH = ROOT_DIR / "context_engine"
 
 SRC_DIR = ROOT_DIR / "src"
-MODEL_WEIGHT_DIR = SRC_DIR / "model_weight"
 
 SESSIONS_DIR = ROOT_DIR / "sessions"
 SKILLS_DIR = ROOT_DIR / "skills"

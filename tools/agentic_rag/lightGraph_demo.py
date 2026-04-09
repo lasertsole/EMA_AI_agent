@@ -1,7 +1,7 @@
 import time
 from pathlib import Path
 from typing import Optional
-from models import extract_model
+from models import embed_model
 from dataclasses import dataclass, field, asdict
 
 CHROMA_PERSIST_DIR = './chroma_db_persist_dir'
@@ -47,4 +47,4 @@ if txt_file.exists():
 
 parse_start_time = time.time()
 
-extract_model.invoke([txt_file])
+embed_model.invoke([txt_file])
