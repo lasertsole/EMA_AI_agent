@@ -42,11 +42,11 @@ class Node(BaseModel):
 
 class Edge(BaseModel):
     """边"""
-    from_node: str
-    to_node: str
+    from_node: str = Field(alias="from")
+    to_node: str = Field(alias="to")
     type: str
     instruction: str
-    condition: Optional[str]
+    condition: Optional[str] = None
 
 
 class ExtractionResult(BaseModel):

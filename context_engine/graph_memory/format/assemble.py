@@ -15,20 +15,12 @@ CHARS_PER_TOKEN = 3
 class SelectedNode(TypedDict):
     """选中的节点"""
     type: str
-    src: Literal["active", "recalled"]
-
-
-class NodeWithSource(GmNode):
-    src: Literal["active", "recalled"]
-
 
 class AssembleResult(TypedDict):
     """组装结果"""
     xml: Optional[str]
     system_prompt: str
     tokens: int
-    episodic_xml: str
-    episodic_tokens: int
 
 
 def build_system_prompt_addition(selected_nodes: List[SelectedNode], edge_count: int) -> str:
@@ -45,8 +37,6 @@ def build_system_prompt_addition(selected_nodes: List[SelectedNode], edge_count:
     if not selected_nodes:
         return ""
 
-    recalled_count = sum(1 for n in selected_nodes if n['src'] == 'recalled')
-    has_recalled = recalled_count > 0
     skill_count = sum(1 for n in selected_nodes if n['type'] == 'SKILL')
     event_count = sum(1 for n in selected_nodes if n['type'] == 'EVENT')
     task_count = sum(1 for n in selected_nodes if n['type'] == 'TASK')
@@ -61,10 +51,10 @@ def build_system_prompt_addition(selected_nodes: List[SelectedNode], edge_count:
         f"Current graph: {skill_count} skills, {event_count} events, {task_count} tasks, {edge_count} relationships.",
     ]
 
-    if has_recalled:
+    if selected_nodes:
         sections.extend([
             "",
-            f"**{recalled_count} nodes recalled from OTHER conversations** — these are proven solutions that worked before.",
+            f"**{len(selected_nodes)} nodes recalled from OTHER conversations** — these are proven solutions that worked before.",
             "Apply them directly when the current situation matches their trigger conditions.",
         ])
 
@@ -77,15 +67,11 @@ def build_system_prompt_addition(selected_nodes: List[SelectedNode], edge_count:
         "",
         "**Three layers, read in order:**",
         "",
-        "1. **`<episodic_context>`** — Original conversation snippets from past sessions.",
-        "   These are the actual [USER]/[ASSISTANT] dialogues that produced the knowledge below.",
-        '   If the user asks "what did we discuss" / "之前聊了什么", the answer is HERE.',
-        "",
-        "2. **`<knowledge_graph>`** — Structured triples (TASK/SKILL/EVENT nodes + edges),",
+        "1. **`<knowledge_graph>`** — Structured triples (TASK/SKILL/EVENT nodes + edges),",
         "   organized by community clusters. Each `<community>` groups related knowledge.",
         "   Edges show causation: SOLVED_BY, USED_SKILL, REQUIRES, PATCHES, CONFLICTS_WITH.",
         "",
-        "3. **`gm_search` tool** — If the above doesn't cover the user's question,",
+        "2. **`gm_search` tool** — If the above doesn't cover the user's question,",
         "   search for more nodes. Then query `gm_messages` for deeper conversation history.",
         "",
         "Use `gm_record` to save new discoveries worth remembering for future sessions.",
@@ -111,8 +97,6 @@ def build_system_prompt_addition(selected_nodes: List[SelectedNode], edge_count:
 
 def assemble_context(
     db: Connection,
-    active_nodes: List[GmNode],
-    active_edges: List[GmEdge],
     recalled_nodes: List[GmNode],
     recalled_edges: List[GmEdge]
 ) -> AssembleResult:
@@ -121,8 +105,6 @@ def assemble_context(
 
     Args:
         db: SQLite 数据库连接
-        active_nodes: 活跃节点列表
-        active_edges: 活跃边列表
         recalled_nodes: 召回节点列表
         recalled_edges: 召回边列表
 
@@ -131,15 +113,10 @@ def assemble_context(
     """
 
     # recall 返回多少节点就放多少，不截断
-    node_map: Dict[str, NodeWithSource] = {}
+    node_map: Dict[str, GmNode] = {}
 
     for n in recalled_nodes:
-        node_with_src: NodeWithSource = NodeWithSource(**n.model_dump(), src = 'recalled')
-        node_map[n.id] = node_with_src
-
-    for n in active_nodes:
-        node_with_src: NodeWithSource = NodeWithSource(**n.model_dump(), src = 'active')
-        node_map[n.id] = node_with_src
+        node_map[n.id] = n
 
     # 排序：本 sessions > SKILL 优先 > validated_count > 全局 pagerank 基线
     type_pri: Dict[NodeType, int] = {NodeType.SKILL: 3, NodeType.TASK: 2, NodeType.EVENT: 1}
@@ -148,7 +125,6 @@ def assemble_context(
     selected = sorted(
         node_map.values(),
         key=lambda n: (
-            0 if n.src == 'active' else 1,  # active 优先
             -(type_pri.get(n.type, 0)),  # SKILL 优先
             -n.validated_count,  # validated_count 降序
             -n.pagerank  # pagerank 降序
@@ -160,9 +136,7 @@ def assemble_context(
         return {
             'xml': None,
             'system_prompt': '',
-            'tokens': 0,
-            'episodic_xml': '',
-            'episodic_tokens': 0,
+            'tokens': 0
         }
 
     # ID 到名称的映射
@@ -170,10 +144,9 @@ def assemble_context(
     selected_ids: Set[str] = {n.id for n in selected}
 
     # 过滤边（只保留两端节点都在 selected 中的边）
-    all_edges: List[GmEdge] = active_edges + recalled_edges
     seen_edges: Set[str] = set()
     edges: List[GmEdge] = [
-        e for e in all_edges
+        e for e in recalled_edges
         if e.from_id in selected_ids
            and e.to_id in selected_ids
            and e.id not in seen_edges
@@ -181,8 +154,8 @@ def assemble_context(
     ]
 
     # 按社区分组节点
-    by_community: Dict[str, List[NodeWithSource]] = {}
-    no_community: List[NodeWithSource] = []
+    by_community: Dict[str, List[GmNode]] = {}
+    no_community: List[GmNode] = []
 
     for n in selected:
         if n.community_id:
@@ -204,12 +177,11 @@ def assemble_context(
 
         for n in members:
             tag = n.type.value.lower()
-            src_attr = ' source="recalled"' if n.src == 'recalled' else ''
             updated_date = datetime.fromtimestamp(n.updated_at / 1000).isoformat()[:10]
             time_attr = f' updated="{updated_date}"'
 
             xml_parts.append(
-                f'    <{tag} name="{n.name}" desc="{escape_xml(n.description)}"{src_attr}{time_attr}>\n'
+                f'    <{tag} name="{n.name}" desc="{escape_xml(n.description)}"{time_attr}>\n'
                 f'{n.content.strip()}\n'
                 f'    </{tag}>'
             )
@@ -219,12 +191,11 @@ def assemble_context(
     # 无社区的节点直接放顶层
     for n in no_community:
         tag = n.type.value.lower()
-        src_attr = ' source="recalled"' if n.src == 'recalled' else ''
         updated_date = datetime.fromtimestamp(n.updated_at / 1000).isoformat()[:10]
         time_attr = f' updated="{updated_date}"'
 
         xml_parts.append(
-            f'  <{tag} name="{n.name}" desc="{escape_xml(n.description)}"{src_attr}{time_attr}>\n'
+            f'  <{tag} name="{n.name}" desc="{escape_xml(n.description)}"{time_attr}>\n'
             f'{n.content.strip()}\n'
             f'  </{tag}>'
         )
@@ -252,44 +223,15 @@ def assemble_context(
     xml = f"<knowledge_graph>\n{nodes_xml}{edges_xml}\n</knowledge_graph>"
 
     # 构建 system prompt
-    selected_node_info = [SelectedNode(type = n.type.value, src = n.src) for n in selected]
+    selected_node_info = [SelectedNode(type = n.type.value) for n in selected]
     system_prompt = build_system_prompt_addition(selected_node_info, len(edges))
 
-    # ── 溯源选拉：PPR top 3 节点 → 拉原始 user/assistant 对话 ──
-    top_nodes = selected[:3]
-    episodic_parts = []
-
-    for node in top_nodes:
-        source_sessions = getattr(node, 'source_sessions', [])
-        if not source_sessions:
-            continue
-
-        # 取最近的 2 个 sessions
-        recent_sessions = source_sessions[-2:]
-        msgs = get_episodic_messages(db, recent_sessions, node.updated_at, 500)
-
-        if not msgs:
-            continue
-
-        lines = [
-            f'    [{m["role"].upper()}] {escape_xml(m["text"][:200])}'
-            for m in msgs
-        ]
-        episodic_parts.append(f'  <trace node="{node.name}">\n' + "\n".join(lines) + f'\n  </trace>')
-
-    if episodic_parts:
-        episodic_xml = f"<episodic_context>\n" + "\n".join(episodic_parts) + f"\n</episodic_context>"
-    else:
-        episodic_xml = ""
-
-    full_content = system_prompt + "\n\n" + xml + ("\n\n" + episodic_xml if episodic_xml else "")
+    full_content = system_prompt + "\n\n" + xml
 
     return {
         'xml': xml,
         'system_prompt': system_prompt,
-        'tokens': math.ceil(len(full_content) / CHARS_PER_TOKEN),
-        'episodic_xml': episodic_xml,
-        'episodic_tokens': math.ceil(len(episodic_xml) / CHARS_PER_TOKEN),
+        'tokens': math.ceil(len(full_content) / CHARS_PER_TOKEN)
     }
 
 

@@ -18,7 +18,7 @@ from pub_func.extract_text_from_content import extract_text_from_content
 from .graph import (invalidate_graph_cache, detect_communities, summarize_communities, run_maintenance, CommunityResult,
                     MaintenanceResult)
 from .store import (get_db, delete_node, save_message, get_unextracted, get_by_session, upsert_node, find_by_id, find_by_name,
-                   upsert_edge, mark_extracted, edges_from, edges_to, UpsertResult)
+                   upsert_edge, delete_extracted, UpsertResult)
 
 logger = logging.getLogger(__name__)
 
@@ -236,7 +236,7 @@ async def run_turn_extract(session_id: str) -> None:
             )
 
     max_turn = max(msg["turn_index"] for msg in msgs)
-    mark_extracted(db, session_id, max_turn)
+    delete_extracted(db, session_id, max_turn)
 
     if getattr(result, "nodes", None) or getattr(result, "edges", None):
         invalidate_graph_cache()
@@ -250,16 +250,9 @@ async def assemble(
         session_id: str,
         messages: list[BaseMessage]
 ) -> dict:
-    active_nodes = get_by_session(db, session_id)
-    active_edges = []
-    for node in active_nodes:
-        active_edges.extend(edges_from(db, node.id))
-        active_edges.extend(edges_to(db, node.id))
-
     rec = recalled.get(session_id, {"nodes": [], "edges": []})
-    total_gm_nodes = len(active_nodes) + len(rec["nodes"])
 
-    if total_gm_nodes == 0:
+    if len(rec["nodes"]) == 0:
         return {
             "messages": normalize_message_content(messages),
             "estimated_tokens": 0
@@ -272,28 +265,16 @@ async def assemble(
     # ── 2. 图谱 + 溯源 ─────────────────────────────
     assemble_result = assemble_context(
         db,
-        active_nodes= active_nodes,
-        active_edges= active_edges,
         recalled_nodes= rec["nodes"],
         recalled_edges= rec["edges"]
     )
     xml = assemble_result["xml"]
     system_prompt = assemble_result["system_prompt"]
     gm_tokens = assemble_result["tokens"]
-    episodic_xml = assemble_result["episodic_xml"]
-    episodic_tokens = assemble_result["episodic_tokens"]
-
-    if last_turn["dropped"] > 0 or episodic_tokens > 0:
-        logger.info(
-            f"[graph-memory] assemble: last turn {len(last_turn['messages'])} msgs "
-            f"(~{last_turn['tokens']} tok), dropped {last_turn['dropped']} older msgs, "
-            f"graph ~{gm_tokens} tok"
-            + (f", episodic ~{episodic_tokens} tok" if episodic_tokens > 0 else "")
-        )
 
     # ── 3. 组装 systemPrompt ────────────────────────
     system_prompt_addition: str | None = None
-    parts = [system_prompt, xml, episodic_xml]
+    parts = [system_prompt, xml]
     filtered_parts = [p for p in parts if p]
     if filtered_parts:
         system_prompt_addition = "\n\n".join(filtered_parts)

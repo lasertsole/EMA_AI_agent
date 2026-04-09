@@ -128,7 +128,10 @@ def delete_node(db: sqlite3.Connection, node_id: str) -> None:
     # 1. 先删除所有与该节点相关的边（from_id 或 to_id 等于该节点）
     db.execute("DELETE FROM gm_edges WHERE from_id=? OR to_id=?", (node_id, node_id))
 
-    # 2. 再删除节点本身
+    # 2. 后删除向量节点
+    db.execute("DELETE FROM gm_vectors WHERE node_id=?", (node_id,))
+
+    # 3. 再删除节点本身
     db.execute("DELETE FROM gm_nodes WHERE id=?", (node_id,))
 
     db.commit()
@@ -405,28 +408,6 @@ def save_message(
     """, (uid("m"), session_id, turn, role, json.dumps(content, ensure_ascii=False), int(time.time() * 1000)))
     db.commit()
 
-def get_messages(db: sqlite3.Connection, session_id: str, limit: Optional[int] = None) -> list:
-    """获取指定 sessions 的消息"""
-    db.row_factory = sqlite3.Row
-
-    if limit:
-        sql = """
-            SELECT * FROM gm_messages 
-            WHERE session_id=? 
-            ORDER BY turn_index DESC 
-            LIMIT ?
-        """
-        rows = db.execute(sql, (session_id, limit)).fetchall()
-    else:
-        sql = """
-            SELECT * FROM gm_messages 
-            WHERE session_id=? 
-            ORDER BY turn_index
-        """
-        rows = db.execute(sql, (session_id,)).fetchall()
-
-    return [dict(row) for row in rows]
-
 
 def get_unextracted(db: sqlite3.Connection, session_id: str, limit: int) -> list:
     """获取未提取的消息"""
@@ -434,7 +415,7 @@ def get_unextracted(db: sqlite3.Connection, session_id: str, limit: int) -> list
 
     sql = """
         SELECT * FROM gm_messages 
-        WHERE session_id=? AND extracted=0 
+        WHERE session_id=?
         ORDER BY turn_index 
         LIMIT ?
     """
@@ -442,11 +423,10 @@ def get_unextracted(db: sqlite3.Connection, session_id: str, limit: int) -> list
     return [dict(row) for row in rows]
 
 
-def mark_extracted(db: sqlite3.Connection, session_id: str, up_to_turn: int) -> None:
-    """标记消息已提取"""
+def delete_extracted(db: sqlite3.Connection, session_id: str, up_to_turn: int) -> None:
+    """删除已提取的消息记录"""
     db.execute("""
-        UPDATE gm_messages 
-        SET extracted=1 
+        DELETE FROM gm_messages 
         WHERE session_id=? AND turn_index<=?
     """, (session_id, up_to_turn))
     db.commit()

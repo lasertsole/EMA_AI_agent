@@ -105,7 +105,7 @@ class Recaller:
                     self.db, vec, math.ceil(limit / 2)
                 )
                 seeds: List[GmNode] = [s['node'] for s in scored]
-
+                print("seeds", seeds)
                 # 向量结果不足时补 FTS5
                 if len(seeds) < 2:
                     fts_results = search_nodes(self.db, query, limit)
@@ -207,6 +207,8 @@ class Recaller:
 
         if not seeds:
             return {'nodes': [], 'edges': [], 'token_estimate': 0}
+
+        print("seeds", seeds)
 
         seed_ids: List[str] = [n.id for n in seeds]
 

@@ -33,7 +33,7 @@ def _split_messages(
 
     for i, msg in enumerate(messages):
         msg_chars = len(msg.get("content", ""))
-        if compressed_chars + msg_chars > target_chars:
+        if compressed_chars + msg_chars > target_chars and msg.get("type", "HumanMessage"):
             break
         compressed_chars += msg_chars
         split_index = i + 1

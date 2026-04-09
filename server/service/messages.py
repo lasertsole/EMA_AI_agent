@@ -124,7 +124,7 @@ async def async_generator(session_id: str, multi_modal_message: MultiModalMessag
                     # 以上是对话信息
 
         else:
-            result: dict[str, Any] = await agent.ainvoke(input=None, config = _get_config(session_id))
+            result: dict[str, Any] = await agent.ainvoke(input = None, config = _get_config(session_id))
             res: str = result["messages"][-1].content
             ai_content += res
             yield SSEMessage(res)

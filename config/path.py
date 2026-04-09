@@ -7,6 +7,7 @@ ROOT_DIR = ROOT_DIR.resolve()
 ENV_PATH = ROOT_DIR / ".env"
 
 INTERPRETER_PATH = ROOT_DIR / ".venv/Scripts/python"
+CONTEXT_ENGINE_PATH = ROOT_DIR / "context_engine"
 
 SRC_DIR = ROOT_DIR / "src"
 MODEL_WEIGHT_DIR = SRC_DIR / "model_weight"

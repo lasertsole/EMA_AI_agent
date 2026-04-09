@@ -1,10 +1,9 @@
 import time
 import sqlite3
 from pathlib import Path
-from config import SRC_DIR
-from sqlite3 import Connection
+from config import SRC_DIR, CONTEXT_ENGINE_PATH
 
-_db:Connection | None = None
+_db: sqlite3.Connection | None = None
 _db_path = Path(SRC_DIR) / "store/graph_memory.db"
 
 def get_db():
@@ -14,6 +13,9 @@ def get_db():
 
     _db_path.parent.mkdir(parents=True, exist_ok=True)
     _db = sqlite3.connect(_db_path, check_same_thread=False)
+
+    _db.enable_load_extension(True)
+    _db.load_extension((CONTEXT_ENGINE_PATH / "tokenizer/simple.dll").as_posix())
 
     _db.execute("PRAGMA journal_mode = WAL")
     _db.execute("PRAGMA foreign_keys = ON")
@@ -81,7 +83,6 @@ def m2_messages(db: sqlite3.Connection) -> None:
             turn_index  INTEGER NOT NULL,
             role        TEXT NOT NULL,
             content     TEXT NOT NULL,
-            extracted   INTEGER NOT NULL DEFAULT 0,
             created_at  INTEGER NOT NULL
         );
         CREATE INDEX IF NOT EXISTS ix_gm_msg_session ON gm_messages(session_id, turn_index);
@@ -111,7 +112,8 @@ def m4_fts5(db: sqlite3.Connection) -> None:
                 description,
                 content,
                 content=gm_nodes,
-                content_rowid=rowid
+                content_rowid=rowid,
+                tokenize='simple'
             );
 
             CREATE TRIGGER IF NOT EXISTS gm_nodes_ai AFTER INSERT ON gm_nodes BEGIN
