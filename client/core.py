@@ -6,11 +6,11 @@ from pathlib import Path
 from urllib.parse import urlencode
 from type import MultiModalMessage
 from pub_func import process_sse_data
-from models import TTS_Request, fetch_TTS_sound
 from websocket import WebSocket, create_connection
 from typing import AsyncGenerator, List, Any, Tuple
 from streamlit.delta_generator import DeltaGenerator
 from streamlit.elements.widgets.chat import ChatInputValue
+from models.sovits_model import TTS_Request, fetch_TTS_sound
 from config import USER_NAME, ASSISTANT_NAME, API_HOST, API_PORT
 from streamlit.runtime.uploaded_file_manager import UploadedFile
 from client.utils import storage_add_chat, ChatStorage, clear_session as clear_streamlit_session

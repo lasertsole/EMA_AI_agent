@@ -35,11 +35,6 @@ async def _assemble_agent(session_id: str, history: List[dict[str, Any]], multi_
     mes_history = assemble_result.get("messages", [])
     system_prompt_addition = assemble_result.get("system_prompt_addition", "")
 
-    # # 使用viking-memory路由
-    # viking_result: Dict[str, Any] = viking_routing(session_id = session_id, user_input = user_input)
-    # files: List[str] = viking_result.get("file_names", [])
-    # system_prompt_addition:str = viking_result.get("context", "")
-
     # 加入系统提示
     messages: List[BaseMessage] = [SystemMessage(content=build_system_prompt() + system_prompt_addition)]
 
@@ -153,11 +148,8 @@ async def async_generator(session_id: str, multi_modal_message: MultiModalMessag
         # 将用户消息持久化
         serialize_messages_to_jsonl(session_id = session_id, messages = format_last_turn_messages)
 
-        # 写出viking时间线
-        # enqueue_append_timeline_entry(session_id = session_id, human_content = multi_modal_message.text, ai_content = ai_content)
-
-        # 尝试归档信息
-        maybe_archive_history(session_id = session_id, all_messages = all_messages)
+        # # 尝试归档信息
+        # maybe_archive_history(session_id = session_id, all_messages = all_messages)
 
 """以上是返回信息逻辑"""
 

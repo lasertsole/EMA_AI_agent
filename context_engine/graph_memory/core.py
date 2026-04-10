@@ -33,7 +33,7 @@ class RecallResult(TypedDict):
 
 # ── 初始化核心模块 ──────────────────────────────────────
 DEFAULT_CONFIG: GmConfig = GmConfig(
-    db_path=f"{SRC_DIR}/store/graph-memory.db",
+    db_path=f"{SRC_DIR}/store/graph-memory/graph-memory.db",
     compact_turn_count = 6,
     recall_max_nodes = 6,
     recall_max_depth = 2,

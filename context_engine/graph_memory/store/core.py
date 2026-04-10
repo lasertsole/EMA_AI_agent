@@ -8,8 +8,11 @@ from ..type import GmNode, GmEdge
 from typing import Any, Optional, List, TypedDict, Set
 
 # ─── 工具 ─────────────────────────────────────────────────────
+def get_timestamp() -> int:
+    return int(time.time() * 1000)
+
 def uid(p: str) -> str:
-    timestamp = int(time.time() * 1000)
+    timestamp = get_timestamp()
     random_str = ''.join(random.choices(string.ascii_lowercase + string.digits, k=5))
 
     return f"{p}-{timestamp}-{random_str}"
@@ -85,7 +88,7 @@ class UpsertResult(TypedDict):
 def upsert_node(db: sqlite3.Connection, c: dict, session_id: str) -> UpsertResult:
     name = normalize_name(c['name'])
     ex: GmNode = find_by_name(db, name)
-    now = int(time.time() * 1000)
+    now = get_timestamp()
 
     if ex:
         old_sessions: List[str] = getattr(ex, 'source_sessions', [])
@@ -157,7 +160,7 @@ def merge_nodes(db: sqlite3.Connection, keep_id: str, merge_id: str) -> None:
     db.execute(
         "UPDATE gm_nodes SET content=?, description=?, validated_count=?, "
         "source_sessions=?, updated_at=? WHERE id=?",
-        (content, desc, count, json.dumps(sessions), int(time.time() * 1000), keep_id)
+        (content, desc, count, json.dumps(sessions), get_timestamp(), keep_id)
     )
 
     # 迁移边关系：将指向 merge_id 的边重新指向 keep_id
@@ -239,7 +242,7 @@ def upsert_edge(
                 edge_data['instruction'],
                 edge_data.get('condition'),  # 使用get避免KeyError
                 edge_data['session_id'],
-                int(time.time() * 1000)  # 当前时间戳
+                get_timestamp()  # 当前时间戳
             )
         )
     db.commit()
@@ -405,7 +408,7 @@ def save_message(
     db.execute("""
         INSERT OR IGNORE INTO gm_messages (id, session_id, turn_index, role, content, created_at)
         VALUES (?,?,?,?,?,?)
-    """, (uid("m"), session_id, turn, role, json.dumps(content, ensure_ascii=False), int(time.time() * 1000)))
+    """, (uid("m"), session_id, turn, role, json.dumps(content, ensure_ascii=False), get_timestamp()))
     db.commit()
 
 
@@ -516,7 +519,7 @@ def save_signal(db: sqlite3.Connection, session_id: str, signal_data: dict) -> N
         INSERT INTO gm_signals (id, session_id, turn_index, type, data, created_at)
         VALUES (?,?,?,?,?,?)
     """, (uid("s"), session_id, signal_data['turnIndex'], signal_data['type'],
-          json.dumps(signal_data['data']), int(time.time() * 1000)))
+          json.dumps(signal_data['data']), get_timestamp()))
     db.commit()
 
 def pending_signals(db: sqlite3.Connection, session_id: str) -> list:
@@ -653,7 +656,7 @@ def vector_search_with_score(
         db: sqlite3.Connection,
         query_vec: list[float],
         limit: int,
-        min_score: float = 0.35
+        min_score: float = 0.5
 ) -> list[ScoredNode]:
     """向量搜索并返回带余弦相似度的节点"""
     import math
@@ -664,7 +667,7 @@ def vector_search_with_score(
         SELECT v.node_id, v.embedding, n.*
         FROM gm_vectors v JOIN gm_nodes n ON n.id = v.node_id
     """).fetchall()
-    # print("rows", rows)
+
     if not rows:
         return []
 
@@ -681,7 +684,6 @@ def vector_search_with_score(
         v_norm = math.sqrt(sum(v[i] * v[i] for i in range(min_len)))
 
         score = dot / (v_norm * q_norm + 1e-9)
-
         if score > min_score:
             results.append({
                 'node': to_node(dict(row)),
@@ -696,7 +698,7 @@ def vector_search(
         db: sqlite3.Connection,
         query_vec: list[float],
         limit: int,
-        min_score: float = 0.35
+        min_score: float = 0.45
 ) -> list[GmNode]:
     """向量搜索（兼容旧接口）"""
     scored = vector_search_with_score(db, query_vec, limit, min_score)
@@ -759,7 +761,7 @@ def upsert_community_summary(
         embedding: Optional[list[float]] = None
 ) -> None:
     """插入或更新社区摘要"""
-    now = int(time.time() * 1000)
+    now = get_timestamp()
 
     db.row_factory = sqlite3.Row
     existing = db.execute(

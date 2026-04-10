@@ -4,7 +4,7 @@ from pathlib import Path
 from config import SRC_DIR, CONTEXT_ENGINE_PATH
 
 _db: sqlite3.Connection | None = None
-_db_path = Path(SRC_DIR) / "store/graph_memory.db"
+_db_path = Path(SRC_DIR) / "store/graph-memory/graph_memory.db"
 
 def get_db():
     global _db
