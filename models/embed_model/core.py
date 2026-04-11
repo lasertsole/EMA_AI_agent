@@ -2,11 +2,16 @@ import os
 from pathlib import Path
 from langchain_core.embeddings import Embeddings
 
-from sentence_transformers import SentenceTransformer
+# 获取当前所在文件夹
+current_dir = Path(__file__).parent.resolve()
+model_cache_folder = current_dir / "model_weight"
 
-os.environ["HF_HUB_OFFLINE"] = "1"
-os.environ["TRANSFORMERS_OFFLINE"] = "1"
-os.environ["HF_HUB_DISABLE_TELEMETRY"] = "1"
+if model_cache_folder.exists():
+    os.environ["HF_HUB_OFFLINE"] = "1"
+    os.environ["TRANSFORMERS_OFFLINE"] = "1"
+    os.environ["HF_HUB_DISABLE_TELEMETRY"] = "1"
+
+from sentence_transformers import SentenceTransformer
 
 # 获取当前所在文件夹
 current_dir = Path(__file__).parent.resolve()

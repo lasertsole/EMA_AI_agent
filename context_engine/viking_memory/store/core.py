@@ -62,7 +62,7 @@ def delete_history_by_session_id(db: sqlite3.Connection, session_id: str):
             DELETE FROM summary WHERE session_id = ?
         """, (session_id,))
 
-def get_summaries(db: sqlite3.Connection, session_id: str, time_start: Optional[int] = None, time_end: Optional[int] = None) -> list[Summary]:
+def get_summaries(db: sqlite3.Connection, session_id: str, time_start: Optional[str] = None, time_end: Optional[str] = None) -> list[Summary]:
     db.row_factory = sqlite3.Row
 
     conditions: list[str] = ["summary.session_id = ?"]
@@ -130,14 +130,14 @@ def get_messages_by_last_n(db: sqlite3.Connection, session_id: str, last_n: int 
 
         return res
 
-def get_messages_by_match_text(db: sqlite3.Connection, session_id: str, match_text: str, limit: int = 6, time_start: Optional[int] = None, time_end: Optional[int] = None)-> list[Message]:
+def get_messages_by_match_text(db: sqlite3.Connection, session_id: str, match_text: str, limit: int = 6, time_start: Optional[str] = None, time_end: Optional[str] = None)-> list[Message]:
     db.row_factory = sqlite3.Row
 
-    conditions: list[str] = ["message.session_id = ?"]
+    conditions: list[str] = ["m.session_id = ?"]
     if time_start is not None:
-        conditions.append(f"message.timestamp >= {time_start}")
+        conditions.append(f"m.timestamp >= {time_start}")
     if time_end is not None:
-        conditions.append(f"message.timestamp <= {time_end}")
+        conditions.append(f"m.timestamp <= {time_end}")
     where_clause: str = " AND ".join(conditions)
 
     with db:

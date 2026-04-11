@@ -3,8 +3,8 @@ import sqlite3
 from typing import Optional, Any
 from pub_func import generate_tsid
 from pydantic import BaseModel, Field
-from models import simple_chat_model, embed_model
 from langchain_core.prompts import ChatPromptTemplate
+from models import simple_chat_model, embed_model, reranker_model
 from .store import get_db, add_history as db_add_history, get_summaries, get_decisions, get_messages_by_match_text, get_messages_by_last_n
 
 _db: sqlite3.Connection = get_db()
@@ -71,10 +71,10 @@ class RetrieveRecord(BaseModel):
 
 class TimeLimited(BaseModel):
     time_start: str | None = Field(default=None, description="起始时间，格式：YYYYMMDDHHmmss", examples= ["20260411154119"])
-    time_end: list[str] = Field(default=[], description="结束时间，格式：YYYYMMDDHHmmss", examples= ["20260411154119"])
+    time_end: str | None = Field(default=None, description="结束时间，格式：YYYYMMDDHHmmss", examples= ["20260411154119"])
 
-def _retrieve_by_embedding(session_id: str, query_vec: list[float], min_score: float = 0.6) -> list[RetrieveRecord]:
-    summaries = get_summaries(db=_db, session_id=session_id)
+def _retrieve_by_embedding(session_id: str, query_vec: list[float], min_score: float = 0.6, time_start: Optional[str] = None, time_end: Optional[str] = None) -> list[RetrieveRecord]:
+    summaries = get_summaries(db=_db, session_id=session_id, time_start = time_start, time_end = time_end)
 
     q_norm = math.sqrt(sum(x * x for x in query_vec))
     if q_norm == 0:
@@ -98,21 +98,22 @@ def _retrieve_by_embedding(session_id: str, query_vec: list[float], min_score: f
 
     return [RetrieveRecord(text="\n".join(d.decisions), timestamp=d.timestamp) for d in decisions]
 
-def _retrieve_by_fts5(session_id: str, user_text: str, limited_count: int = 6) -> list[RetrieveRecord]:
-    messages = get_messages_by_match_text(db=_db, session_id=session_id, match_text=user_text)
+def _retrieve_by_fts5(session_id: str, user_text: str, limited_count: int = 6, time_start: Optional[str] = None, time_end: Optional[str] = None) -> list[RetrieveRecord]:
+    messages = get_messages_by_match_text(db=_db, session_id=session_id, match_text=user_text, time_start=time_start, time_end=time_end)
     messages = messages[:limited_count]
 
     return [RetrieveRecord(text=m.turn_text, timestamp=m.timestamp) for m in messages]
 
-def retrieve_history(session_id: str, user_text: str) -> dict[str, Any]:
+def retrieve_history(session_id: str, user_text: str) -> list[RetrieveRecord]:
     system = (
         "根据用户输入的内容，提取所需要匹配的时间段 或 对话轮数，时间格式为 YYYYMMDDHHmmss\n"
         f"当前时间为 {generate_tsid()}"
         "example:"
         "- '帮我看看昨天的新闻是什么'-> 当前时间为 20260411154119 time_start: 20260410000000 end_time: 20260411000000" 
         "- '帮我看看7月1号到7月7号之间的新闻是什么'-> time_start: 20270701000000 time_end: 20270708000000"
-        "- '帮我看看5分钟前我说了什么'-> 当前时间为 20260411154119 time_start: 20260411153619"
+        "- '帮我看看5分钟前我说了什么'-> 当前时间为 20260411154119 time_start: 20260411153619, 不输出 time_end"
         "如果 用户 说了 ‘刚刚’， ‘刚才’时，不需要输出 time_start 和 time_end"
+        "都不匹配时什么都不输出"
     )
     user = """===== 用户输入的内容 =====
         {user_text}"""
@@ -127,15 +128,26 @@ def retrieve_history(session_id: str, user_text: str) -> dict[str, Any]:
         max_tokens=80
     )
 
-    res = []
+    res: list[RetrieveRecord] = []
     last_n: int = 5
-    if time_limited_res.time_start is None and time_limited_res.time_end is None:
-        res = get_messages_by_last_n(db=_db, session_id=session_id, last_n=last_n)
-    print(res)
+    time_start: str = time_limited_res.time_start
+    time_end: str = time_limited_res.time_end
+
+    if time_start is None and time_end is None:
+        retrieve_mes_by_last_n = get_messages_by_last_n(db=_db, session_id=session_id, last_n=last_n)
+        res = [RetrieveRecord(text=r.turn_text, timestamp=r.timestamp) for r in retrieve_mes_by_last_n]
+
 
     query_vec: list[float] = embed_model.embed_query(user_text)
-    retrieve_by_fts5 = _retrieve_by_fts5(session_id, user_text)
-    retrieve_by_embedding = _retrieve_by_embedding(session_id, query_vec)
+    retrieve_by_fts5 = _retrieve_by_fts5(session_id = session_id, user_text = user_text, time_start = time_start, time_end = time_end)
+    retrieve_by_embedding = _retrieve_by_embedding(session_id = session_id, query_vec = query_vec, time_start=time_start, time_end=time_end)
 
-    print(retrieve_by_fts5)
-    print(retrieve_by_embedding)
+    retrieve_list: list[RetrieveRecord] = [*retrieve_by_fts5, *retrieve_by_embedding]
+    retrieve_dict: dict[str, RetrieveRecord] = {r.text: r for r in retrieve_list}
+
+    reranker_texts: list[dict[str, Any]] = reranker_model.rank(query=user_text, documents=[r.text for r in retrieve_list], top_k=5)
+    reranker_records: list[RetrieveRecord] = [retrieve_dict[r["document"]] for r in reranker_texts]
+    res += reranker_records
+    print(res)
+
+    return res
