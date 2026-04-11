@@ -5,7 +5,11 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent.resolve()
 sys.path.insert(0, str(project_root))
 
-from context_engine.viking_memory.store import get_db
+from context_engine.viking_memory.core import retrieve_history
+
+
+from context_engine import add_history
 
 if __name__ == "__main__":
-    db = get_db()
+    add_history(session_id= "1", user_text = "我帮你吧，你站不起来吧，先休息一下", ai_text = "好的，我先休息一下")
+    retrieve_history(user_text = "休息", session_id = "1")

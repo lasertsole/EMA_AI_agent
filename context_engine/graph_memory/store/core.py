@@ -656,7 +656,7 @@ def vector_search_with_score(
         db: sqlite3.Connection,
         query_vec: list[float],
         limit: int,
-        min_score: float = 0.5
+        min_score: float = 0.6
 ) -> list[ScoredNode]:
     """向量搜索并返回带余弦相似度的节点"""
     import math
@@ -698,7 +698,7 @@ def vector_search(
         db: sqlite3.Connection,
         query_vec: list[float],
         limit: int,
-        min_score: float = 0.45
+        min_score: float = 0.5
 ) -> list[GmNode]:
     """向量搜索（兼容旧接口）"""
     scored = vector_search_with_score(db, query_vec, limit, min_score)

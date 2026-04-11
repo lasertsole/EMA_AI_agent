@@ -1,8 +1,9 @@
+from .core import add_history
 from .history_index import *
 from tools import ALL_TOOLS
 from workspace import ALL_FILE_NAMES
 from .viking_router import viking_route
-
+from .type import Summary, Decisions, Message, to_summary, to_decisions, to_message
 
 def viking_routing(session_id: str,user_input: str)-> dict[str, Any] | None:
     # ===== L0 时间线加载（始终） start =====

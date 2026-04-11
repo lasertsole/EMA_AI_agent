@@ -148,9 +148,8 @@ def build_routing_prompt(user_input: str, file_names: List[str], skills: List[Sk
         "Rules:\n"
         "1. SKILLS: If the task matches any skill above, no extra tool needed (exec is always loaded). But if the skill also needs web/message/etc, include those tools.\n"
         "2. For ANY conversation: include SOUL.md, IDENTITY.md, USER.md.\n"
-        "3. File editing/coding: include \"base-ext\".\n"
-        "4. Simple chat: tools=[], files=[\"SOUL.md\",\"IDENTITY.md\",\"USER.md\"].\n"
-        "5. When unsure: include more tools (cheap). Do NOT leave tools empty if the task needs"
+        "3. Simple chat: tools=[], files=[\"SOUL.md\",\"IDENTITY.md\",\"USER.md\"].\n"
+        "4. When unsure: include more tools (cheap). Do NOT leave tools empty if the task needs"
     )
 
     return {"system": system, "user": user}

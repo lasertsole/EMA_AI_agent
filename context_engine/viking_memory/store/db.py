@@ -35,7 +35,7 @@ def migrate(db) -> None:
     cur = db.execute("SELECT MAX(v) as v FROM _migrations").fetchone()[0]
     if cur is None:
         cur = 0
-    steps = [m1_summary, m2_decisions, m3_message]
+    steps = [m1_summary, m2_decisions, m3_message, m4_fts5]
     for i in range(cur, len(steps)):
         steps[i](db)
         db.execute("INSERT INTO _migrations (v,at) VALUES (?,?)", (i + 1, int(time.time())))
@@ -49,7 +49,7 @@ def m1_summary(db: sqlite3.Connection) -> None:
             session_id      TEXT,
             summary         TEXT,
             embedding       BLOB,
-            timestamp       INTEGER
+            timestamp       TEXT
         );
         CREATE INDEX IF NOT EXISTS idx_summary_timestamp ON summary(session_id, timestamp);
     """)
@@ -61,7 +61,7 @@ def m2_decisions(db: sqlite3.Connection) -> None:
             summary_id      TEXT REFERENCES summary(id),
             session_id      TEXT,
             decisions       BLOB,
-            timestamp       INTEGER
+            timestamp       TEXT
         );
         CREATE INDEX IF NOT EXISTS idx_decisions_summary_id ON decisions(summary_id);
         CREATE INDEX IF NOT EXISTS idx_decisions_timestamp ON decisions(session_id, timestamp);
@@ -78,9 +78,9 @@ def m3_message(db: sqlite3.Connection) -> None:
         CREATE TABLE IF NOT EXISTS message (
             summary_id      TEXT REFERENCES summary(id),
             session_id      TEXT,
-            ori_text        TEXT,
+            turn_text        TEXT,
             embedding       BLOB,
-            timestamp       INTEGER
+            timestamp       TEXT
         );
         CREATE INDEX IF NOT EXISTS idx_message_summary_id ON message(summary_id);
         CREATE INDEX IF NOT EXISTS idx_message_timestamp ON message(session_id, timestamp);
@@ -96,7 +96,7 @@ def m4_fts5(db: sqlite3.Connection) -> None:
     try:
         db.executescript("""
             CREATE VIRTUAL TABLE IF NOT EXISTS message_fts USING fts5(
-                ori_text,
+                turn_text,
                 content=gm_nodes,
                 content_rowid=rowid,
                 tokenize='simple'
@@ -104,22 +104,22 @@ def m4_fts5(db: sqlite3.Connection) -> None:
 
             CREATE TRIGGER IF NOT EXISTS message_ai AFTER INSERT ON message
             BEGIN
-                INSERT INTO message_fts(rowid, ori_text)
-                VALUES (NEW.rowid, NEW.ori_text);
+                INSERT INTO message_fts(rowid, turn_text)
+                VALUES (NEW.rowid, NEW.turn_text);
             END;
 
             CREATE TRIGGER IF NOT EXISTS message_ad AFTER DELETE ON message
             BEGIN
-                INSERT INTO message_fts(message_fts, rowid, ori_text)
-                VALUES ('delete', OLD.rowid, OLD.ori_text);
+                INSERT INTO message_fts(message_fts, rowid, turn_text)
+                VALUES ('delete', OLD.rowid, OLD.turn_text);
             END;
 
             CREATE TRIGGER IF NOT EXISTS message_au AFTER UPDATE ON message
             BEGIN
-                INSERT INTO message_fts(message_fts, rowid, ori_text)
-                VALUES ('delete', OLD.rowid, OLD.ori_text);
-                INSERT INTO message_fts(rowid, ori_text)
-                VALUES (NEW.rowid, NEW.ori_text);
+                INSERT INTO message_fts(message_fts, rowid, turn_text)
+                VALUES ('delete', OLD.rowid, OLD.turn_text);
+                INSERT INTO message_fts(rowid, turn_text)
+                VALUES (NEW.rowid, NEW.turn_text);
             END;
         """)
     except Exception as e:
