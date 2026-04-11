@@ -62,6 +62,15 @@ def delete_history_by_session_id(db: sqlite3.Connection, session_id: str):
             DELETE FROM summary WHERE session_id = ?
         """, (session_id,))
 
+def delete_history_by_n_days_ago(db: sqlite3.Connection, n_days_ago: str):
+    """ 删除历史记录
+    (decisions表 和 message表有连带删除触发器， 所以只需要操作summary表)
+    """
+    with db:
+        db.execute("""
+            DELETE FROM summary WHERE timestamp < ?
+        """, (n_days_ago,))
+
 def get_summaries(db: sqlite3.Connection, session_id: str, time_start: Optional[str] = None, time_end: Optional[str] = None) -> list[Summary]:
     db.row_factory = sqlite3.Row
 

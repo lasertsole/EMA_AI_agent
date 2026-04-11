@@ -5,7 +5,7 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent.resolve()
 sys.path.insert(0, str(project_root))
 
-from context_engine.viking_memory.core import retrieve_history
+from context_engine.viking_memory import retrieve_history
 
 
 from context_engine import add_history

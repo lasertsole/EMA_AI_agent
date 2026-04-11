@@ -5,7 +5,8 @@ from pub_func import generate_tsid
 from pydantic import BaseModel, Field
 from langchain_core.prompts import ChatPromptTemplate
 from models import simple_chat_model, embed_model, reranker_model
-from .store import get_db, add_history as db_add_history, get_summaries, get_decisions, get_messages_by_match_text, get_messages_by_last_n
+from .store import (get_db, add_history as db_add_history, get_summaries, get_decisions, get_messages_by_match_text,
+                    get_messages_by_last_n, delete_history_by_n_days_ago)
 
 _db: sqlite3.Connection = get_db()
 
@@ -151,3 +152,10 @@ def retrieve_history(session_id: str, user_text: str) -> list[RetrieveRecord]:
     print(res)
 
     return res
+
+def delete_old_history_by_n_days_ago(n_days_ago: int = 7)-> None:
+    if n_days_ago < 0:
+        raise ValueError("n_days_ago must be greater than 0")
+    bias_tsid = generate_tsid(days_offset = -n_days_ago)
+
+    delete_history_by_n_days_ago(db=_db, n_days_ago=bias_tsid)
