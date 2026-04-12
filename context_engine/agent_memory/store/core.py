@@ -99,11 +99,23 @@ def get_turns(
 
     # 转义 FTS5 查询字符串
     escaped_query = query.strip()
-    if any(c in escaped_query for c in ['"', "'", '*', '+', '-', '.', '(', ')', '^', '~', '&', '|', ':']):
+
+    # 如果查询为空，跳过 FTS5 搜索
+    if not escaped_query:
+        pass
+    else:
         escaped_query = escaped_query.replace('"', '""')
-        escaped_query = f'"{escaped_query}"'
+
+        # 检查是否包含 FTS5 操作符，如果有则整体加引号
+        fts_operators = ['*', '+', '-', '.', '(', ')', '（', '）' '^', '~', '&', '|', ':', 'AND', 'OR', 'NOT']
+        needs_quoting = any(op in escaped_query.upper() for op in fts_operators) or any(
+            c in escaped_query for c in ["'", '"'])
+
+        if needs_quoting:
+            escaped_query = f'"{escaped_query}"'
 
     with db:
+        print(escaped_query)
         rows = db.execute(f"""
             SELECT h.*, rank FROM turns_fts fts
             JOIN turns h ON h.rowid = fts.rowid

@@ -1,59 +1,97 @@
+from pprint import pprint
 import sys
-import json
-from typing import Any
+import textwrap
 from pathlib import Path
 # 添加项目根目录到 Python 搜索路径
 project_root = Path(__file__).parent.parent.resolve()
+
 sys.path.insert(0, str(project_root))
-
 from models import simple_chat_model
+import langextract as lx
 
+input_text: str = """新华社北京4月11日电 题：习近平主席寄望中美青年
 
-_EVALUATE_SYSTEM_PROMPT = (
-    "You are a notification gate for a background agent. "
-    "You will be given the original task and the agent's response. "
-    "Call the evaluate_notification tool to decide whether the user "
-    "should be notified.\n\n"
-    "Notify when the response contains actionable information, errors, "
-    "completed deliverables, or anything the user explicitly asked to "
-    "be reminded about.\n\n"
-    "Suppress when the response is a routine status check with nothing "
-    "new, a confirmation that everything is normal, or essentially empty."
-)
+新华社记者马卓言
 
-_EVALUATE_TOOL = [
-    {
-        "type": "function",
-        "function": {
-            "name": "evaluate_notification",
-            "description": "Decide whether the user should be notified about this background task result.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "should_notify": {
-                        "type": "boolean",
-                        "description": "true = result contains actionable/important info the user should see; false = routine or empty, safe to suppress",
-                    },
-                    "reason": {
-                        "type": "string",
-                        "description": "One-sentence reason for the decision",
-                    },
-                },
-                "required": ["should_notify"],
-            },
-        },
-    }
-]
+4月10日，国家主席习近平向中美“乒乓外交”55周年纪念大会暨中美青少年体育交流系列活动启动仪式致贺信，对两国青年一代寄予厚望——
 
-def main(response: str, task_context: str):
-    llm_response = simple_chat_model.bind_tools(_EVALUATE_TOOL).invoke([
-        {"role": "system", "content": _EVALUATE_SYSTEM_PROMPT},
-        {"role": "user", "content": (
-            f"## Original task\n{task_context}\n\n"
-            f"## Agent response\n{response}"
-        )},
-    ])
-    print("llm_response:", llm_response)
+“希望两国各界人士特别是青年一代从历史中汲取智慧和力量，在交流合作中相知相亲，在互学互鉴中携手前行，共同拉紧友谊纽带，为推动中美关系稳定、健康、可持续发展作出新贡献。”
+
+1971年4月，美国乒乓球队应中方邀请，历史性地访问中国，中美“乒乓外交”打开了两国人民友好往来的大门。“小球转动大球”的创举超越了意识形态分歧，不仅开启了中美两国关系的新篇章，甚至对当时的世界格局产生了深远影响。
+
+“中美关系的大门是由人民打开的。”习近平主席对这段历史佳话有着深刻的论断，“是时代潮流让我们走向彼此，是共同利益让中美超越分歧，是人民愿望让两国打破坚冰。”
+
+历史长河大浪淘沙，最终沉淀下来的总是最有价值的东西。“乒乓外交”的历史证明，中美友好的事业必须从人民中找到根基，从人民中集聚力量，由人民来共同完成。而青年则是人民友好的未来和希望。
+
+中美青年一代要从历史中汲取智慧和力量，自觉投身于人民友谊这件大事中去。
+
+“乒乓外交”的成功，其意义在于以体育交流为纽带，推动两国人民在接触互动中增进相互了解，消融隔阂的坚冰。国之交在于民相亲，民相亲可促国之信。
+
+新时代的两国青年，更应传承这份精神，通过交流打破偏见和隔阂，建立对彼此正确的认知。无论是球台对垒、赛场切磋，还是文化对话、学术交流，中美青年的每一次互动，都是在为两国关系行稳致远积累民意基础，为中美友好的大树培土固本。
+
+习近平主席深刻指出，“中美关系的根基由人民浇筑，未来靠青年创造”“无论形势如何变化，中美两国人民交流合作的愿望不会改变，两国青少年相知相亲的情谊不会改变”。
+
+中美两国虽然历史文化、社会制度、发展道路不同，但人民都善良友好、勤劳务实，都爱祖国、爱家庭、爱生活，都对彼此抱有好感和兴趣。正是善意友好的涓滴汇流，让宽广太平洋不再是天堑；正是人民的双向奔赴，让中美关系一次次从低谷重回正道。
+
+近年来，从推进“未来5年邀请5万名美国青少年来华交流学习”等倡议，到为包括美国在内的数十国公民提供过境免签或单方面免签便利，一个愈发自信、开放、包容的中国，热情欢迎包括美国人民在内的各国人民来华感受真实立体的现代中国，结识真诚友好的中国人民，在文明交流互鉴中体悟相互尊重、和平共处、合作共赢的正确相处之道。
+
+诚如习近平主席指出的那样，中美关系的大门一旦打开，就不会再被关上。两国人民友好事业一经开启，就不会半途而废。人民友谊之树已经长大，一定能经风历雨。
+
+此次中美“乒乓外交”55周年纪念大会期间，中美青少年体育交流系列活动正式启动。赓续“乒乓外交”精神，新一轮丰富多彩的青少年体育交流，正在为中美人民友好交往注入新的青春活力。
+
+小小银球，见证历史，也照亮未来。今年是中美关系的“大年”。期待两国各界更多人士特别是青年再续“乒乓情缘”，成为中美人民友好事业的参与者、支持者、推动者，为推动中美关系发展贡献更大的民间力量。""".strip()
+
+def main():
+    prompt = textwrap.dedent("""\
+        Extract characters, emotions, and relationships in order of appearance.
+        Use exact text for extractions. Do not paraphrase or overlap entities.
+        Provide meaningful attributes for each entity to add context.""")
+
+    # 2. Provide a high-quality example to guide the model
+    examples = [
+        lx.data.ExampleData(
+            text="ROMEO. But soft! What light through yonder window breaks? It is the east, and Juliet is the sun.",
+            extractions=[
+                lx.data.Extraction(
+                    extraction_class="character",
+                    extraction_text="ROMEO",
+                    attributes={"emotional_state": "wonder"}
+                ),
+                lx.data.Extraction(
+                    extraction_class="emotion",
+                    extraction_text="But soft!",
+                    attributes={"feeling": "gentle awe"}
+                ),
+                lx.data.Extraction(
+                    extraction_class="relationship",
+                    extraction_text="Juliet is the sun",
+                    attributes={"type": "metaphor"}
+                ),
+            ]
+        )
+    ]
+    try:
+        result = lx.extract(
+            text_or_documents=input_text,
+            prompt_description=prompt,
+            examples=examples,
+            model_id="qwen3:8b",
+            model_url="http://localhost:11434",
+        )
+
+        print(f"\n✅ 提取成功！共找到 {len(result.extractions)} 个实体\n")
+
+        print("\n📊 正在生成可视化报告...")
+        lx.io.save_annotated_documents([result], output_name="extraction_results.jsonl", output_dir=".")
+        # Generate the visualization from the file
+        html_content = lx.visualize("extraction_results.jsonl")
+        with open("visualization.html", "w", encoding="utf-8") as f:
+            if hasattr(html_content, 'data'):
+                f.write(html_content.data)  # For Jupyter/Colab
+            else:
+                f.write(html_content)
+    except Exception as e:
+        print(f"❌ 抽取失败: {e}")
 
 if __name__ == "__main__":
-    main("解决了", "打印 123")
+    main()

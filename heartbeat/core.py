@@ -57,8 +57,8 @@ class HeartbeatService:
         self,
         on_execute: Callable[[str], Coroutine[Any, Any, str]] | None = None,
         on_notify: Callable[[str], Coroutine[Any, Any, None]] | None = None,
-        # interval_s: int = 30 * 60,
-        interval_s: int = 1 * 10,
+        interval_s: int = 30 * 60,
+        # interval_s: int = 1 * 10,
         enabled: bool = True,
         timezone: str | None = None,
     ):
