@@ -8,10 +8,9 @@ from typing import AsyncGenerator, Any, Dict, List
 from langgraph.graph.state import CompiledStateGraph
 from workspace.prompt_builder import build_system_prompt
 from pub_func import slice_last_turn, sanitize_tool_use_result_pairing
-from sessions import serialize_messages_to_jsonl, deserialize_messages_from_jsonl
+from ..DAO import maybe_extract_memory, clear_session as clear_session_DAO
 from langchain_core.messages import HumanMessage, SystemMessage, BaseMessage, ToolCall, ToolCallChunk
-from context_engine import after_turn, assemble, before_agent_start, rectification_and_standardization
-from ..DAO import maybe_archive_history, maybe_extract_memory, read_current_from_session, clear_session as clear_session_DAO
+from context_engine import after_turn, assemble, before_agent_start, rectification_and_standardization, add_history, retrieve_history_prompt, retrieve_history_by_last_n_prompt
 
 
 def _get_config(session_id: str) -> dict[str, Any]:
@@ -20,28 +19,42 @@ def _get_config(session_id: str) -> dict[str, Any]:
     except ValueError:
         raise Exception("session_id must be an integer")
 
+def _get_agent_history_list(agent: CompiledStateGraph, session_id: str)-> List[BaseMessage]:
+    return agent.get_state(config=_get_config(session_id)).values.get("messages", [])
+
 """以下是组装自带上下文的agent逻辑"""
-async def _assemble_agent(session_id: str, history: List[dict[str, Any]], multi_modal_message: MultiModalMessage) -> CompiledStateGraph:
-    # 将List[dict[str, Any]]转换为List[BaseMessage]
-    mes_history: List[BaseMessage] = deserialize_messages_from_jsonl(session_id)
+async def _assemble_agent(session_id: str, multi_modal_message: MultiModalMessage) -> CompiledStateGraph:
 
     # 创建agent
     agent: CompiledStateGraph = built_agent()
 
-    user_input:str = multi_modal_message.text
+    user_text:str = multi_modal_message.text
 
-    await before_agent_start(session_id = session_id, human_input_text = user_input)
-    assemble_result: Dict[str, str] = await assemble(session_id = session_id, messages = mes_history)
-    mes_history = assemble_result.get("messages", [])
-    system_prompt_addition = assemble_result.get("system_prompt_addition", "")
+    # 获取graph-memory系统提示词
+    await before_agent_start(session_id = session_id, human_input_text = user_text)
 
-    # 加入系统提示
-    messages: List[BaseMessage] = [SystemMessage(content=build_system_prompt() + system_prompt_addition)]
+    all_messages: List[BaseMessage] = _get_agent_history_list(agent, session_id)
+    assemble_result: Dict[str, str] = await assemble(session_id = session_id, messages = all_messages)
+    graph_system_prompt_addition:str = assemble_result.get("system_prompt_addition", "")
 
-    # 消息列表中加入历史对话
-    messages += mes_history
+    # 获取agent-memory系统提示词
+    agent_system_prompt_addition:str  = retrieve_history_prompt(user_text = user_text, session_id = session_id)
 
-    content_list:List[dict[str, str]] = [{"type": "text", "text": multi_modal_message.text}]
+    # 获取最近几条对话
+    recent_messages_addition:str = retrieve_history_by_last_n_prompt(session_id=session_id)
+
+    # 构建系统提示
+    messages: List[BaseMessage] = [
+        SystemMessage(
+            content=
+                build_system_prompt()
+                + graph_system_prompt_addition
+                + agent_system_prompt_addition
+                + recent_messages_addition
+        )
+    ]
+
+    content_list:List[dict[str, str]] = [{"type": "text", "text": user_text}]
     if multi_modal_message.image_base64_list:
         for image_base64 in multi_modal_message.image_base64_list:
             content_list.append({"type": "image_url", "image_url": {"url": f"data:image/png;base64,{image_base64}"}})
@@ -64,15 +77,13 @@ async def async_generator(session_id: str, multi_modal_message: MultiModalMessag
     global _current_tool_name
     global _current_tool_id
 
-    # 获取历史信息
-    history: List[dict[str, Any]] = read_current_from_session(session_id)
-
     # 若有用户要求记忆的内容 添加 跨线程记忆中
-    maybe_extract_memory(multi_modal_message.text)
+    user_text: str = multi_modal_message.text
+    maybe_extract_memory(user_text)
 
     # 创建已经组装好上下文的agent
-    agent: CompiledStateGraph = await _assemble_agent(session_id, history, multi_modal_message)
-    ai_content:str = ""
+    agent: CompiledStateGraph = await _assemble_agent(session_id, multi_modal_message)
+    ai_text:str = ""
 
     try:
         yield SSEMessage(f"{ASSISTANT_NAME}:")
@@ -101,12 +112,12 @@ async def async_generator(session_id: str, multi_modal_message: MultiModalMessag
 
                         if not repeat_flag:
                             res: str = f"\n\n**调用工具 {_current_tool_name} 中**"
-                            ai_content += res
+                            ai_text += res
                             yield SSEMessage(res)
 
                     if _current_tool_id and msg_chunk.content is not None and msg_chunk.content:
                         res: str = f"\n\n**调用工具 {_current_tool_name} 结束。**\n\n"
-                        ai_content += res
+                        ai_text += res
                         yield SSEMessage(res)
                         _current_tool_id = ""
                     # 以上是输出工具信息
@@ -114,14 +125,14 @@ async def async_generator(session_id: str, multi_modal_message: MultiModalMessag
                     # 以下是对话信息
                     if len(msg_chunk.content) > 0:
                         res: str = msg_chunk.content
-                        ai_content += res
+                        ai_text += res
                         yield SSEMessage(res)
                     # 以上是对话信息
 
         else:
             result: dict[str, Any] = await agent.ainvoke(input = None, config = _get_config(session_id))
             res: str = result["messages"][-1].content
-            ai_content += res
+            ai_text += res
             yield SSEMessage(res)
 
     except requests.exceptions.HTTPError as e:
@@ -138,7 +149,7 @@ async def async_generator(session_id: str, multi_modal_message: MultiModalMessag
         _current_tool_id = ""
 
         # 获取 格式化后的最后一轮对话的 消息列表
-        all_messages: List[BaseMessage] = agent.get_state(config = _get_config(session_id)).values.get("messages", [])
+        all_messages: List[BaseMessage] = _get_agent_history_list(agent, session_id)
         last_turn_messages: List[BaseMessage] = slice_last_turn(all_messages)["messages"]
         format_last_turn_messages: List[BaseMessage] = sanitize_tool_use_result_pairing(last_turn_messages)
 
@@ -146,10 +157,8 @@ async def async_generator(session_id: str, multi_modal_message: MultiModalMessag
         await after_turn(session_id = session_id, last_turn_messages = format_last_turn_messages)
 
         # 将用户消息持久化
-        serialize_messages_to_jsonl(session_id = session_id, messages = format_last_turn_messages)
+        add_history(session_id = session_id, user_text=user_text, ai_text=ai_text)
 
-        # # 尝试归档信息
-        # maybe_archive_history(session_id = session_id, all_messages = all_messages)
 
 """以上是返回信息逻辑"""
 

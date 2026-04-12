@@ -7,7 +7,7 @@ from threading import Thread, Lock
 
 _logger = logging.getLogger(__name__)
 
-TaskType = Literal["archive_session", "update_memory_index"]
+TaskType = Literal["update_memory_index"]
 
 
 class BackgroundTaskQueue:
@@ -46,11 +46,6 @@ class BackgroundTaskQueue:
             task_type, data = await self._queue.get()
             try:
                 match task_type:
-                    case "archive_session":
-                        # Import here to avoid circular dependency
-                        from tasks.archive_sessions import archive_session
-                        await archive_session(data["session_id"])
-
                     case "update_memory_index":
                         from tasks.memory_index import update_memory_index_incremental
                         await update_memory_index_incremental(data["new_content"])
@@ -61,10 +56,6 @@ class BackgroundTaskQueue:
                 _logger.error(f"Task failed [{task_type}]: {e}", exc_info=True)
             finally:
                 self._queue.task_done()
-
-    def archive_compress(self, session_id: str) -> None:
-        coro = self._queue.put(("archive_session", {"session_id": session_id}))
-        asyncio.run_coroutine_threadsafe(coro, self._event_loop)
 
     def enqueue_memory_index(self, new_content: str) -> None:
         """Enqueue a memory index update task."""

@@ -849,7 +849,7 @@ class ScoredCommunity(TypedDict):
 def community_vector_search(
         db: sqlite3.Connection,
         query_vec: list[float],
-        min_score: float = 0.15
+        min_score: float = 0.35
 ) -> list[ScoredCommunity]:
     """
     社区向量搜索：用 query 向量匹配社区 embedding，返回按相似度排序的社区
@@ -880,7 +880,7 @@ def community_vector_search(
         v_norm = math.sqrt(sum(v[i] * v[i] for i in range(min_len)))
 
         score = dot / (v_norm * q_norm + 1e-9)
-
+        print(score)
         if score > min_score:
             results.append({
                 'id': row['id'],

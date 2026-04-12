@@ -7,7 +7,6 @@ from typing import Any, List, Optional
 import yaml
 
 from config import ROOT_DIR, SKILLS_DIR
-from context_engine.viking_memory.viking_router import SkillIndexEntry
 
 
 def _parse_frontmatter(text: str) -> dict[str, Any]:
@@ -19,8 +18,8 @@ def _parse_frontmatter(text: str) -> dict[str, Any]:
     return yaml.safe_load(parts[1]) or {}
 
 
-def scan_skills() -> list[SkillIndexEntry]:
-    skills: list[SkillIndexEntry] = []
+def scan_skills() -> list[dict[str, Any]]:
+    skills: list[dict[str, Any]] = []
     for skill_file in SKILLS_DIR.glob("**/SKILL.md"):
         content = skill_file.read_text(encoding="utf-8")
         meta = _parse_frontmatter(content)
