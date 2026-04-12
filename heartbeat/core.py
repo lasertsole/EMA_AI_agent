@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+import json
 import time
 import asyncio
 import logging
 from pathlib import Path
-from config import HEARTBEAT_PATH
 from models import simple_chat_model
 from .evaluate import evaluate_response
+from config import ROOT_DIR, HEARTBEAT_PATH
 from typing import Any, Callable, Coroutine
 
 logger = logging.getLogger(__name__)
@@ -56,7 +57,8 @@ class HeartbeatService:
         self,
         on_execute: Callable[[str], Coroutine[Any, Any, str]] | None = None,
         on_notify: Callable[[str], Coroutine[Any, Any, None]] | None = None,
-        interval_s: int = 30 * 60,
+        # interval_s: int = 30 * 60,
+        interval_s: int = 1 * 10,
         enabled: bool = True,
         timezone: str | None = None,
     ):
@@ -146,9 +148,8 @@ class HeartbeatService:
             logger.info("Heartbeat: tasks found, executing...")
             if self.on_execute:
                 response: str = await self.on_execute(tasks)
-
                 if response:
-                    should_notify = await evaluate_response(response, tasks)
+                    should_notify:bool = evaluate_response(response, tasks)
                     if should_notify and self.on_notify:
                         logger.info("Heartbeat: completed, delivering response")
                         await self.on_notify(response)

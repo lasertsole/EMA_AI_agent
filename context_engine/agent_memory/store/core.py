@@ -5,11 +5,11 @@ import random
 import string
 import sqlite3
 from typing import Any
+from ..type import Turn, to_turn
 from pub_func import generate_tsid
-from ..type import History, to_history
 from models import embed_model, reranker_model
 
-# ─── 工具 ─────────────────────────────────────────────────────
+# ─── 工具方法 ─────────────────────────────────────────────────────
 def get_timestamp() -> int:
     return int(time.time() * 1000)
 
@@ -19,9 +19,9 @@ def uid(p: str) -> str:
 
     return f"{p}-{timestamp}-{random_str}"
 
-# ─── CRUD ───────────────────────────────────────────────
+# ─── sqlite CRUD ───────────────────────────────────────────────
 
-def add_history(db: sqlite3.Connection, session_id: str, turn_text: str):
+def add_turn(db: sqlite3.Connection, session_id: str, turn_text: str):
     with db:  # 自动管理 BEGIN/COMMIT/ROLLBACK
         timestamp: str = generate_tsid()
         id: str = uid("s")
@@ -29,66 +29,49 @@ def add_history(db: sqlite3.Connection, session_id: str, turn_text: str):
         turn_text_embedding: list[float] = embed_model.embed_query(turn_text)
 
         db.execute("""
-            INSERT INTO histories (id, session_id, turn_text, embedding, timestamp)
+            INSERT INTO turns (id, session_id, turn_text, embedding, timestamp)
             VALUES (?,?,?,?,?)
         """, (id, session_id, turn_text, json.dumps(turn_text_embedding), timestamp))
 
-def delete_history_by_id(db: sqlite3.Connection, id: str):
-    with db:
-        db.execute("""
-            DELETE FROM histories WHERE id = ?
-        """, (id,))
+        turn_counts = get_turns_count_by_session_id(db, session_id)
+        print(turn_counts)
+        while turn_counts >= 10:
+            delete_turns_by_session_id(db, session_id)
 
-def delete_histories_by_session_id(db: sqlite3.Connection, session_id: str):
+def delete_turn_by_ids(db: sqlite3.Connection, ids: list[str]):
+    """批量删除 turn 记录"""
+    if not ids:
+        return
+
+    with db:
+        placeholders = ','.join(['?'] * len(ids))
+        db.execute(f"""
+            DELETE FROM turns WHERE id IN ({placeholders})
+        """, ids)
+
+def delete_turns_by_session_id(db: sqlite3.Connection, session_id: str):
     """ 删除历史消息
     """
     with db:
         db.execute("""
-            DELETE FROM histories WHERE session_id = ?
+            DELETE FROM turns WHERE session_id = ?
         """, (session_id,))
 
-def delete_histories_by_n_days_ago(db: sqlite3.Connection, n_days_ago: int = 7):
-    """ 删除历史消息
-    """
-    bias_tsid:str = generate_tsid(days_offset=-n_days_ago)
-
-    with db:
-        db.execute("""
-            DELETE FROM histories WHERE timestamp < ?
-        """, (bias_tsid,))
-
-def get_histories_by_last_n(db: sqlite3.Connection, session_id: str, last_n: int = 7)-> list[History]:
-    db.row_factory = sqlite3.Row
-    with db:
-        rows = db.execute(f"""
-            SELECT * FROM histories 
-            WHERE session_id = ?
-            ORDER BY timestamp DESC
-            LIMIT ?
-        """, (session_id, last_n)).fetchall()
-
-        res: list[History] = []
-        for row in rows:
-            row = dict(row)
-            res.append(to_history(row))
-
-        return res
-
-def get_histories(
+def get_turns(
         db: sqlite3.Connection,
         session_id: str,
         query: str,
-        limit: int = 10,
+        limit: int = 5,
         min_score: float = 0.5,
-)-> list[History]:
+)-> list[Turn]:
     db.row_factory = sqlite3.Row
 
-    """以下是用余弦相似度 筛选出符合条件的histories"""
-    selected_histories_by_embedding: list[History] = []
+    """以下是用余弦相似度 筛选出符合条件的turns"""
+    selected_turns_by_embedding: list[Turn] = []
 
     with db:
         rows = db.execute(f"""
-            SELECT * FROM histories WHERE histories.session_id = ?
+            SELECT * FROM turns WHERE turns.session_id = ?
         """, (session_id,)).fetchall()
 
     query_vec: list[float] = embed_model.embed_query(query)
@@ -104,15 +87,15 @@ def get_histories(
 
         score = dot / (v_norm * q_norm + 1e-9)
         if score > min_score:
-            selected_histories_by_embedding.append(to_history(row))
+            selected_turns_by_embedding.append(to_turn(row))
 
             # 如果已经满足limit的3倍，则停止
-            if len(selected_histories_by_embedding) >= limit * 3:
+            if len(selected_turns_by_embedding) >= limit * 3:
                 break
-    """以上是用余弦相似度 筛选出符合条件的histories"""
+    """以上是用余弦相似度 筛选出符合条件的turns"""
 
-    """以下是用fts5 筛选出符合条件的histories"""
-    selected_histories_by_fts5: list[History] = []
+    """以下是用fts5 筛选出符合条件的turns"""
+    selected_turns_by_fts5: list[Turn] = []
 
     # 转义 FTS5 查询字符串
     escaped_query = query.strip()
@@ -122,25 +105,50 @@ def get_histories(
 
     with db:
         rows = db.execute(f"""
-            SELECT h.*, rank FROM histories_fts fts
-            JOIN histories h ON h.rowid = fts.rowid
-            WHERE h.session_id = ? AND histories_fts MATCH ?
+            SELECT h.*, rank FROM turns_fts fts
+            JOIN turns h ON h.rowid = fts.rowid
+            WHERE h.session_id = ? AND turns_fts MATCH ?
             ORDER BY rank LIMIT ?
         """, (session_id, escaped_query, limit)).fetchall()
 
         for row in rows:
             row = dict(row)
-            selected_histories_by_fts5.append(to_history(row))
-    """以上是用fts5 筛选出符合条件的histories"""
+            selected_turns_by_fts5.append(to_turn(row))
+    """以上是用fts5 筛选出符合条件的turns"""
 
     """以下是用reranker 精选"""
-    selected_histories: list[History] = [*selected_histories_by_fts5, *selected_histories_by_embedding]
-    retrieve_dict: dict[str, History] = {r.turn_text: r for r in selected_histories}
-    reranker_res: list[dict[str, Any]] = reranker_model.rank(query=query, documents=[r.turn_text for r in selected_histories], top_k=limit)
-    res: list[History] = [retrieve_dict[r["document"]] for r in reranker_res if r["score"] > 0.0]
+    selected_turns: list[Turn] = [*selected_turns_by_fts5, *selected_turns_by_embedding]
+    retrieve_dict: dict[str, Turn] = {r.turn_text: r for r in selected_turns}
+    reranker_res: list[dict[str, Any]] = reranker_model.rank(query=query, documents=[r.turn_text for r in selected_turns], top_k=limit)
+    res: list[Turn] = [retrieve_dict[r["document"]] for r in reranker_res if r["score"] > 0.0]
 
     if len(res) > limit:
         res = res[:limit]
     """以上是用reranker 精选"""
 
     return res
+
+def get_turns_count_by_session_id(db: sqlite3.Connection, session_id: str)-> int:
+    """获取指定session_id的turns数量"""
+    with db:
+        return db.execute(f"""
+            SELECT COUNT(*) FROM turns WHERE session_id = ?
+        """, (session_id,)).fetchone()[0]
+
+def get_turns_by_lastest_n(db: sqlite3.Connection, session_id: str, last_n: int = 5)-> list[Turn]:
+    db.row_factory = sqlite3.Row
+    with db:
+        rows = db.execute(f"""
+            SELECT * FROM turns 
+            WHERE session_id = ?
+            ORDER BY timestamp DESC
+            LIMIT ?
+        """, (session_id, last_n)).fetchall()
+
+        res: list[Turn] = []
+        for row in rows:
+            row = dict(row)
+            res.append(to_turn(row))
+
+        res.reverse()
+        return res

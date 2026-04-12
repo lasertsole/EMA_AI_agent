@@ -1,3 +1,2 @@
 from .db import get_db
-from .core import (add_history, get_histories,
-                   get_histories_by_last_n, delete_histories_by_n_days_ago)
+from .core import (add_turn, get_turns, get_turns_by_lastest_n, get_turns_count_by_session_id)

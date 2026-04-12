@@ -35,54 +35,54 @@ def migrate(db) -> None:
     cur = db.execute("SELECT MAX(v) as v FROM _migrations").fetchone()[0]
     if cur is None:
         cur = 0
-    steps = [m1_histories, m2_fts5]
+    steps = [build_turns_db, build_turns_fts5_db]
     for i in range(cur, len(steps)):
         steps[i](db)
         db.execute("INSERT INTO _migrations (v,at) VALUES (?,?)", (i + 1, int(time.time())))
     db.commit()
 
-# ─── histories 表 ──────────────────────────────────────
-def m1_histories(db: sqlite3.Connection) -> None:
+# ─── turns 表 ──────────────────────────────────────
+def build_turns_db(db: sqlite3.Connection) -> None:
     db.executescript("""
-        CREATE TABLE IF NOT EXISTS histories (
+        CREATE TABLE IF NOT EXISTS turns (
             id              TEXT PRIMARY KEY,
             session_id      TEXT,
             turn_text       TEXT,
             embedding       BLOB,
             timestamp       TEXT
         );
-        CREATE INDEX IF NOT EXISTS idx_histories_session_id ON histories(session_id);
-        CREATE INDEX IF NOT EXISTS idx_histories_timestamp ON histories(timestamp);
+        CREATE INDEX IF NOT EXISTS idx_turns_session_id ON turns(session_id);
+        CREATE INDEX IF NOT EXISTS idx_turns_timestamp ON turns(timestamp);
     """)
 
-# ─── FTS5 全文索引 ───────────────────────────────────────────
-def m2_fts5(db: sqlite3.Connection) -> None:
+# ─── turns FTS5 全文索引 ───────────────────────────────────────────
+def build_turns_fts5_db(db: sqlite3.Connection) -> None:
     try:
         db.executescript("""
-            CREATE VIRTUAL TABLE IF NOT EXISTS histories_fts USING fts5(
+            CREATE VIRTUAL TABLE IF NOT EXISTS turns_fts USING fts5(
                 turn_text,
                 content=gm_nodes,
                 content_rowid=rowid,
                 tokenize='simple'
             );
 
-            CREATE TRIGGER IF NOT EXISTS histories_ai AFTER INSERT ON histories
+            CREATE TRIGGER IF NOT EXISTS turns_ai AFTER INSERT ON turns
             BEGIN
-                INSERT INTO histories_fts(rowid, turn_text)
+                INSERT INTO turns_fts(rowid, turn_text)
                 VALUES (NEW.rowid, NEW.turn_text);
             END;
 
-            CREATE TRIGGER IF NOT EXISTS histories_ad AFTER DELETE ON histories
+            CREATE TRIGGER IF NOT EXISTS turns_ad AFTER DELETE ON turns
             BEGIN
-                INSERT INTO histories_fts(histories_fts, rowid, turn_text)
+                INSERT INTO turns_fts(turns_fts, rowid, turn_text)
                 VALUES ('delete', OLD.rowid, OLD.turn_text);
             END;
 
-            CREATE TRIGGER IF NOT EXISTS histories_au AFTER UPDATE ON histories
+            CREATE TRIGGER IF NOT EXISTS turns_au AFTER UPDATE ON turns
             BEGIN
-                INSERT INTO histories_fts(histories_fts, rowid, turn_text)
+                INSERT INTO turns_fts(turns_fts, rowid, turn_text)
                 VALUES ('delete', OLD.rowid, OLD.turn_text);
-                INSERT INTO histories_fts(rowid, turn_text)
+                INSERT INTO turns_fts(rowid, turn_text)
                 VALUES (NEW.rowid, NEW.turn_text);
             END;
         """)

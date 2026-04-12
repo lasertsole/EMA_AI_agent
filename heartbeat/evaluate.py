@@ -39,7 +39,7 @@ _EVALUATE_TOOL = [
     }
 ]
 
-async def evaluate_response(response: str, task_context: str)-> bool:
+def evaluate_response(response: str, task_context: str)-> bool:
     """Decide whether a background-task result should be delivered to the user.
 
     Uses a lightweight tool-call LLM request (same pattern as heartbeat
@@ -47,7 +47,7 @@ async def evaluate_response(response: str, task_context: str)-> bool:
     that important messages are never silently dropped.
     """
     try:
-        llm_response = await simple_chat_model.bind_tools(_EVALUATE_TOOL).ainvoke([
+        llm_response = simple_chat_model.bind_tools(_EVALUATE_TOOL).invoke([
             {"role": "system", "content": _EVALUATE_SYSTEM_PROMPT},
             {"role": "user", "content": (
                 f"## Original task\n{task_context}\n\n"
@@ -59,10 +59,12 @@ async def evaluate_response(response: str, task_context: str)-> bool:
             logger.warning("evaluate_response: no tool call returned, defaulting to notify")
             return True
 
-        args = llm_response.tool_calls[0].arguments
+        args = llm_response.tool_calls[0].get("args", {})
+
         should_notify = args.get("should_notify", True)
         reason = args.get("reason", "")
         logger.info("evaluate_response: should_notify={}, reason={}", should_notify, reason)
+
         return bool(should_notify)
 
     except Exception:

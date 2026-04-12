@@ -1,17 +1,59 @@
 import sys
+import json
+from typing import Any
 from pathlib import Path
-
 # 添加项目根目录到 Python 搜索路径
 project_root = Path(__file__).parent.parent.resolve()
 sys.path.insert(0, str(project_root))
 
-from context_engine.agent_memory import retrieve_history_prompt, retrieve_history_by_last_n_prompt, delete_old_history_by_n_days_ago
+from models import simple_chat_model
 
 
-from context_engine import add_history
+_EVALUATE_SYSTEM_PROMPT = (
+    "You are a notification gate for a background agent. "
+    "You will be given the original task and the agent's response. "
+    "Call the evaluate_notification tool to decide whether the user "
+    "should be notified.\n\n"
+    "Notify when the response contains actionable information, errors, "
+    "completed deliverables, or anything the user explicitly asked to "
+    "be reminded about.\n\n"
+    "Suppress when the response is a routine status check with nothing "
+    "new, a confirmation that everything is normal, or essentially empty."
+)
+
+_EVALUATE_TOOL = [
+    {
+        "type": "function",
+        "function": {
+            "name": "evaluate_notification",
+            "description": "Decide whether the user should be notified about this background task result.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "should_notify": {
+                        "type": "boolean",
+                        "description": "true = result contains actionable/important info the user should see; false = routine or empty, safe to suppress",
+                    },
+                    "reason": {
+                        "type": "string",
+                        "description": "One-sentence reason for the decision",
+                    },
+                },
+                "required": ["should_notify"],
+            },
+        },
+    }
+]
+
+def main(response: str, task_context: str):
+    llm_response = simple_chat_model.bind_tools(_EVALUATE_TOOL).invoke([
+        {"role": "system", "content": _EVALUATE_SYSTEM_PROMPT},
+        {"role": "user", "content": (
+            f"## Original task\n{task_context}\n\n"
+            f"## Agent response\n{response}"
+        )},
+    ])
+    print("llm_response:", llm_response)
 
 if __name__ == "__main__":
-    add_history(session_id= "1", user_text = "我帮你吧，你站不起来吧，先休息一下", ai_text = "好的，我先休息一下")
-    print(retrieve_history_prompt(user_text = "休息没", session_id = "1"))
-    print(retrieve_history_by_last_n_prompt(session_id = "1"))
-    delete_old_history_by_n_days_ago(n_days_ago = 0)
+    main("解决了", "打印 123")
