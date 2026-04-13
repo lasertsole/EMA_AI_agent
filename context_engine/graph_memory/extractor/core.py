@@ -82,7 +82,7 @@ EXTRACT_SYS = """你是 graph_memory 知识图谱提取引擎，从 AI Agent 对
        - type：节点类型，只允许 TASK / SKILL / EVENT
        - name：全小写连字符命名，确保整个提取过程命名一致
        - description：一句话说明什么场景触发
-       - content：纯文本格式的知识内容（见 1.4 的模板）
+       - content：纯文本格式的知识内容
    1.3 name 命名规范：
        - TASK：动词 - 对象格式，如 deploy-bilibili-mcp、extract-pdf-tables、compare-ocr-engines
        - SKILL：工具 - 操作格式，如 conda-env-create、docker-port-expose

@@ -207,8 +207,6 @@ class Recaller:
         if not seeds:
             return {'nodes': [], 'edges': [], 'token_estimate': 0}
 
-        print("seeds", seeds)
-
         seed_ids: List[str] = [n.id for n in seeds]
 
         walk_result = graph_walk(self.db, seed_ids, 1)

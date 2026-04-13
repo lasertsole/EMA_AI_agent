@@ -10,7 +10,7 @@ from workspace.prompt_builder import build_system_prompt
 from pub_func import slice_last_turn, sanitize_tool_use_result_pairing
 from ..DAO import maybe_extract_memory, clear_session as clear_session_DAO
 from langchain_core.messages import HumanMessage, SystemMessage, BaseMessage, ToolCall, ToolCallChunk
-from context_engine import after_turn, assemble, before_agent_start, rectification_and_standardization, add_history, retrieve_history_prompt, retrieve_history_by_last_n_prompt
+from context_engine import after_turn, assemble, rectification_and_standardization, add_history, retrieve_history_prompt, retrieve_history_by_last_n_prompt
 
 
 def _get_config(session_id: str) -> dict[str, Any]:
@@ -31,10 +31,8 @@ async def _assemble_agent(session_id: str, multi_modal_message: MultiModalMessag
     user_text:str = multi_modal_message.text
 
     # 获取graph-memory系统提示词
-    await before_agent_start(session_id = session_id, human_input_text = user_text)
-
     all_messages: List[BaseMessage] = _get_agent_history_list(agent, session_id)
-    assemble_result: Dict[str, str] = await assemble(session_id = session_id, messages = all_messages)
+    assemble_result: Dict[str, str] = await assemble(user_text = user_text, messages = all_messages)
     graph_system_prompt_addition:str = assemble_result.get("system_prompt_addition", "")
 
     # 获取agent-memory系统提示词
@@ -49,7 +47,7 @@ async def _assemble_agent(session_id: str, multi_modal_message: MultiModalMessag
             content=
                 build_system_prompt()
                 + graph_system_prompt_addition
-                + agent_system_prompt_addition
+                # + agent_system_prompt_addition
                 + recent_messages_addition
         )
     ]

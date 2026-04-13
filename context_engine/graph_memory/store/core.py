@@ -656,7 +656,7 @@ def vector_search_with_score(
         db: sqlite3.Connection,
         query_vec: list[float],
         limit: int,
-        min_score: float = 0.6
+        min_score: float = 0.35
 ) -> list[ScoredNode]:
     """向量搜索并返回带余弦相似度的节点"""
     import math
@@ -758,7 +758,7 @@ def upsert_community_summary(
         summary_id: str,
         summary_text: str,
         node_count: int,
-        embedding: Optional[list[float]] = None
+        embedding: list[float]
 ) -> None:
     """插入或更新社区摘要"""
     now = get_timestamp()
@@ -880,7 +880,7 @@ def community_vector_search(
         v_norm = math.sqrt(sum(v[i] * v[i] for i in range(min_len)))
 
         score = dot / (v_norm * q_norm + 1e-9)
-        print(score)
+
         if score > min_score:
             results.append({
                 'id': row['id'],

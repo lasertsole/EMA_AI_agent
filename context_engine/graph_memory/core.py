@@ -51,7 +51,6 @@ extractor = Extractor(DEFAULT_CONFIG)
 
 # ── Session运行时状态 ──────────────────────────────────
 msg_seq: Dict[str, int] = {}
-recalled: Dict[str, RecallResult] = {}
 turn_counter: Dict[str, int] = {} # 社区维护计数器
 
 # ─── 取最后一轮完整用户对话 ─────────────────────────────────
@@ -241,16 +240,12 @@ async def run_turn_extract(session_id: str) -> None:
     if getattr(result, "nodes", None) or getattr(result, "edges", None):
         invalidate_graph_cache()
 
-# agent调用前召回 匹配的上下文
-async def before_agent_start(session_id: str, human_input_text: str)-> None:
-    res: RecallResult = await recaller.recall(human_input_text)
-    recalled[session_id] = res
-
+# 组装系统prompt
 async def assemble(
-        session_id: str,
+        user_text: str,
         messages: list[BaseMessage]
 ) -> dict:
-    rec = recalled.get(session_id, {"nodes": [], "edges": []})
+    rec: RecallResult = await recaller.recall(user_text)
 
     if len(rec["nodes"]) == 0:
         return {
@@ -302,11 +297,12 @@ async def after_turn(
     asyncio.create_task(run_extract())
 
     # ★ 社区维护：每 N 轮触发一次（纯计算，<5ms）
-    turns = turn_counter.get(session_id, 0) + 1
-    turn_counter[session_id] = turns
-    maintain_interval = getattr(DEFAULT_CONFIG, 'compact_turn_count', 7)
+    turns:int = turn_counter.get(session_id, 0) + 1
+    maintain_interval:int = getattr(DEFAULT_CONFIG, 'compact_turn_count', 6)
 
-    if turns % maintain_interval == 0:
+    if turns >= maintain_interval:
+        turn_counter[session_id] = 0
+
         try:
             invalidate_graph_cache()
             comm: CommunityResult = detect_communities(db)
@@ -328,32 +324,9 @@ async def after_turn(
         except Exception as err:
             logger.error(f"[graph-memory] periodic maintenance failed: {err}")
 
-
-async def prepare_subagent_spawn(parent_session_id: str, child_session_id: str) -> Callable[[], None]:
-    """准备子代理启动：复制父代理的记忆到子代理"""
-    rec: RecallResult = recalled.get(parent_session_id)
-    if rec:
-        recalled[child_session_id] = rec
-
-    def rollback():
-        if child_session_id in recalled:
-            del recalled[child_session_id]
-
-    return rollback
-
-
-async def on_subagent_ended(child_session_key: str) -> None:
-    """子代理结束后清理记忆"""
-    if child_session_key in recalled:
-        del recalled[child_session_key]
-    if child_session_key in msg_seq:
-        del msg_seq[child_session_key]
-
-
 async def dispose() -> None:
     """释放所有内存"""
     msg_seq.clear()
-    recalled.clear()
 
 
 async def rectification_and_standardization(session_id: str) -> None:
@@ -447,5 +420,4 @@ async def rectification_and_standardization(session_id: str) -> None:
     finally:
         # 清理 Session 状态
         msg_seq.pop(session_id, None)
-        recalled.pop(session_id, None)
         turn_counter.pop(session_id, None)
