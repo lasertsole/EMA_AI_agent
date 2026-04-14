@@ -1,9 +1,6 @@
 """
 graph_memory — 向量余弦去重
 
-By: adoresever
-Email: Wywelljob@gmail.com
-
 向量余弦去重 — 发现并合并语义重复的节点
 
 原理：两个节点的 embedding 余弦相似度 > threshold → 视为重复

@@ -1,17 +1,6 @@
 """
 graph_memory - Community Detection
 
-社区检测 — Label Propagation Algorithm
-
-原理：每个节点初始自成一个社区，迭代中每个节点采纳邻居中最频繁的社区标签。
-      收敛后自然形成社区划分。
-
-为什么选 Label Propagation 而不是 Louvain：
-  - 实现简单（50 行核心逻辑）
-  - 不需要外部库
-  - 对小图（< 10000 节点）效果够好
-  - O(iterations * edges)，几千节点 < 5ms
-
 用途：
   - 发现知识域（Docker 相关技能自动聚成一组）
   - recall 时可以拉整个社区的节点
@@ -148,6 +137,62 @@ def detect_communities(db: Connection, max_iter: int = 50) -> CommunityResult:
         "count": len(final_communities),
     }
 
+def detect_communities_leiden(db: Connection, resolution: float = 1.0) -> dict:
+    db.row_factory = sqlite3.Row
+    cursor = db.cursor()
+
+    cursor.execute("SELECT id FROM gm_nodes")
+    node_ids = [row[0] for row in cursor.fetchall()]
+    if not node_ids:
+        return {"labels": {}, "communities": {}, "count": 0}
+
+    id_to_idx = {node_id: i for i, node_id in enumerate(node_ids)}
+    idx_to_id = {i: node_id for i, node_id in enumerate(node_ids)}
+
+    cursor.execute("SELECT from_id, to_id FROM gm_edges")
+    edges = []
+    for f, t in cursor.fetchall():
+        if f in id_to_idx and t in id_to_idx:
+            edges.append((id_to_idx[f], id_to_idx[t]))
+
+    g = ig.Graph(len(node_ids), edges, directed=False)
+
+    partition = leidenalg.find_partition(
+        g,
+        leidenalg.ModularityVertexPartition,
+        resolution_parameter=resolution,
+        n_iterations=2
+    )
+
+    temp_communities = {}
+    for idx, community_id in enumerate(partition.membership):
+        node_id = idx_to_id[idx]
+        if community_id not in temp_communities:
+            temp_communities[community_id] = []
+        temp_communities[community_id].append(node_id)
+
+    sorted_comm_items = sorted(
+        temp_communities.items(),
+        key=lambda x: len(x[1]),
+        reverse=True
+    )
+
+    final_labels = {}
+    final_communities = {}
+
+    for i, (old_id, members) in enumerate(sorted_comm_items):
+        new_label = f"c-{i + 1}"
+        final_communities[new_label] = members
+        for m in members:
+            final_labels[m] = new_label
+
+    update_communities(db, final_labels)
+
+    return {
+        "labels": final_labels,
+        "communities": final_communities,
+        "count": len(final_communities),
+    }
 
 def get_community_peers(
     db: Connection,

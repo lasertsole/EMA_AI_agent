@@ -1,9 +1,6 @@
 """
 graph_memory — 图谱维护
 
-By: adoresever
-Email: Wywelljob@gmail.com
-
 调用时机：session_end（finalize 之后）
 
 执行顺序：
