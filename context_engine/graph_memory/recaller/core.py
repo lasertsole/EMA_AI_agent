@@ -16,6 +16,7 @@ import math
 import hashlib
 from ..graph import PPRResult
 from sqlite3 import Connection
+from models import reranker_model
 from ..type import GmConfig, GmNode, GmEdge
 from langchain_core.embeddings import Embeddings
 from ..graph.community import get_community_peers
@@ -116,6 +117,12 @@ class Recaller:
         else:
             seeds: List[GmNode]  = search_nodes(self.db, query, limit)
 
+        # reranker 阈值过滤
+        node_dict: dict[str, GmNode] = {s.content : s  for s in seeds}
+        filter_contents: List[str] = reranker_model.filter(query, [s.content for s in seeds], gap_score = 0.85)
+        if filter_contents:
+            seeds = [node_dict[c] for c in filter_contents]
+
         if not seeds:
             return {'nodes': [], 'edges': [], 'token_estimate': 0}
 
@@ -199,6 +206,12 @@ class Recaller:
             except Exception:
                 # embedding 失败，fallback
                 pass
+
+        # reranker 阈值过滤
+        node_dict: dict[str, GmNode] = {s.content : s  for s in seeds}
+        filter_contents: List[str] = reranker_model.filter(query, [s.content for s in seeds], gap_score = 0.85)
+        if filter_contents:
+            seeds = [node_dict[c] for c in filter_contents]
 
         # fallback：按时间取社区代表节点
         if not seeds:

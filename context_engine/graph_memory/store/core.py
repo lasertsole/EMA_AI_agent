@@ -238,7 +238,7 @@ def upsert_edge(
                 uid("e"),  # 生成唯一ID
                 edge_data['from_id'],
                 edge_data['to_id'],
-                edge_data['type'],
+                edge_data['type'] if isinstance(edge_data['type'], str) else edge_data['type'].value,
                 edge_data['instruction'],
                 edge_data.get('condition'),  # 使用get避免KeyError
                 edge_data['session_id'],

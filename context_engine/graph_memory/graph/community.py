@@ -9,9 +9,9 @@ graph_memory - Community Detection
 """
 
 import re
-import os
-import random
 import sqlite3
+import leidenalg
+import igraph as ig
 from sqlite3 import Connection
 from langchain_core.messages import AIMessage
 from langchain_core.embeddings import Embeddings
@@ -26,118 +26,7 @@ class CommunityResult(TypedDict):
     communities: dict[str, list[str]]
     count: int
 
-
-def detect_communities(db: Connection, max_iter: int = 50) -> CommunityResult:
-    """
-    运行 Label Propagation 并写回 gm_nodes.community_id
-
-    把有向边当无向边处理（知识关联不分方向）
-
-    Args:
-        db: SQLite 数据库连接
-        max_iter: 最大迭代次数
-
-    Returns:
-        包含标签、社区和数量的结果字典
-    """
-    # 读取活跃节点
-    cursor = db.cursor()
-    cursor.execute("SELECT id FROM gm_nodes")
-    node_rows = cursor.fetchall()
-
-    if not node_rows:
-        return {"labels": {}, "communities": {}, "count": 0}
-
-    node_ids = [row[0] for row in node_rows]
-
-    # 读取边，构建无向邻接表
-    cursor.execute("SELECT from_id, to_id FROM gm_edges")
-    edge_rows = cursor.fetchall()
-
-    node_set = set(node_ids)
-    adj: dict[str, list[str]] = {node_id: [] for node_id in node_ids}
-
-    for from_id, to_id in edge_rows:
-        if from_id not in node_set or to_id not in node_set:
-            continue
-        adj[from_id].append(to_id)
-        adj[to_id].append(from_id)
-
-    # 初始标签：每个节点 = 自己的 ID
-    label: dict[str, str] = {node_id: node_id for node_id in node_ids}
-
-    # 迭代
-    for _ in range(max_iter):
-        changed = False
-
-        # 随机打乱遍历顺序（减少震荡）
-        shuffled = node_ids.copy()
-        random.shuffle(shuffled)
-
-        for node_id in shuffled:
-            neighbors = adj.get(node_id, [])
-            if not neighbors:
-                continue
-
-            # 统计邻居标签频次
-            freq: dict[str, int] = {}
-            for nb in neighbors:
-                neighbor_label = label.get(nb, node_id)
-                freq[neighbor_label] = freq.get(neighbor_label, 0) + 1
-
-            # 取频次最高的标签（相同频次取字典序最小，保证确定性）
-            best_label = label.get(node_id, node_id)
-            best_count = 0
-
-            for lbl, count in sorted(freq.items()):
-                if count > best_count or (count == best_count and lbl < best_label):
-                    best_label = lbl
-                    best_count = count
-
-            if label.get(node_id) != best_label:
-                label[node_id] = best_label
-                changed = True
-
-        if not changed:
-            break
-
-    # 构建社区映射
-    communities: dict[str, list[str]] = {}
-    for node_id, community_id in label.items():
-        if community_id not in communities:
-            communities[community_id] = []
-        communities[community_id].append(node_id)
-
-    # 给社区编号（用最大成员数排序，编号 c-1, c-2, ...）
-    sorted_communities = sorted(
-        communities.items(),
-        key=lambda x: len(x[1]),
-        reverse=True
-    )
-
-    rename_map = {old_id: f"c-{i + 1}" for i, (old_id, _) in enumerate(sorted_communities)}
-
-    # 重命名标签
-    final_labels = {
-        node_id: rename_map.get(old_label, old_label)
-        for node_id, old_label in label.items()
-    }
-
-    final_communities = {
-        rename_map.get(old_id, old_id): members
-        for old_id, members in communities.items()
-    }
-
-    # 写回数据库
-    update_communities(db, final_labels)
-
-    return {
-        "labels": final_labels,
-        "communities": final_communities,
-        "count": len(final_communities),
-    }
-
-def detect_communities_leiden(db: Connection, resolution: float = 1.0) -> dict:
+def detect_communities(db: Connection) -> CommunityResult:
     db.row_factory = sqlite3.Row
     cursor = db.cursor()
 
@@ -160,7 +49,6 @@ def detect_communities_leiden(db: Connection, resolution: float = 1.0) -> dict:
     partition = leidenalg.find_partition(
         g,
         leidenalg.ModularityVertexPartition,
-        resolution_parameter=resolution,
         n_iterations=2
     )
 

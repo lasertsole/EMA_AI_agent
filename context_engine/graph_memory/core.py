@@ -6,12 +6,12 @@ import sqlite3
 from config import SRC_DIR
 from .recaller import Recaller
 from .extractor import Extractor
-from .type import GmConfig, GmNode
 from pub_func import slice_last_turn
+from typing import TypedDict, List, Any, Dict
 from .async_task_queue import async_task_queue
 from langchain_core.embeddings import Embeddings
 from models import simple_chat_model, embed_model
-from typing import TypedDict, List, Any, Dict, Callable
+from .type import GmConfig, GmNode, ExtractionResult
 from langchain_core.messages import BaseMessage, ToolMessage
 from .format import sanitize_tool_use_result_pairing, assemble_context
 from pub_func.extract_text_from_content import extract_text_from_content
@@ -190,7 +190,7 @@ async def run_turn_extract(session_id: str) -> None:
         return
 
     existing = [node.name for node in get_by_session(db, session_id)]
-    result = await extractor.extract(messages=msgs, existing_names=existing)
+    result: ExtractionResult = await extractor.extract(messages=msgs, existing_names=existing)
 
     name_to_id: Dict[str, str] = {}
     for nc in getattr(result, "nodes", []):

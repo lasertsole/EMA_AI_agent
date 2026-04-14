@@ -35,7 +35,7 @@ class RerankerModel:
 
         self.model = CrossEncoder(
             "BAAI/bge-reranker-v2-m3",
-            cache_folder=model_cache_folder.as_posix()
+            cache_folder=model_cache_folder.as_posix(),
         )
         self._initialized = True
 
@@ -43,7 +43,7 @@ class RerankerModel:
             self,
             query: str,
             documents: List[str],
-            top_k: int = None
+            top_k: int = None,
     ) -> List[Dict[str, Any]]:
         """
         对文档按与查询的相关性排序
@@ -85,6 +85,31 @@ class RerankerModel:
         ]
 
         return results
+
+    def filter(
+            self,
+            query: str,
+            documents: List[str],
+            gap_score: float = 0.85
+    ) -> List[str]:
+        if not documents:
+            return []
+
+        # 构建查询-文档对
+        pairs = [[query, doc] for doc in documents]
+
+        # 计算分数
+        scores = self.model.predict(pairs)
+
+        # 配对并排序
+        doc_score_pairs = list(enumerate(scores))
+
+        if gap_score is not None:
+            # 删除分数低于gap_score的文档
+            doc_score_pairs = [pair for pair in doc_score_pairs if pair[1] >= gap_score]
+
+        # 格式化输出（包含文档内容）
+        return [documents[idx] for i, (idx, score) in enumerate(doc_score_pairs)]
 
 # 单例实例
 reranker_model: RerankerModel = RerankerModel()
