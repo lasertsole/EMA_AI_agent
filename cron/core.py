@@ -457,7 +457,6 @@ async def _on_cron_job(cron_job: CronJob) -> None:
        chat_id=to,
        content=res,
     )
-    print(msg)
     await bus.publish_inbound(msg)
 
 cron_service.set_on_job(_on_cron_job)

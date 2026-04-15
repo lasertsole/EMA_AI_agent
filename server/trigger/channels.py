@@ -11,19 +11,10 @@ from typing import AsyncGenerator, Any
 from heartbeat import heartbeat_service
 from server.service import async_generator
 from bus import InboundMessage, OutboundMessage
+from langgraph.graph.state import CompiledStateGraph
 from pub_func import string_to_unique_int, process_sse_data
+from langchain_core.messages import SystemMessage, BaseMessage, HumanMessage
 
-# 启动频道
-channel_thread: Thread = Thread(target = lambda: channel_manager.start_all(), daemon = True)
-channel_thread.start()
-
-# 启动心跳服务
-_heartbeat_thread: Thread = Thread(target=lambda: asyncio.run(heartbeat_service.start()), daemon=True)
-_heartbeat_thread.start()
-
-# 启动cron服务
-_cron_thread: Thread = Thread(target=lambda: asyncio.run(cron_service.start()), daemon=True)
-_cron_thread.start()
 
 """以下是常规处理频道信息"""
 async def process_qq_inbound(message: InboundMessage, channel: BaseChannel) -> None:
@@ -46,22 +37,58 @@ channel_manager.set_inbound_consumer(
 """以上是常规处理频道信息"""
 
 """以下是处理心跳事件"""
-async def process_heartbeat(task: str) -> str:
+async def process_heartbeat_task(task: str) -> str:
+    try:
+        from agent import built_agent
+        from workspace.prompt_builder import build_system_prompt
+
+        agent: CompiledStateGraph = built_agent(checkpointer = None)
+        messages: list[BaseMessage] = [SystemMessage(content=build_system_prompt(selected_file_names=[])), HumanMessage(content=task)]
+        result: dict[str, Any] = agent.invoke(input={"messages": messages})
+
+        return result["messages"][-1].content
+    except Exception as e:
+        return f"发生错误{e}"
+
+heartbeat_service.on_execute = process_heartbeat_task
+
+async def process_heartbeat_notify(agent_res: str) -> None:
     channels_json: Path = Path(ROOT_DIR) / "channels.json"
-    res: list[str] = []
+    res: dict[str, str] = {}
 
     if channels_json.exists():
         channels_configs: dict[str, Any] = json.loads(channels_json.read_text())
         for name, config in channels_configs.items():
-            if config.get("heartbeat", False):
-                res.append(name)
+            if config.get("heartbeat", False) and config.get("heartbeat_receiver", False):
+                res[name] = config["heartbeat_receiver"]
 
-    print(task)
-    return "OK"
-heartbeat_service.on_execute = process_heartbeat
+    for name, receiver in res.items():
+        channel: BaseChannel = channel_manager.get_channel(name)
+        if channel:
+            await channel.send(OutboundMessage(channel=name, chat_id = receiver, content = agent_res))
 
-heartbeat_service.on_notify = process_heartbeat
+heartbeat_service.on_notify = process_heartbeat_notify
 """以上是处理心跳事件"""
 
 """以下是定时器事件"""
 """以上是定时器事件"""
+
+
+def run() -> None:
+    # 先启动心跳和 cron 服务（它们会在 channel_manager 的事件循环中创建任务）
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+
+    try:
+        # 启动心跳服务
+        loop.run_until_complete(heartbeat_service.start())
+        # 启动 cron 服务
+        loop.run_until_complete(cron_service.start())
+        # 启动频道管理器（内部会调用 run_forever）
+        channel_manager.start_all()
+    finally:
+        loop.close()
+
+
+channel_thread: Thread = Thread(target=run, daemon=True)
+channel_thread.start()

@@ -1,6 +1,5 @@
 import sqlite3
 from .type import Turn
-from pathlib import Path
 from pydantic import BaseModel, Field
 from .store import get_db, add_turn as db_add_history, get_turns, get_turns_by_lastest_n
 

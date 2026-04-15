@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import List, Optional
 from config import MEMORY_DIR, WORKSPACE_DIR, SRC_DIR
 from skills.loader import get_skills_text
-from workspace import CORE_FILE_NAMES
+from workspace import CORE_FILE_NAMES, ALL_FILE_NAMES
 
 MAX_FILE_CHARS = 20_000
 
@@ -30,11 +30,17 @@ def build_system_prompt(selected_file_names: Optional[List[str]] = None, selecte
     skill_paths = get_skills_text(selected_skill_names)
     skill_paths = f"{skill_paths}\n\n{skill_guide_text}"
 
-    if selected_file_names is not None and len(selected_file_names) > 0:
+    if selected_file_names is not None:
         file_paths = [_read_text(WORKSPACE_DIR / f) for f in selected_file_names]
+        print(selected_file_names)
+        # 确保一定有核心文件
+        for core_file in CORE_FILE_NAMES:
+            if core_file not in selected_file_names:
+                file_paths.append(_read_text(WORKSPACE_DIR / core_file))
+
     else:
         file_paths = [
-            *[_read_text(WORKSPACE_DIR / f) for f in CORE_FILE_NAMES],
+            *[_read_text(WORKSPACE_DIR / f) for f in ALL_FILE_NAMES],
             _read_text(MEMORY_DIR / "MEMORY.md"),
         ]
 

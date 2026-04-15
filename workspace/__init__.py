@@ -1,15 +1,13 @@
 """Workspace package."""
 CORE_FILE_NAMES = [
     "AGENTS.md",
-    "SOUL.md",
-    "IDENTITY.md",
-    "USER.md",
 ]
 
 ALL_FILE_NAMES = [
     *CORE_FILE_NAMES,
-    "TOOLS.md",
-    "SKILLS.md",
+    "SOUL.md",
+    "IDENTITY.md",
+    "USER.md",
 ]
 
 FILE_DESCRIPTIONS: dict[str, str] = {

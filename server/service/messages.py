@@ -47,7 +47,7 @@ async def _assemble_agent(session_id: str, multi_modal_message: MultiModalMessag
             content=
                 build_system_prompt()
                 + graph_system_prompt_addition
-                # + agent_system_prompt_addition
+                + agent_system_prompt_addition
                 + recent_messages_addition
         )
     ]
