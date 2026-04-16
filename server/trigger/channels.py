@@ -70,9 +70,6 @@ async def process_heartbeat_notify(agent_res: str) -> None:
 heartbeat_service.on_notify = process_heartbeat_notify
 """以上是处理心跳事件"""
 
-"""以下是定时器事件"""
-"""以上是定时器事件"""
-
 def run() -> None:
     # 从频道管理器获取事件循环，让 心跳服务 和 cron服务 运行在相同的事件循环中
     event_loop = channel_manager.get_event_loop()
