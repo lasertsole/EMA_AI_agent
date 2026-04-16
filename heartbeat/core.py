@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import time
 import asyncio
 import logging
 from pathlib import Path
@@ -56,8 +55,7 @@ class HeartbeatService:
         self,
         on_execute: Callable[[str], Coroutine[Any, Any, str]] | None = None,
         on_notify: Callable[[str], Coroutine[Any, Any, None]] | None = None,
-        # interval_s: int = 30 * 60,
-        interval_s: int = 1 * 20,
+        interval_s: int = 30 * 60,
         enabled: bool = True,
         timezone: str | None = None,
     ):
@@ -118,7 +116,7 @@ class HeartbeatService:
         """Main heartbeat loop."""
         while self._running:
             try:
-                time.sleep(self.interval_s)
+                await asyncio.sleep(self.interval_s)
 
                 if self._running:
                     await self._tick()

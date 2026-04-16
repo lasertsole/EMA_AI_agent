@@ -9,8 +9,8 @@ from config import ROOT_DIR
 from .base import BaseChannel
 from bus.queue import MessageBus
 from asyncio import AbstractEventLoop
-from typing import Any, Optional, Callable, Awaitable
 from bus import InboundMessage, OutboundMessage
+from typing import Any, Optional, Callable, Awaitable
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ class ChannelManager:
     _channels: dict[str, BaseChannel] = {}
     _dispatch_task: asyncio.Task | None = None
     _config: dict[str, str] = None
-    _event_loop: AbstractEventLoop | None = asyncio.new_event_loop()
+    _event_loop: AbstractEventLoop | None = None
     _inbound_consumer_dict: dict[str, Callable[[InboundMessage, BaseChannel], Awaitable[None]]] | None = None
     _outbound_consumer_dict: dict[str, Callable[[OutboundMessage, BaseChannel], Awaitable[None]]] | None = None
 
@@ -81,6 +81,12 @@ class ChannelManager:
         self._bus = bus
         self._config = config
         self._init_channels()
+
+        # 如果有运行中的事件循环，则使用它， 否则创建一个新的
+        try:
+            self._event_loop = asyncio.get_running_loop()
+        except RuntimeError:
+            self._event_loop = asyncio.new_event_loop()
 
     def _init_channels(self) -> None:
         """Initialize channels discovered via pkgutil scan + entry_points plugins."""
@@ -141,7 +147,11 @@ class ChannelManager:
                 logger.info(f"Starting {name} channel...")
                 self._event_loop.create_task(self._start_channel(name, channel))
 
-            self._event_loop.run_forever()
+            # 防止重复运行报错
+            try:
+                self._event_loop.run_forever()
+            except Exception:
+                pass
 
     async def stop_all(self) -> None:
         """Stop all channels and the dispatcher."""
@@ -213,6 +223,10 @@ class ChannelManager:
     def get_bus(self) -> MessageBus:
         """Get the message bus."""
         return self._bus
+
+    def get_event_loop(self) -> asyncio.AbstractEventLoop:
+        """Get the event loop."""
+        return self._event_loop
     
     @property
     def enabled_channels(self) -> list[str]:

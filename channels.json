@@ -5,6 +5,7 @@
     "appId": "102821758",
     "secret": "",
     "heartbeat": true,
+    "heartbeat_receiver": "",
     "cron": true
   }
 }

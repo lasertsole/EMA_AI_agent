@@ -73,21 +73,21 @@ heartbeat_service.on_notify = process_heartbeat_notify
 """以下是定时器事件"""
 """以上是定时器事件"""
 
-
 def run() -> None:
-    # 先启动心跳和 cron 服务（它们会在 channel_manager 的事件循环中创建任务）
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
+    # 从频道管理器获取事件循环，让 心跳服务 和 cron服务 运行在相同的事件循环中
+    event_loop = channel_manager.get_event_loop()
+
+    # 启动心跳服务
+    asyncio.run_coroutine_threadsafe(heartbeat_service.start(), event_loop)
+    # 启动 cron 服务
+    asyncio.run_coroutine_threadsafe(cron_service.start(), event_loop)
+    # 启动频道管理器（内部会调用 run_forever）
+    channel_manager.start_all()
 
     try:
-        # 启动心跳服务
-        loop.run_until_complete(heartbeat_service.start())
-        # 启动 cron 服务
-        loop.run_until_complete(cron_service.start())
-        # 启动频道管理器（内部会调用 run_forever）
-        channel_manager.start_all()
-    finally:
-        loop.close()
+        event_loop.run_forever()
+    except Exception:
+        pass
 
 
 channel_thread: Thread = Thread(target=run, daemon=True)

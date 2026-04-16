@@ -32,7 +32,7 @@ def build_system_prompt(selected_file_names: Optional[List[str]] = None, selecte
 
     if selected_file_names is not None:
         file_paths = [_read_text(WORKSPACE_DIR / f) for f in selected_file_names]
-        print(selected_file_names)
+
         # 确保一定有核心文件
         for core_file in CORE_FILE_NAMES:
             if core_file not in selected_file_names:
