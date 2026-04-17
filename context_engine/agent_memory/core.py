@@ -20,7 +20,7 @@ class TimeLimited(BaseModel):
     time_start: str | None = Field(default=None, description="起始时间，格式：YYYYMMDDHHmmss", examples= ["20260411154119"])
     time_end: str | None = Field(default=None, description="结束时间，格式：YYYYMMDDHHmmss", examples= ["20260411154119"])
 
-def retrieve_history_prompt(session_id: str, user_text: str) -> dict[str, str]:
+def retrieve_history_prompt(session_id: str, user_text: str) -> str:
     retrieve_turns: list[Turn] = get_turns(
         db=_db,
         session_id=session_id,
@@ -30,14 +30,11 @@ def retrieve_history_prompt(session_id: str, user_text: str) -> dict[str, str]:
 
     turns_of_history: str = f"{'\n\n'.join(['<turn>\n'+h.turn_text+'\n</turn>' for h in retrieve_turns])}"
 
-    return {
-        "full_prompt": (
-            "===== 以下是 agent-memory 根据用户输入的内容 匹配到的 历史对话记录 =====\n\n"
-            f"{turns_of_history}"
-            "\n\n===== 以下是 agent-memory 根据用户输入的内容 匹配到的 历史对话记录 ====="""
-        ),
-        "turns_of_history": turns_of_history
-    }
+    return (
+        "===== 以下是 agent-memory 根据用户输入的内容 匹配到的 历史对话记录 =====\n\n"
+        f"{turns_of_history}"
+        "\n\n===== 以下是 agent-memory 根据用户输入的内容 匹配到的 历史对话记录 ====="""
+    )
 
 def retrieve_history_by_last_n_prompt(session_id: str, n: int = 5) -> str:
     retrieve_turns: list[Turn] = get_turns_by_lastest_n(

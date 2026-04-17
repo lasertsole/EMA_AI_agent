@@ -26,6 +26,7 @@ def _get_agent_history_list(agent: CompiledStateGraph, session_id: str)-> List[B
     return agent.get_state(config=_get_config(session_id)).values.get("messages", [])
 
 def _mixed_query_with_last_n_turns(turns_of_history: str, query: str) -> str:
+    """根据前n论对话重写query"""
     system_prompt: str = textwrap.dedent("""
         你是一个问题改写助手,根据用户给的几轮历史上下文,将当前用户的提问内容补充得更加完整。
         要求:
@@ -37,8 +38,7 @@ def _mixed_query_with_last_n_turns(turns_of_history: str, query: str) -> str:
                         **assistant**:小雪啊,翻跟斗一向拿手
                     </turn>
                 </turns>
-                query: '你猜她拿了第几名?'
-                改写query为 '你猜小雪拿了第几名?'
+                query: '你猜她拿了第几名?' -> '你猜小雪拿了第几名?'
 
             - 如果query有 指代不明的地方, 根据上下文将query改写成更具体的query
                 如:
@@ -49,8 +49,7 @@ def _mixed_query_with_last_n_turns(turns_of_history: str, query: str) -> str:
                             同时支持 1200 万像素光学品质的 2 倍长焦功能:52 毫米焦距,ƒ/1.6 光圈,传感器位移式光学图像防抖功能,100% Focus Pixels
                         </turn>
                     </turns>
-                query: '参数那么高啊,那这个参数跟真正的相机比如何?'
-                改写query为 '4800 万像素融合式主摄, 1200 万像素光学品质的 跟真正的相机比如何?'
+                query: '参数那么高啊,那这个参数跟真正的相机比如何?' -> '4800 万像素融合式主摄, 1200 万像素光学品质的 跟真正的相机比如何?'
 
             - 其他情况尽量让语句简单整洁的同时包含丰富的有效信息
     """)
@@ -95,20 +94,19 @@ async def _assemble_agent(session_id: str, multi_modal_message: MultiModalMessag
 
     user_text:str = multi_modal_message.text
 
+    # 获取最近几条对话
+    recent_messages_addition:str = retrieve_history_by_last_n_prompt(session_id=session_id)
+
+    # 用最近几条对话 和 query， 生成信息特征更丰富的  用户问题 - transformer_user_text
+    transformer_user_text:str = _mixed_query_with_last_n_turns(turns_of_history=recent_messages_addition, query=user_text)
+
     # 获取graph-memory系统提示词
     all_messages: List[BaseMessage] = _get_agent_history_list(agent, session_id)
-    assemble_result: Dict[str, str] = await assemble(user_text = user_text, messages = all_messages)
+    assemble_result: Dict[str, str] = await assemble(user_text = transformer_user_text, messages = all_messages)
     graph_system_prompt_addition:str = assemble_result.get("system_prompt_addition", "")
 
     # 获取agent-memory系统提示词
-    retrieve_history:dict[str, str]  = retrieve_history_prompt(user_text = user_text, session_id = session_id)
-    agent_system_prompt_addition: str = retrieve_history.get("full_prompt", "")
-
-    # 获取最近几条对话
-    turns_of_history: str = retrieve_history.get("turns_of_history", "")
-
-    # 获取最近几条对话
-    recent_messages_addition:str = retrieve_history_by_last_n_prompt(session_id=session_id)
+    agent_system_prompt_addition: str = retrieve_history_prompt(user_text = transformer_user_text, session_id = session_id)
 
     # 构建系统提示
     messages: List[BaseMessage] = [

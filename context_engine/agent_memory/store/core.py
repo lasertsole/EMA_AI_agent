@@ -70,7 +70,7 @@ def get_turns(
         """, (session_id,)).fetchall()
 
     query_vec: list[float] = embed_model.embed_query(query)
-    q_norm = math.sqrt(sum(x * x for x in query_vec))
+    q_norm: float = math.sqrt(sum(x * x for x in query_vec))
 
     for row in rows:
         row = dict(row)
@@ -80,7 +80,7 @@ def get_turns(
         dot = sum(v[i] * query_vec[i] for i in range(min_len))
         v_norm = math.sqrt(sum(v[i] * v[i] for i in range(min_len)))
 
-        score = dot / (v_norm * q_norm + 1e-9)
+        score: float = dot / (v_norm * q_norm + 1e-9)
         if score > min_score:
             selected_turns_by_embedding.append(to_turn(row))
 

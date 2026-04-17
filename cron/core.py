@@ -136,7 +136,7 @@ class CronService:
                 self._store = CronStore(jobs=jobs)
                 self._last_mtime = self.store_path.stat().st_mtime
             except Exception as e:
-                logger.warning("Failed to load cron store: {}", e)
+                logger.warning("Failed to load cron store: %s", e)
                 self._store = CronStore()
         else:
             self._store = CronStore()
@@ -203,7 +203,7 @@ class CronService:
         self._recompute_next_runs()
         self._save_store()
         self._arm_timer()
-        logger.info("Cron service started with {} jobs", len(self._store.jobs if self._store else []))
+        logger.info("Cron service started with %s jobs", len(self._store.jobs if self._store else []))
 
     def stop(self) -> None:
         """Stop the cron service."""
@@ -269,7 +269,7 @@ class CronService:
     async def _execute_job(self, job: CronJob) -> None:
         """Execute a single job."""
         start_ms = _now_ms()
-        logger.info("Cron: executing job '{}' ({})", job.name, job.id)
+        logger.info("Cron: executing job %s (%s)", job.name, job.id)
 
         try:
             if self.on_job:
@@ -277,12 +277,12 @@ class CronService:
 
             job.state.last_status = "ok"
             job.state.last_error = None
-            logger.info("Cron: job '{}' completed", job.name)
+            logger.info("Cron: job %s completed", job.name)
 
         except Exception as e:
             job.state.last_status = "error"
             job.state.last_error = str(e)
-            logger.error("Cron: job '{}' failed: {}", job.name, e)
+            logger.error("Cron: job %s failed: %s", job.name, e)
 
         end_ms = _now_ms()
         job.state.last_run_at_ms = start_ms
@@ -352,7 +352,7 @@ class CronService:
         self._save_store()
         self._arm_timer()
 
-        logger.info("Cron: added job '{}' ({})", name, job.id)
+        logger.info("Cron: added job %s (%s)", name, job.id)
         return job
 
     def register_system_job(self, job: CronJob) -> CronJob:
@@ -366,7 +366,7 @@ class CronService:
         store.jobs.append(job)
         self._save_store()
         self._arm_timer()
-        logger.info("Cron: registered system job '{}' ({})", job.name, job.id)
+        logger.info("Cron: registered system job %s (%s)", job.name, job.id)
         return job
 
     def remove_job(self, job_id: str) -> Literal["removed", "protected", "not_found"]:
@@ -376,7 +376,7 @@ class CronService:
         if job is None:
             return "not_found"
         if job.payload.kind == "system_event":
-            logger.info("Cron: refused to remove protected system job {}", job_id)
+            logger.info("Cron: refused to remove protected system job %s", job_id)
             return "protected"
 
         before = len(store.jobs)
@@ -386,7 +386,7 @@ class CronService:
         if removed:
             self._save_store()
             self._arm_timer()
-            logger.info("Cron: removed job {}", job_id)
+            logger.info("Cron: removed job %s", job_id)
             return "removed"
 
         return "not_found"
@@ -445,7 +445,7 @@ async def _on_cron_job(cron_job: CronJob) -> None:
 
     from agent import built_agent
 
-    agent: CompiledStateGraph = built_agent()
+    agent: CompiledStateGraph = built_agent(checkpointer = None)
     result: dict[str, Any] = await agent.ainvoke(HumanMessage(content=message))
     res: str = result["messages"][-1].content
 
