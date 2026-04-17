@@ -33,11 +33,6 @@ def add_turn(db: sqlite3.Connection, session_id: str, turn_text: str):
             VALUES (?,?,?,?,?)
         """, (id, session_id, turn_text, json.dumps(turn_text_embedding), timestamp))
 
-        # turn_counts = get_turns_count_by_session_id(db, session_id)
-        #
-        # while turn_counts >= 10:
-        #     delete_turns_by_session_id(db, session_id)
-
 def delete_turn_by_ids(db: sqlite3.Connection, ids: list[str]):
     """批量删除 turn 记录"""
     if not ids:

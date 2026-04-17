@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from typing import Any, List, Dict
+from typing import Any, List, Dict, Optional
 
 # 获取当前所在文件夹
 current_dir = Path(__file__).parent.resolve()
@@ -44,6 +44,7 @@ class RerankerModel:
             query: str,
             documents: List[str],
             top_k: int = None,
+            gap_score: Optional[float] = None
     ) -> List[Dict[str, Any]]:
         """
         对文档按与查询的相关性排序
@@ -73,6 +74,13 @@ class RerankerModel:
         if top_k is not None:
             ranked = ranked[:top_k]
 
+        # 设置分数阈值
+        _gap_score: float = 0.0
+        if gap_score is not None:
+            if gap_score < 0.0 or gap_score > 1.0:
+                raise ValueError("gap_score must be between 0.0 and 1.0")
+            _gap_score = gap_score
+
         # 格式化输出（包含文档内容）
         results = [
             {
@@ -81,7 +89,7 @@ class RerankerModel:
                 "document": documents[idx],
                 "score": round(float(score), 4)
             }
-            for i, (idx, score) in enumerate(ranked)
+            for i, (idx, score) in enumerate(ranked) if score >= _gap_score
         ]
 
         return results

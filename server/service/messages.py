@@ -1,7 +1,10 @@
+import textwrap
 import requests
+from langchain_core.prompts import PromptTemplate
 from robyn import SSEMessage
 from config import ASSISTANT_NAME
 from type import MultiModalMessage
+from models import simple_chat_model
 from agent import built_agent, ModelType
 from langchain.messages import AIMessageChunk
 from typing import AsyncGenerator, Any, Dict, List
@@ -22,6 +25,68 @@ def _get_config(session_id: str) -> dict[str, Any]:
 def _get_agent_history_list(agent: CompiledStateGraph, session_id: str)-> List[BaseMessage]:
     return agent.get_state(config=_get_config(session_id)).values.get("messages", [])
 
+def _mixed_query_with_last_n_turns(turns_of_history: str, query: str) -> str:
+    system_prompt: str = textwrap.dedent("""
+        你是一个问题改写助手,根据用户给的几轮历史上下文,将当前用户的提问内容补充得更加完整。
+        要求:
+            - 如果query有 她、它、他等第三人称代词,根据上下文 将第三人称代词 成正确的名字
+                如:
+                <turns>
+                    <turn>
+                        **user**:小雪今天在参加翻跟头比赛
+                        **assistant**:小雪啊,翻跟斗一向拿手
+                    </turn>
+                </turns>
+                query: '你猜她拿了第几名?'
+                改写query为 '你猜小雪拿了第几名?'
+
+            - 如果query有 指代不明的地方, 根据上下文将query改写成更具体的query
+                如:
+                    <turns>
+                        <turn>
+                            **user**: iphone17摄像头参数怎么样
+                            **assistant**:4800 万像素融合式主摄:26 毫米焦距,ƒ/1.6 光圈,传感器位移式光学图像防抖功能,100% Focus Pixels,支持超高分辨率照片 (2400 万像素和 4800 万像素)
+                            同时支持 1200 万像素光学品质的 2 倍长焦功能:52 毫米焦距,ƒ/1.6 光圈,传感器位移式光学图像防抖功能,100% Focus Pixels
+                        </turn>
+                    </turns>
+                query: '参数那么高啊,那这个参数跟真正的相机比如何?'
+                改写query为 '4800 万像素融合式主摄, 1200 万像素光学品质的 跟真正的相机比如何?'
+
+            - 其他情况尽量让语句简单整洁的同时包含丰富的有效信息
+    """)
+
+    user_prompt_template: str = textwrap.dedent("""
+        =================以下是几轮历史上下文=================
+        {turns_of_history}
+
+        =================当前需要改写的query=================
+        {query}
+    """)
+
+    systemPrompt_Template = PromptTemplate(
+        template=system_prompt,
+        input_variables=[]
+    )
+
+    userPrompt_Template = PromptTemplate(
+        template=user_prompt_template,
+        input_variables=["turns_of_history", "query"]
+    )
+
+    from langchain_core.messages import SystemMessage, HumanMessage
+
+    messages = [
+        SystemMessage(content=systemPrompt_Template.format()),
+        HumanMessage(content=userPrompt_Template.format(
+            turns_of_history=turns_of_history,
+            query=query
+        ))
+    ]
+
+    res = simple_chat_model.invoke(messages)
+    return res.content if hasattr(res, 'content') else str(res)
+
+
 """以下是组装自带上下文的agent逻辑"""
 async def _assemble_agent(session_id: str, multi_modal_message: MultiModalMessage) -> CompiledStateGraph:
 
@@ -36,7 +101,11 @@ async def _assemble_agent(session_id: str, multi_modal_message: MultiModalMessag
     graph_system_prompt_addition:str = assemble_result.get("system_prompt_addition", "")
 
     # 获取agent-memory系统提示词
-    agent_system_prompt_addition:str  = retrieve_history_prompt(user_text = user_text, session_id = session_id)
+    retrieve_history:dict[str, str]  = retrieve_history_prompt(user_text = user_text, session_id = session_id)
+    agent_system_prompt_addition: str = retrieve_history.get("full_prompt", "")
+
+    # 获取最近几条对话
+    turns_of_history: str = retrieve_history.get("turns_of_history", "")
 
     # 获取最近几条对话
     recent_messages_addition:str = retrieve_history_by_last_n_prompt(session_id=session_id)
