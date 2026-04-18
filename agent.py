@@ -12,8 +12,11 @@ class ModelType(Enum):
     REASONER_MODEL = reasoner_model
     VL_MODEL = vl_model
 
-def built_agent(model_type:ModelType = ModelType.CHAT_MODEL, temperature: float = 0.8, enable_tool: bool = True, checkpointer: Checkpointer | None = InMemorySaver())-> CompiledStateGraph:
+def built_agent(model_type:ModelType = ModelType.CHAT_MODEL, temperature: float = 0.8, enable_tool: bool = True, checkpointer: Checkpointer | None = None)-> CompiledStateGraph:
     model = model_type.value.bind(temperature=temperature)
+
+    if checkpointer is None:
+        checkpointer = InMemorySaver()
 
     #生成agent对象
     agent = create_agent(

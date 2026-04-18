@@ -8,6 +8,7 @@ from agent import built_agent, ModelType
 from langchain.messages import AIMessageChunk
 from langchain_core.prompts import PromptTemplate
 from typing import AsyncGenerator, Any, Dict, List
+from langchain_core.runnables import RunnableConfig
 from langgraph.graph.state import CompiledStateGraph
 from workspace.prompt_builder import build_system_prompt
 from pub_func import slice_last_turn, sanitize_tool_use_result_pairing
@@ -16,7 +17,7 @@ from langchain_core.messages import HumanMessage, SystemMessage, BaseMessage, To
 from context_engine import after_turn, assemble, rectification_and_standardization, add_history, retrieve_history_prompt, retrieve_history_by_last_n_prompt
 
 
-def _get_config(session_id: str) -> dict[str, Any]:
+def _get_config(session_id: str) -> RunnableConfig:
     try:
         return {"configurable": {"thread_id": int(session_id)}}
     except ValueError:
