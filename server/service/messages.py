@@ -1,19 +1,19 @@
 import textwrap
 import requests
-from langchain_core.prompts import PromptTemplate
 from robyn import SSEMessage
 from config import ASSISTANT_NAME
 from type import MultiModalMessage
 from models import simple_chat_model
 from agent import built_agent, ModelType
 from langchain.messages import AIMessageChunk
+from langchain_core.prompts import PromptTemplate
 from typing import AsyncGenerator, Any, Dict, List
 from langgraph.graph.state import CompiledStateGraph
 from workspace.prompt_builder import build_system_prompt
 from pub_func import slice_last_turn, sanitize_tool_use_result_pairing
 from ..DAO import maybe_extract_memory, clear_session as clear_session_DAO
 from langchain_core.messages import HumanMessage, SystemMessage, BaseMessage, ToolCall, ToolCallChunk
-from context_engine import after_turn, assemble, rectification_and_standardization, add_history, retrieve_history_prompt, retrieve_history_by_last_n_prompt
+from context_engine import after_turn, assemble, rectification_and_standardization, add_history, retrieve_history_prompt, retrieve_history_by_last_n_prompt, mixed_query_with_last_n_turns
 
 
 def _get_config(session_id: str) -> dict[str, Any]:
@@ -34,8 +34,9 @@ def _mixed_query_with_last_n_turns(turns_of_history: str, query: str) -> str:
                 如:
                 <turns>
                     <turn>
-                        **user**:小雪今天在参加翻跟头比赛
-                        **assistant**:小雪啊,翻跟斗一向拿手
+                        小雪今天在参加翻跟头比赛。
+                        
+                        小雪啊,翻跟斗一向拿手。
                     </turn>
                 </turns>
                 query: '你猜她拿了第几名?' -> '你猜小雪拿了第几名?'
@@ -44,9 +45,10 @@ def _mixed_query_with_last_n_turns(turns_of_history: str, query: str) -> str:
                 如:
                     <turns>
                         <turn>
-                            **user**: iphone17摄像头参数怎么样
-                            **assistant**:4800 万像素融合式主摄:26 毫米焦距,ƒ/1.6 光圈,传感器位移式光学图像防抖功能,100% Focus Pixels,支持超高分辨率照片 (2400 万像素和 4800 万像素)
-                            同时支持 1200 万像素光学品质的 2 倍长焦功能:52 毫米焦距,ƒ/1.6 光圈,传感器位移式光学图像防抖功能,100% Focus Pixels
+                            iphone17摄像头参数怎么样?
+                            
+                            4800 万像素融合式主摄:26 毫米焦距,ƒ/1.6 光圈,传感器位移式光学图像防抖功能,100% Focus Pixels,支持超高分辨率照片 (2400 万像素和 4800 万像素)
+                            同时支持 1200 万像素光学品质的 2 倍长焦功能:52 毫米焦距,ƒ/1.6 光圈,传感器位移式光学图像防抖功能,100% Focus Pixels。
                         </turn>
                     </turns>
                 query: '参数那么高啊,那这个参数跟真正的相机比如何?' -> '4800 万像素融合式主摄, 1200 万像素光学品质的 跟真正的相机比如何?'
@@ -106,7 +108,7 @@ async def _assemble_agent(session_id: str, multi_modal_message: MultiModalMessag
     graph_system_prompt_addition:str = assemble_result.get("system_prompt_addition", "")
 
     # 获取agent-memory系统提示词
-    agent_system_prompt_addition: str = retrieve_history_prompt(user_text = transformer_user_text, session_id = session_id)
+    agent_system_prompt_addition: str = await retrieve_history_prompt(user_text = transformer_user_text, session_id = session_id)
 
     # 构建系统提示
     messages: List[BaseMessage] = [

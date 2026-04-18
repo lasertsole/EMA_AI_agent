@@ -1,0 +1,60 @@
+import os
+import numpy as np
+from config import SESSIONS_DIR
+from lightrag.utils import EmbeddingFunc
+from lightrag import LightRAG, QueryParam
+from models import embed_model, simple_chat_model
+
+
+# 1. 定义 Embedding 函数 (LightRAG 要求必须是异步的)
+async def _local_embedding_func(texts: list[str]) -> np.ndarray:
+    """将本地 embed_model 适配为 LightRAG 需要的格式"""
+    # 调用你项目里的嵌入模型
+    embeddings = embed_model.embed_documents(texts)
+    return np.array(embeddings)
+
+
+# 2. 定义 LLM 完成函数 (用于图谱构建和回答生成)
+async def _local_llm_func(prompt: str, system_prompt: str = None, history_messages: list = None, **kwargs) -> str:
+    """将本地 simple_chat_model 适配为 LightRAG 需要的格式"""
+    from langchain_core.messages import SystemMessage, HumanMessage
+
+    messages = []
+    if system_prompt:
+        messages.append(SystemMessage(content=system_prompt))
+    if history_messages:
+        messages.extend(history_messages)
+    messages.append(HumanMessage(content=prompt))
+
+    # 调用你项目里的聊天模型
+    response = await simple_chat_model.ainvoke(messages)
+    return response.content
+
+async def _get_lightrag(session_id: str)->  LightRAG:
+    working_dir: str = (SESSIONS_DIR / session_id / "lightrag_db").resolve().as_posix()
+    if not os.path.exists(working_dir):
+        os.mkdir(working_dir)
+
+    lightrag = LightRAG(
+        working_dir=working_dir,
+        llm_model_func=_local_llm_func,
+        embedding_func = EmbeddingFunc(
+            embedding_dim=1024,  # BGE-M3 模型的维度
+            max_token_size=8192,
+            func=_local_embedding_func
+        )
+    )
+
+    await lightrag.initialize_storages()
+
+    return lightrag
+
+async def add_rag(session_id: str, histories: list[str])-> None:
+    lightrag = await _get_lightrag(session_id)
+
+    await lightrag.ainsert(histories)
+
+async def retrieve_rag(session_id: str, query_text: str) -> str:
+    lightrag = await _get_lightrag(session_id)
+
+    return await lightrag.aquery(query_text, param=QueryParam(mode="hybrid"))

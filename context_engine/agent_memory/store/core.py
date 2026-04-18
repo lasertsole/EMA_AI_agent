@@ -44,13 +44,45 @@ def delete_turn_by_ids(db: sqlite3.Connection, ids: list[str]):
             DELETE FROM turns WHERE id IN ({placeholders})
         """, ids)
 
-def delete_turns_by_session_id(db: sqlite3.Connection, session_id: str):
-    """ 删除历史消息
+def fetch_and_delete_earliest_turns_by_session_id(db: sqlite3.Connection, session_id: str, n: int = 5) -> list[Turn]:
+    """查询并删除指定 session_id 的最早 n 条 turn 记录
+
+    Args:
+        db: SQLite 数据库连接
+        session_id: 会话 ID
+        n: 要查询和删除的记录数量，默认 5
+
+    Returns:
+        被删除的 Turn 对象列表（按时间顺序排列）
     """
+    db.row_factory = sqlite3.Row
+
+    # 第一步：查询最早 n 条数据
     with db:
-        db.execute("""
-            DELETE FROM turns WHERE session_id = ?
-        """, (session_id,))
+        rows = db.execute("""
+            SELECT * FROM turns 
+            WHERE session_id = ?
+            ORDER BY timestamp ASC
+            LIMIT ?
+        """, (session_id, n)).fetchall()
+
+        if not rows:
+            return []
+
+        # 转换为 Turn 对象
+        deleted_turns: list[Turn] = []
+        ids_to_delete: list[str] = []
+
+        for row in rows:
+            row_dict = dict(row)
+            deleted_turns.append(to_turn(row_dict))
+            ids_to_delete.append(row_dict['id'])
+
+    # 第二步：删除这些记录
+    if ids_to_delete:
+        delete_turn_by_ids(db, ids_to_delete)
+
+    return deleted_turns
 
 def get_turns(
         db: sqlite3.Connection,
@@ -102,7 +134,7 @@ def get_turns(
         escaped_query = escaped_query.replace('"', '""')
 
         # 检查是否包含 FTS5 操作符，如果有则整体加引号
-        fts_operators = ['*', '+', '-', '.', '(', ')', '（', '）' '^', '~', '&', '|', ':', 'AND', 'OR', 'NOT']
+        fts_operators = ['*', '+', '-', '.', '(', ')', '（', '）', '^', '~', '&', '|', ':', 'AND', 'OR', 'NOT']
         needs_quoting = any(op in escaped_query.upper() for op in fts_operators) or any(
             c in escaped_query for c in ["'", '"'])
 
