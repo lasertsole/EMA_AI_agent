@@ -30,7 +30,14 @@ async def _local_llm_func(prompt: str, system_prompt: str = None, history_messag
     response = await simple_chat_model.ainvoke(messages)
     return response.content
 
+
+# 缓存 LightRAG 实例，避免重复创建
+_lightrag_cache: dict[str, LightRAG] = {}
 async def _get_lightrag(session_id: str)->  LightRAG:
+    # 如果已经存在，直接返回缓存的实例
+    if session_id in _lightrag_cache:
+        return _lightrag_cache[session_id]
+
     working_dir: str = (SESSIONS_DIR / session_id / "lightrag_db").resolve().as_posix()
     if not os.path.exists(working_dir):
         os.mkdir(working_dir)
@@ -47,14 +54,15 @@ async def _get_lightrag(session_id: str)->  LightRAG:
 
     await lightrag.initialize_storages()
 
+    _lightrag_cache[session_id] = lightrag
+
     return lightrag
 
 async def add_rag(session_id: str, histories: list[str])-> None:
     lightrag = await _get_lightrag(session_id)
-
     await lightrag.ainsert(histories)
 
 async def retrieve_rag(session_id: str, query_text: str) -> str:
     lightrag = await _get_lightrag(session_id)
-
-    return await lightrag.aquery(query_text, param=QueryParam(mode="hybrid"))
+    res = await lightrag.aquery(query_text, param=QueryParam(mode="hybrid"))
+    return res
