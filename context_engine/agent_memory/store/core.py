@@ -37,7 +37,6 @@ def delete_turn_by_ids(db: sqlite3.Connection, ids: list[str]):
     """批量删除 turn 记录"""
     if not ids:
         return
-
     with db:
         placeholders = ','.join(['?'] * len(ids))
         db.execute(f"""
@@ -78,9 +77,9 @@ def fetch_and_delete_earliest_turns_by_session_id(db: sqlite3.Connection, sessio
             deleted_turns.append(to_turn(row_dict))
             ids_to_delete.append(row_dict['id'])
 
-    # 第二步：删除这些记录
-    if ids_to_delete:
-        delete_turn_by_ids(db, ids_to_delete)
+        # 第二步：删除这些记录
+        if ids_to_delete:
+            delete_turn_by_ids(db, ids_to_delete)
 
     return deleted_turns
 

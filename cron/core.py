@@ -445,7 +445,7 @@ async def _on_cron_job(cron_job: CronJob) -> None:
 
     from agent import built_agent
 
-    agent: CompiledStateGraph = built_agent(checkpointer = None)
+    agent: CompiledStateGraph = built_agent()
     result: dict[str, Any] = await agent.ainvoke(HumanMessage(content=message))
     res: str = result["messages"][-1].content
 

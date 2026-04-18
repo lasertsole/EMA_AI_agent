@@ -1,5 +1,7 @@
+import asyncio
 import textwrap
 import requests
+from asyncio import Task
 from robyn import SSEMessage
 from config import ASSISTANT_NAME
 from type import MultiModalMessage
@@ -222,10 +224,12 @@ async def async_generator(session_id: str, multi_modal_message: MultiModalMessag
         format_last_turn_messages: List[BaseMessage] = sanitize_tool_use_result_pairing(last_turn_messages)
 
         # 启动上下文引擎的 后处理
-        await after_turn(session_id = session_id, last_turn_messages = format_last_turn_messages)
+        after_turn_task: Task = asyncio.create_task(after_turn(session_id = session_id, last_turn_messages = format_last_turn_messages))
 
         # 将用户消息持久化
-        add_history(session_id = session_id, user_text=user_text, ai_text=ai_text)
+        add_history_task: Task = asyncio.create_task(add_history(session_id = session_id, user_text=user_text, ai_text=ai_text))
+
+        await asyncio.gather(after_turn_task, add_history_task)
 
 
 """以上是返回信息逻辑"""
