@@ -13,7 +13,7 @@ from workspace.prompt_builder import build_system_prompt
 from pub_func import slice_last_turn, sanitize_tool_use_result_pairing
 from ..DAO import maybe_extract_memory, clear_session as clear_session_DAO
 from langchain_core.messages import HumanMessage, SystemMessage, BaseMessage, ToolCall, ToolCallChunk
-from context_engine import after_turn, assemble, rectification_and_standardization, add_history, retrieve_history_prompt, retrieve_history_by_last_n_prompt, mixed_query_with_last_n_turns
+from context_engine import after_turn, assemble, rectification_and_standardization, add_history, retrieve_history_prompt, retrieve_history_by_last_n_prompt
 
 
 def _get_config(session_id: str) -> dict[str, Any]:

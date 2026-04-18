@@ -1,5 +1,7 @@
+import asyncio
 import sqlite3
 from .type import Turn
+from asyncio import Task
 from pydantic import BaseModel, Field
 from .store import (get_db, add_turn as db_add_history, get_turns, get_turns_by_lastest_n, get_turns_count_by_session_id,
                     fetch_and_delete_earliest_turns_by_session_id, add_rag, retrieve_rag)
@@ -31,6 +33,8 @@ class TimeLimited(BaseModel):
     time_end: str | None = Field(default=None, description="结束时间，格式：YYYYMMDDHHmmss", examples= ["20260411154119"])
 
 async def retrieve_history_prompt(session_id: str, user_text: str) -> str:
+    rag_task: Task[str] = asyncio.create_task(retrieve_rag(session_id=session_id, query_text=user_text))
+
     retrieve_turns: list[Turn] = get_turns(
         db=_db,
         session_id=session_id,
@@ -40,7 +44,7 @@ async def retrieve_history_prompt(session_id: str, user_text: str) -> str:
 
     turns_of_history: str = f"{'\n\n'.join(['<turn>\n'+h.turn_text+'\n</turn>' for h in retrieve_turns])}"
 
-    rag: str = await retrieve_rag(session_id=session_id, query_text=user_text)
+    rag:str = await rag_task
 
     return (
         "===== 以下是 agent-memory 根据用户输入的内容 匹配到的 历史对话记录 =====\n\n"
