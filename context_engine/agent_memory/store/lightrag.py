@@ -5,6 +5,11 @@ from lightrag.utils import EmbeddingFunc
 from lightrag import LightRAG, QueryParam
 from models import embed_model, simple_chat_model
 
+# 设置 LightRAG 知识图谱大小控制的环境变量， 缓解图谱无限膨胀
+os.environ.setdefault("MAX_SOURCE_IDS_PER_ENTITY", "50")
+os.environ.setdefault("MAX_SOURCE_IDS_PER_RELATION", "50")
+os.environ.setdefault("SOURCE_IDS_LIMIT_METHOD", "FIFO")
+os.environ.setdefault("RELATED_CHUNK_NUMBER", "5")
 
 # 1. 定义 Embedding 函数 (LightRAG 要求必须是异步的)
 async def _local_embedding_func(texts: list[str]) -> np.ndarray:
@@ -49,7 +54,7 @@ async def _get_lightrag(session_id: str)->  LightRAG:
             embedding_dim=1024,  # BGE-M3 模型的维度
             max_token_size=8192,
             func=_local_embedding_func
-        )
+        ),
     )
 
     await lightrag.initialize_storages()
@@ -59,10 +64,23 @@ async def _get_lightrag(session_id: str)->  LightRAG:
     return lightrag
 
 async def add_rag(session_id: str, histories: list[str])-> None:
+    """增加lightrag数据"""
     lightrag = await _get_lightrag(session_id)
     await lightrag.ainsert(histories)
 
 async def retrieve_rag(session_id: str, query_text: str) -> str:
+    """召回lightrag数据"""
     lightrag = await _get_lightrag(session_id)
     res = await lightrag.aquery(query_text, param=QueryParam(mode="hybrid"))
     return res
+
+async def delete_rag(session_id: str, entity_names: list[str])-> None:
+    """物理删除节点和相关边，而不是逻辑删除"""
+    lightrag = await _get_lightrag(session_id)
+
+    for entity_name in entity_names:
+        try:
+            await lightrag.delete_by_entity(entity_name)
+            print(f"✅ 已删除实体: {entity_name}")
+        except Exception as e:
+            print(f"❌ 删除失败 {entity_name}: {e}")
