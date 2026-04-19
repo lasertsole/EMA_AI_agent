@@ -37,14 +37,21 @@ def scan_skills() -> list[dict[str, Any]]:
     return skills
 
 
-def get_skills_text(selected_skill_names: Optional[List[str]]=None) -> str:
-    skills = scan_skills()
+def get_skills_text(selected_skill_names: Optional[List[str]]=None, exclude_ext: bool | None = None) -> str:
+    skills: list[dict[str, Any]] = scan_skills()
 
+    exclude_skill_names: List[str] = []
+    if exclude_ext is not None and exclude_ext:
+        exclude_skill_names = ["clawhub", "skill_creator"]
+
+    final_skills: list[dict[str, Any]] = []
     if selected_skill_names is not None and len(selected_skill_names) > 0:
-        skills = [s for s in skills if s["name"] in selected_skill_names]
+        for s in skills:
+            if s["name"] in selected_skill_names and s["name"] not in exclude_skill_names:
+                final_skills.append(s)
 
     lines = ["<available_skills>"]
-    for s in skills:
+    for s in final_skills:
         lines.append("  <skill>")
         lines.append(f"    <name>{s['name']}</name>")
         lines.append(f"    <description>{s['description']}</description>")

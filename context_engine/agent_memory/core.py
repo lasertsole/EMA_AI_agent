@@ -8,7 +8,7 @@ from .store import (get_db, add_turn as db_add_history, get_turns, get_turns_by_
 
 _db: sqlite3.Connection = get_db()
 
-async def add_history(session_id: str, user_text: str, ai_text: str, delete_earliest_turns: int = 5)-> None:
+async def add_history(session_id: str, user_text: str, ai_text: str, persistence_turns: int = 15)-> None:
     turn_text: str = f"{user_text}\n\n{ai_text.replace('\n', ' ').replace('\r', '')}"
 
     db_add_history(
@@ -19,12 +19,13 @@ async def add_history(session_id: str, user_text: str, ai_text: str, delete_earl
 
     need_to_lightrag:list[Turn] = []
 
-    # 删除多余的历史记录
+    """ 以下是将超过 persistence_turns 轮数的早期的对话记录，从纯rag（中期记忆） 转为 graphrag（长期期记忆）"""
+    # 从纯 rag 中，获取最老的 n//2 条数据，并删除
     turn_counts: int = get_turns_count_by_session_id(_db, session_id)
-    if turn_counts >= delete_earliest_turns * 2:
-        need_to_lightrag = fetch_and_delete_earliest_turns_by_session_id(db = _db, session_id =  session_id, n = delete_earliest_turns)
+    if turn_counts >= persistence_turns:
+        need_to_lightrag = fetch_and_delete_earliest_turns_by_session_id(db = _db, session_id =  session_id, n = persistence_turns // 2)
 
-    # 向图谱中添加数据
+    # 将获取到的数据加入 图谱中
     if len(need_to_lightrag) > 0:
         asyncio.create_task(add_rag(session_id, [r.turn_text for r in need_to_lightrag]))
 

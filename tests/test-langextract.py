@@ -6,7 +6,6 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent.resolve()
 
 sys.path.insert(0, str(project_root))
-from models import simple_chat_model
 import langextract as lx
 
 input_text: str = textwrap.dedent("""\

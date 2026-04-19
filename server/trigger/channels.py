@@ -29,6 +29,7 @@ async def process_qq_inbound(message: InboundMessage, channel: BaseChannel) -> N
 
     await channel.send(OutboundMessage(channel="qq", chat_id = message.chat_id, content = ai_reply))
 
+# 设置频道的消费者
 channel_manager.set_inbound_consumer(
     {
         "qq": process_qq_inbound

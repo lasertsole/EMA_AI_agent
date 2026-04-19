@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import List, Optional
-from config import MEMORY_DIR, WORKSPACE_DIR, SRC_DIR
 from skills.loader import get_skills_text
+from config import MEMORY_DIR, WORKSPACE_DIR, SRC_DIR
 from workspace import CORE_FILE_NAMES, ALL_FILE_NAMES
 
 MAX_FILE_CHARS = 20_000
@@ -27,7 +27,7 @@ skill_guide_text: str = f"""
 """
 
 def build_system_prompt(selected_file_names: Optional[List[str]] = None, selected_skill_names: Optional[List[str]] = None) -> str:
-    skill_paths = get_skills_text(selected_skill_names)
+    skill_paths:str = get_skills_text(selected_skill_names)
     skill_paths = f"{skill_paths}\n\n{skill_guide_text}"
 
     if selected_file_names is not None:

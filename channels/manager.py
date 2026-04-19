@@ -121,7 +121,8 @@ class ChannelManager:
                     f'Set ["*"] to allow everyone, or add specific user IDs.'
                 )
 
-    async def _start_channel(self, name: str, channel: BaseChannel) -> None:
+    @staticmethod
+    async def _start_channel(name: str, channel: BaseChannel) -> None:
         """Start a channel and log any exceptions."""
         try:
             await channel.start()

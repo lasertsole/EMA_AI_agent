@@ -80,7 +80,7 @@ async def delete_rag(session_id: str, entity_names: list[str])-> None:
 
     for entity_name in entity_names:
         try:
-            await lightrag.delete_by_entity(entity_name)
+            lightrag.delete_by_entity(entity_name)
             print(f"✅ 已删除实体: {entity_name}")
         except Exception as e:
             print(f"❌ 删除失败 {entity_name}: {e}")
