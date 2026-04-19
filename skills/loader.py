@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any, List, Optional
-
 import yaml
-
+from typing import Any, List, Optional
 from config import ROOT_DIR, SKILLS_DIR
 
 

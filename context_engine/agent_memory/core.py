@@ -8,7 +8,7 @@ from .store import (get_db, add_turn as db_add_history, get_turns, get_turns_by_
 
 _db: sqlite3.Connection = get_db()
 
-async def add_history(session_id: str, user_text: str, ai_text: str, persistence_turns: int = 15)-> None:
+async def add_history(session_id: str, user_text: str, ai_text: str, persistence_turns: int = 10)-> None:
     turn_text: str = f"{user_text}\n\n{ai_text.replace('\n', ' ').replace('\r', '')}"
 
     db_add_history(
