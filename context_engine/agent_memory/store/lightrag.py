@@ -1,9 +1,13 @@
 import os
+import asyncio
+import logging
 import numpy as np
 from config import SESSIONS_DIR
 from lightrag.utils import EmbeddingFunc
 from lightrag import LightRAG, QueryParam
 from models import embed_model, simple_chat_model
+
+logger = logging.getLogger(__name__)
 
 # 设置 LightRAG 知识图谱大小控制的环境变量， 缓解图谱无限膨胀
 os.environ.setdefault("MAX_SOURCE_IDS_PER_ENTITY", "50")
@@ -65,7 +69,17 @@ async def add_rag(session_id: str, histories: list[str])-> None:
     """增加lightrag数据"""
 
     lightrag = await _get_lightrag(session_id)
-    res = await lightrag.ainsert(histories)
+    logger.info(f"Session {session_id}: 调用 lightrag.ainsert...")
+    try:
+        res = await asyncio.wait_for(
+            lightrag.ainsert(histories),
+            timeout=60.0 * 15  # 15分钟超时
+        )
+        logger.info(f"Session {session_id}: ✅ 插入成功")
+    except asyncio.TimeoutError:
+        logger.error(f"Session {session_id}: ❌ 插入超时(180s)! LightRAG 可能卡死了!")
+        raise RuntimeError(f"LightRAG ainsert timeout for session {session_id}")
+
 
 async def retrieve_rag(session_id: str, query_text: str) -> str:
     """召回lightrag数据"""
