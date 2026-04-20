@@ -77,7 +77,7 @@ async def add_rag(session_id: str, histories: list[str])-> None:
         )
         logger.info(f"Session {session_id}: ✅ 插入成功")
     except asyncio.TimeoutError:
-        logger.error(f"Session {session_id}: ❌ 插入超时(180s)! LightRAG 可能卡死了!")
+        logger.error(f"Session {session_id}: ❌ 插入超时(15min)! LightRAG 可能卡死了!")
         raise RuntimeError(f"LightRAG ainsert timeout for session {session_id}")
 
 
@@ -89,8 +89,8 @@ async def retrieve_rag(session_id: str, query_text: str) -> str:
     res = await lightrag.aquery(
         query_text,
         param=QueryParam(
-            mode="hybrid",
-            only_need_context=True,
+            mode="local", # 默认使用本地模式,确保快速召回
+            only_need_context=True, # 直接回复召回的关系，不经过llm总结
             top_k=5,
             chunk_top_k=3,
             max_entity_tokens=1000,

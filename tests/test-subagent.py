@@ -5,11 +5,10 @@ from pathlib import Path
 from bus import MessageBus
 from models import chat_model
 from typing import Literal, Any
-from workspace import CORE_FILE_NAMES
 from logging import Logger, getLogger
 from dataclasses import dataclass, field
 from skills.loader import get_skills_text
-from config import SRC_DIR, WORKSPACE_TEMPLATE_DIR, MEMORY_DIR
+from config import SRC_DIR, MUTIL_AGENT_DIR
 from tools import build_read_file_tool, build_write_file_tool, web_search_tool
 
 logger: Logger = getLogger(__name__)
@@ -117,11 +116,10 @@ class SubagentManager:
         file_paths: list[str] = []
 
         # 确保一定有核心文件
-        for f in CORE_FILE_NAMES:
-            path = WORKSPACE_TEMPLATE_DIR / f
-            if not path.exists():
-                return ""
-            file_paths.append(path.read_text(encoding="utf-8"))
+        path = MUTIL_AGENT_DIR / "SUBAGENY.md"
+        if not path.exists():
+            return ""
+        file_paths.append(path.read_text(encoding="utf-8"))
 
         parts = [skill_paths, *file_paths, task_prompt]
 
