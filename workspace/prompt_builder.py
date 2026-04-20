@@ -23,7 +23,7 @@ def _read_text(path: Path) -> str:
 skill_guide_text: str = f"""
 补充说明：
 1.将<skill_folder>替换成技能文件SKILL.md所在的目录 比如技能文件在 "./skills/text_to_image/SKILL.md", 那么文件目录就在 "./skills/text_to_image"
-2.技能生成的临时资源（如图片、语音等）存放在{(SRC_DIR / "image").as_posix()}目录下
+2.技能生成的临时资源（如图片、语音等）存放在{(SRC_DIR / "temp").as_posix()}目录下
 """
 
 def build_system_prompt(selected_file_names: Optional[List[str]] = None, selected_skill_names: Optional[List[str]] = None) -> str:

@@ -27,7 +27,7 @@ async def add_history(session_id: str, user_text: str, ai_text: str, persistence
 
     # 将获取到的数据加入 图谱中
     if len(need_to_lightrag) > 0:
-        asyncio.create_task(add_rag(session_id, [r.turn_text for r in need_to_lightrag]))
+        await add_rag(session_id= session_id, histories = [r.turn_text for r in need_to_lightrag])
 
 class TimeLimited(BaseModel):
     time_start: str | None = Field(default=None, description="起始时间，格式：YYYYMMDDHHmmss", examples= ["20260411154119"])

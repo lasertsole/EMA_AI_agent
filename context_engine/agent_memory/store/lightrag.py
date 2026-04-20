@@ -1,6 +1,5 @@
 import os
 import numpy as np
-from pathlib import Path
 from config import SESSIONS_DIR
 from lightrag.utils import EmbeddingFunc
 from lightrag import LightRAG, QueryParam
@@ -40,8 +39,11 @@ async def _local_llm_func(prompt: str, system_prompt: str = None, history_messag
 # 缓存 LightRAG 实例，避免重复创建
 _lightrag_cache: dict[str, LightRAG] = {}
 async def _get_lightrag(session_id: str)->  LightRAG:
+    if session_id in _lightrag_cache:
+        return _lightrag_cache[session_id]
+
+    # 如果已经存在，直接返回缓存的实例
     working_dir: str = (SESSIONS_DIR / session_id / "lightrag_db").resolve().as_posix()
-    Path(working_dir).mkdir(parents=True, exist_ok=True)
 
     lightrag = LightRAG(
         working_dir=working_dir,
@@ -53,21 +55,36 @@ async def _get_lightrag(session_id: str)->  LightRAG:
         ),
     )
 
+    _lightrag_cache[session_id] = lightrag
+
     await lightrag.initialize_storages()
 
     return lightrag
 
 async def add_rag(session_id: str, histories: list[str])-> None:
     """增加lightrag数据"""
+
     lightrag = await _get_lightrag(session_id)
-    await lightrag.ainsert(histories)
+    res = await lightrag.ainsert(histories)
 
 async def retrieve_rag(session_id: str, query_text: str) -> str:
     """召回lightrag数据"""
 
     lightrag = await _get_lightrag(session_id)
 
-    res = await lightrag.aquery(query_text, param=QueryParam(mode="hybrid"))
+    res = await lightrag.aquery(
+        query_text,
+        param=QueryParam(
+            mode="hybrid",
+            only_need_context=True,
+            top_k=5,
+            chunk_top_k=3,
+            max_entity_tokens=1000,
+            max_relation_tokens=1000,
+            max_total_tokens=3000,
+            enable_rerank=False,
+        )
+    )
 
     return res
 
