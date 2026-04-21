@@ -5,7 +5,7 @@ import numpy as np
 from config import SESSIONS_DIR
 from lightrag.utils import EmbeddingFunc
 from lightrag import LightRAG, QueryParam
-from models import embed_model, simple_chat_model
+from models import embed_model, chat_model
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ async def _local_llm_func(prompt: str, system_prompt: str = None, history_messag
     messages.append(HumanMessage(content=prompt))
 
     # 调用你项目里的聊天模型
-    response = await simple_chat_model.ainvoke(messages)
+    response = await chat_model.ainvoke(messages)
     return response.content
 
 

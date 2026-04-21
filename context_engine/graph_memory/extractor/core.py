@@ -255,6 +255,7 @@ class Extractor:
 
         msgs = "\n\n---\n\n".join(msgs_parts)
 
+        # TODO 复杂对话时使用本地qwen3:8b进行 关系结构化抽取有概率失败，需要解决(如去除特殊字符、语气词、思维链、缩进和空格)
         return self.llm.with_structured_output(ExtractionResult).invoke([SystemMessage(EXTRACT_SYS), HumanMessage(extract_user_prompt(msgs, ", ".join(existing_names)))])
 
 
