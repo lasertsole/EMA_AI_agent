@@ -4,11 +4,11 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import List, Optional
-from skills.loader import get_skills_text
+from skills import get_skills_text
 from config import MEMORY_DIR, WORKSPACE_DIR, SRC_DIR
 from workspace import CORE_FILE_NAMES, ALL_FILE_NAMES
 
-MAX_FILE_CHARS = 20_000
+MAX_FILE_CHARS: int = 20_000
 
 
 def _read_text(path: Path) -> str:

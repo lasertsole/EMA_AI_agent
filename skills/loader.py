@@ -17,6 +17,12 @@ def _parse_frontmatter(text: str) -> dict[str, Any]:
 
 
 def scan_skills() -> list[dict[str, Any]]:
+    from .skills_snapshot import read_skills_snapshot
+
+    skills_snapshot: list[dict[str, str]] | None = read_skills_snapshot()
+    if skills_snapshot:
+        return skills_snapshot
+
     skills: list[dict[str, Any]] = []
     for skill_file in SKILLS_DIR.glob("**/SKILL.md"):
         content = skill_file.read_text(encoding="utf-8")
