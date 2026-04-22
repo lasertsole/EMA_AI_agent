@@ -41,17 +41,29 @@ def scan_skills() -> list[dict[str, Any]]:
     return skills
 
 
-def get_skills_text(selected_skill_names: Optional[List[str]]=None, exclude_ext: bool | None = None) -> str:
+def get_skills_text(selected_skill_names: Optional[List[str]]=None, exclude_auth_skills: bool | None = None) -> str:
+    """
+    获取 skills xml
+    :param selected_skill_names: 选中的技能名字列表
+    :param exclude_auth_skills: 是否排除高权限技能
+    :return: skills xml
+    """
     skills: list[dict[str, Any]] = scan_skills()
 
     exclude_skill_names: List[str] = []
-    if exclude_ext is not None and exclude_ext:
+    if exclude_auth_skills is not None and exclude_auth_skills:
         exclude_skill_names = ["clawhub", "skill_creator"]
 
     final_skills: list[dict[str, Any]] = []
     if selected_skill_names is not None and len(selected_skill_names) > 0:
         for s in skills:
             if s["name"] in selected_skill_names and s["name"] not in exclude_skill_names:
+                final_skills.append(s)
+
+    # 如果selected_skill_names为空则默认全选
+    else:
+        for s in skills:
+            if s["name"] not in exclude_skill_names:
                 final_skills.append(s)
 
     lines = ["<available_skills>"]

@@ -47,7 +47,7 @@ DEFAULT_CONFIG: GmConfig = GmConfig(
 
 db = get_db()
 recaller = Recaller(db, DEFAULT_CONFIG)
-extractor = Extractor(DEFAULT_CONFIG)
+extractor = Extractor()
 
 # ── Session运行时状态 ──────────────────────────────────
 msg_seq: Dict[str, int] = {}

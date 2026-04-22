@@ -10,23 +10,15 @@ from agent import built_agent, ModelType
 from langchain.messages import AIMessageChunk
 from langchain_core.prompts import PromptTemplate
 from typing import AsyncGenerator, Any, Dict, List
-from langchain_core.runnables import RunnableConfig
 from langgraph.graph.state import CompiledStateGraph
 from workspace.prompt_builder import build_system_prompt
-from pub_func import slice_last_turn, sanitize_tool_use_result_pairing
 from ..DAO import maybe_extract_memory, clear_session as clear_session_DAO
+from pub_func import slice_last_turn, sanitize_tool_use_result_pairing, get_agent_configurable
 from langchain_core.messages import HumanMessage, SystemMessage, BaseMessage, ToolCall, ToolCallChunk
 from context_engine import after_turn, assemble, rectification_and_standardization, add_history, retrieve_history_prompt, retrieve_history_by_last_n_prompt
 
-
-def _get_config(session_id: str) -> RunnableConfig:
-    try:
-        return {"configurable": {"thread_id": int(session_id)}}
-    except ValueError:
-        raise Exception("session_id must be an integer")
-
 def _get_agent_history_list(agent: CompiledStateGraph, session_id: str)-> List[BaseMessage]:
-    return agent.get_state(config=_get_config(session_id)).values.get("messages", [])
+    return agent.get_state(config=get_agent_configurable(session_id)).values.get("messages", [])
 
 def _mixed_query_with_last_n_turns(turns_of_history: str, query: str) -> str:
     """根据前n论对话重写query"""
@@ -134,7 +126,7 @@ async def _assemble_agent(session_id: str, multi_modal_message: MultiModalMessag
     messages.append(HumanMessage(content = content_list))
 
     # 直接将上下文写入checkpointer内
-    agent.update_state(config = _get_config(session_id), values = {"messages": messages})
+    agent.update_state(config = get_agent_configurable(session_id), values = {"messages": messages})
 
     return agent
 
@@ -160,7 +152,7 @@ async def async_generator(session_id: str, multi_modal_message: MultiModalMessag
         
         if is_stream:
             # 用已组装好上下文的agent直接输出
-            async for chunk in agent.astream(input=None, config=_get_config(session_id), stream_mode="messages"):
+            async for chunk in agent.astream(input=None, config=get_agent_configurable(session_id), stream_mode="messages"):
                 msg_chunk: BaseMessage = chunk[0]
                 if isinstance(msg_chunk, AIMessageChunk):
                     # 以下是输出工具信息
@@ -200,7 +192,7 @@ async def async_generator(session_id: str, multi_modal_message: MultiModalMessag
                     # 以上是对话信息
 
         else:
-            result: dict[str, Any] = await agent.ainvoke(input = None, config = _get_config(session_id))
+            result: dict[str, Any] = await agent.ainvoke(input = None, config = get_agent_configurable(session_id))
             res: str = result["messages"][-1].content
             ai_text += res
             yield SSEMessage(res)
