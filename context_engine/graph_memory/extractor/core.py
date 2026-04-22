@@ -3,10 +3,13 @@ graph_memory — 知识图谱提取引擎
 """
 
 import json
-from ..type import GmConfig, GmNode
+from ..type import GmNode
+from models import chat_model
 from pydantic import BaseModel, Field
+from langchain_core.prompts import ChatPromptTemplate
 from typing import List, Dict, Set, Optional, Literal
 from langchain_core.messages import SystemMessage, HumanMessage
+from pub_func import sanitize_content, escape_xml, escape_prompt_braces
 
 # ─── 节点/边合法值 ──────────────────────────────────────────────
 VALID_NODE_TYPES = {"TASK", "SKILL", "EVENT"}
@@ -34,25 +37,25 @@ EDGE_TO_CONSTRAINT: Dict[str, Set[str]] = {
 # ─── 类型定义 ─────────────────────────────────────────────────
 class Node(BaseModel):
     """节点"""
-    type: Literal["TASK", "SKILL", "EVENT"]
-    name: str
-    description: str
-    content: str
+    type: Literal["TASK", "SKILL", "EVENT"] = Field(description="节点类型")
+    name: str = Field(description="节点名称")
+    description: str = Field(description="节点描述")
+    content: str = Field(description="节点内容")
 
 
 class Edge(BaseModel):
     """边"""
-    from_node: str = Field(alias="from")
-    to_node: str = Field(alias="to")
-    type: str
-    instruction: str
-    condition: Optional[str] = None
+    from_node: str = Field(alias="from", description="边的 from 节点名称")
+    to_node: str = Field(alias="to", description="边的 to 节点名称")
+    type: str = Field(description="边的类型")
+    instruction: str = Field(description="边的执行步骤")
+    condition: Optional[str] = Field(description="边的条件")
 
 
 class ExtractionResult(BaseModel):
     """提取结果"""
-    nodes: List[Node]
-    edges: List[Edge]
+    nodes: List[Node] = Field(description="提取的节点列表", default=[])
+    edges: List[Edge] = Field(description="提取的边列表", default=[])
 
 
 class PromotedSkill(Node):
@@ -69,7 +72,7 @@ class FinalizeResult(BaseModel):
 
 # ─── 提取 System Prompt ─────────────────────────────────────────
 
-EXTRACT_SYS = """你是 graph_memory 知识图谱提取引擎，从 AI Agent 对话中提取可复用的结构化知识三元组（节点 + 关系）。
+EXTRACT_SYS = escape_prompt_braces("""你是 graph_memory 知识图谱提取引擎，从 AI Agent 对话中提取可复用的结构化知识三元组（节点 + 关系）。
 提取的知识将在未来对话中被召回，帮助 Agent 避免重复犯错、复用已验证方案。
 输出严格 JSON：{"nodes":[...],"edges":[...]}，不包含任何额外文字。
 
@@ -155,10 +158,7 @@ EXTRACT_SYS = """你是 graph_memory 知识图谱提取引擎，从 AI Agent 对
 示例 2（EVENT + SKILL + SOLVED_BY 边）：
 
 对话摘要：执行 PaddleOCR 时报 libGL 缺失，通过 apt 安装解决。
-
-输出：
-{"nodes":[{"type":"EVENT","name":"importerror-libgl1","description":"导入 cv2/paddleocr 时报 libGL.so.1 缺失","content":"importerror-libgl1\n现象：ImportError: libGL.so.1: cannot open shared object file\n原因：OpenCV 依赖系统级 libGL 库，conda/pip 不自动安装\n解决方法：apt install -y libgl1-mesa-glx"},{"type":"SKILL","name":"apt-install-libgl1","description":"安装 libgl1 解决 OpenCV 系统依赖缺失","content":"apt-install-libgl1\n触发条件：ImportError: libGL.so.1\n执行步骤:\n1. sudo apt update\n2. sudo apt install -y libgl1-mesa-glx\n常见错误:\n- Permission denied -> 加 sudo"}],"edges":[{"from_node":"importerror-libgl1","to_node":"apt-install-libgl1","type":"SOLVED_BY","instruction":"执行 sudo apt install -y libgl1-mesa-glx","condition":"报 ImportError: libGL.so.1 时"}]}"""
-
+""")
 
 # ─── 提取 User Prompt ───────────────────────────────────────────
 def extract_user_prompt(msgs: str, existing: str) -> str:
@@ -216,17 +216,6 @@ def finalize_user_prompt(nodes: List[GmNode], summary: str) -> str:
 # ─── Extractor ────────────────────────────────────────────────
 class Extractor:
     """知识图谱提取器"""
-
-    def __init__(self, cfg: GmConfig):
-        """
-        初始化提取器
-
-        Args:
-            cfg: Graph Memory 配置
-        """
-        self._cfg = cfg
-        self.llm = cfg.llm.bind(temperature=0)
-
     async def extract(self, messages: List[Dict], existing_names: List[str]) -> ExtractionResult:
         """
         从对话中提取知识图谱
@@ -250,13 +239,22 @@ class Extractor:
             else:
                 text = json.dumps(content, ensure_ascii=False)
 
+            # 过滤特殊字符
+            text = sanitize_content(text)
+            text = escape_xml(text)
+
             msg_text = f"[{role} t={turn_index}]\n{text[:800]}"
             msgs_parts.append(msg_text)
 
         msgs = "\n\n---\n\n".join(msgs_parts)
 
         # TODO 复杂对话时使用本地qwen3:8b进行 关系结构化抽取有概率失败，需要解决(如去除特殊字符、语气词、思维链、缩进和空格)
-        return self.llm.with_structured_output(ExtractionResult).invoke([SystemMessage(EXTRACT_SYS), HumanMessage(extract_user_prompt(msgs, ", ".join(existing_names)))])
+        structured_llm = ChatPromptTemplate.from_messages([
+            ("system", EXTRACT_SYS),  # 假设 EXTRACT_SYS 是你的系统提示词字符串
+            ("human", "{user_input}")
+        ]) | chat_model.with_structured_output(ExtractionResult)
+
+        return structured_llm.invoke({"user_input": extract_user_prompt(msgs, ", ".join(existing_names))})
 
 
     async def finalize(self, session_nodes: List[GmNode], graph_summary: str) -> FinalizeResult:
@@ -270,4 +268,4 @@ class Extractor:
         Returns:
             包含升级技能、新边和失效节点的结果
         """
-        return self.llm.with_structured_output(FinalizeResult).invoke([SystemMessage(FINALIZE_SYS), HumanMessage(finalize_user_prompt(session_nodes, graph_summary))])
+        return chat_model.with_structured_output(FinalizeResult).invoke([SystemMessage(FINALIZE_SYS), HumanMessage(finalize_user_prompt(session_nodes, graph_summary))])

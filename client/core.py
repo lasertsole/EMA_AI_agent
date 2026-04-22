@@ -1,14 +1,13 @@
-import re
 import base64
 import requests
 import streamlit as st
 from pathlib import Path
 from urllib.parse import urlencode
 from type import MultiModalMessage
-from pub_func import process_sse_data
 from websocket import WebSocket, create_connection
 from typing import AsyncGenerator, List, Any, Tuple
 from streamlit.delta_generator import DeltaGenerator
+from pub_func import process_sse_data, sanitize_content
 from streamlit.elements.widgets.chat import ChatInputValue
 from models.sovits_model import TTS_Request, fetch_TTS_sound
 from config import USER_NAME, ASSISTANT_NAME, API_HOST, API_PORT
@@ -36,13 +35,6 @@ def get_ws() -> WebSocket:
 
 ws: WebSocket = get_ws()
 #"""以上是创建并保持websocket连接"""
-
-#"""以下是工具函数"""
-def filter_content_for_tts(content: str) -> str:
-    #"""去除多余字符"""
-    res = re.sub(r'[（\\(].*?[）\\)]', ' ', content)
-    return res
-#"""以上是工具函数"""
 
 async def post_agent_astream(request_json: dict[str, Any]) -> AsyncGenerator[str, None]:
     with requests.post(f"http://{API_HOST}:{API_PORT}/sessions/agent/sse", stream=True, json=request_json) as response:
@@ -153,7 +145,7 @@ def main()-> None:
                     # 生成语音,当生成失败时跳过生成
                     try:
                         # 去除多余字符
-                        clear_content = filter_content_for_tts(_content)
+                        clear_content = sanitize_content(_content)
 
                         audio_requires = TTS_Request(text=clear_content, text_lang="zh")
                         response = fetch_TTS_sound(audio_requires)

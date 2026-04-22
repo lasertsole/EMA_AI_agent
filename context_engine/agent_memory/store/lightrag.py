@@ -90,7 +90,6 @@ async def retrieve_rag(session_id: str, query_text: str) -> str:
         query_text,
         param=QueryParam(
             mode="local", # 默认使用本地模式,确保快速召回
-            only_need_context=True, # 直接回复召回的关系，不经过llm总结
             top_k=5,
             chunk_top_k=3,
             max_entity_tokens=1000,
