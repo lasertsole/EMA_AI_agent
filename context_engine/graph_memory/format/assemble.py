@@ -5,9 +5,10 @@ graph_memory — Assemble Context
 import math
 from datetime import datetime
 from sqlite3 import Connection
+from pub_func import escape_xml
 from ..type import GmNode, GmEdge, NodeType
-from typing import TypedDict, List, Dict, Set, Optional, Literal
-from ..store.core import get_community_summary, get_episodic_messages
+from ..store.core import get_community_summary
+from typing import TypedDict, List, Dict, Set, Optional
 
 CHARS_PER_TOKEN = 3
 
@@ -233,21 +234,3 @@ def assemble_context(
         'system_prompt': system_prompt,
         'tokens': math.ceil(len(full_content) / CHARS_PER_TOKEN)
     }
-
-
-def escape_xml(s: str) -> str:
-    """
-    XML 转义
-
-    Args:
-        s: 原始字符串
-
-    Returns:
-        转义后的字符串
-    """
-    return (
-        s.replace('&', '&amp;')
-        .replace('<', '&lt;')
-        .replace('>', '&gt;')
-        .replace('"', '&quot;')
-    )

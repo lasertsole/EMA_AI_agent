@@ -8,7 +8,7 @@ from typing import Literal, Any
 from logging import Logger, getLogger
 from dataclasses import dataclass, field
 from skills.loader import get_skills_text
-from config import SRC_DIR, MUTIL_AGENT_DIR
+from config import SRC_DIR, WORKSPACE_DIR
 from tools import build_read_file_tool, build_write_file_tool, web_search_tool
 
 logger: Logger = getLogger(__name__)
@@ -116,7 +116,7 @@ class SubagentManager:
         file_paths: list[str] = []
 
         # 确保一定有核心文件
-        path = MUTIL_AGENT_DIR / "SUBAGENY.md"
+        path = WORKSPACE_DIR / "SUBAGENY.md"
         if not path.exists():
             return ""
         file_paths.append(path.read_text(encoding="utf-8"))
