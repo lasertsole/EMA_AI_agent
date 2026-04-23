@@ -8,6 +8,7 @@ from langgraph.graph.state import CompiledStateGraph
 
 from bus import MessageBus
 from agent import built_agent
+from bus import InboundMessage
 from typing import Literal, Any
 from workspace import CORE_FILE_NAMES
 from logging import Logger, getLogger
@@ -15,8 +16,6 @@ from dataclasses import dataclass, field
 from skills.loader import get_skills_text
 from config import SRC_DIR, WORKSPACE_DIR
 from pub_func import get_agent_configurable
-
-from tools import build_read_file_tool, build_write_file_tool, web_search_tool
 
 logger: Logger = getLogger(__name__)
 
@@ -31,9 +30,9 @@ class SubagentStatus:
     phase: Literal["initializing", "awaiting_tools", "tools_completed", "final_response", "done", "error"] \
         = "initializing"
     iteration: int = 0
-    tool_events: list = field(default_factory=list)   # [{name, status, detail}, ...]
+    tool_calls: list = field(default_factory=list)
     usage: dict = field(default_factory=dict)          # token usage
-    stop_reason: str | None = None
+    finish_reason: str | None = None
     error: str | None = None
 
 class SubagentManager:
@@ -156,29 +155,58 @@ class SubagentManager:
             ]
 
             agent: CompiledStateGraph = built_agent(temperature = 0.5)
+
             messages: list[BaseMessage] = (await agent.ainvoke(input={"messages": messages}, config=get_agent_configurable("1"))).get("messages", [])
-            agent_res: str = messages[1].content
+
+            result: BaseMessage = messages[-1]
+            result_metadata: dict[str, Any] = result.response_metadata
 
             status.phase = "done"
-            # status.stop_reason = result.stop_reason
-            #
-            # if result.stop_reason == "tool_error":
-            #     status.tool_events = list(result.tool_events)
-            #     await self._announce_result(
-            #         task_id, label, task,
-            #         self._format_partial_progress(result),
-            #         origin, "error",
-            #     )
-            # elif result.stop_reason == "error":
-            #     await self._announce_result(
-            #         task_id, label, task,
-            #         result.error or "Error: subagent execution failed.",
-            #         origin, "error",
-            #     )
-            # else:
-            #     final_result = result.final_content or "Task completed but no final response was generated."
-            #     logger.info("Subagent [{}] completed successfully", task_id)
-            #     await self._announce_result(task_id, label, task, final_result, origin, "ok")
+            finish_reason = result_metadata.get("finish_reason")
+            status.finish_reason = finish_reason
+
+            # 检查是否有工具调用及其状态
+            tool_calls = getattr(result, "tool_calls", [])
+
+            if finish_reason == "tool_calls" and tool_calls:
+                # 记录工具调用信息
+                status.tool_calls = [
+                    {
+                        "name": tc.get("name"),
+                        "status": "called",
+                        "detail": str(tc)
+                    }
+                    for tc in tool_calls
+                ]
+
+                # 检查后续消息中是否有工具执行错误
+                # messages 列表格式: [SystemMessage, HumanMessage, AIMessage, ToolMessage?, ...]
+                has_tool_error = False
+                for msg in messages[2:]:  # 从第3条消息开始检查
+                    if hasattr(msg, "status") and getattr(msg, "status", None) == "error":
+                        has_tool_error = True
+                        # 更新 tool_calls 中的状态
+                        for tc in status.tool_calls:
+                            if tc.get("name") == getattr(msg, "name", None):
+                                tc["status"] = "error"
+                                tc["detail"] = str(msg.content)
+
+                if has_tool_error:
+                    await self._announce_result(
+                        task_id, label, task,
+                        self._format_partial_progress(result),
+                        origin, "error",
+                    )
+                else:
+                    final_result = result.content or "Task completed but no final response was generated."
+                    logger.info("Subagent [{}] completed successfully", task_id)
+                    await self._announce_result(task_id, label, task, final_result, origin, "ok")
+            else:
+                # 没有工具调用，正常完成
+                final_result = result.content or "Task completed but no final response was generated."
+                logger.info("Subagent [{}] completed successfully", task_id)
+                await self._announce_result(task_id, label, task, final_result, origin, "ok")
+
 
         except Exception as e:
             status.phase = "error"
@@ -186,6 +214,107 @@ class SubagentManager:
             logger.error("Subagent [{}] failed: {}", task_id, e)
             await self._announce_result(task_id, label, task, f"Error: {e}", origin, "error")
 
+
+    # async def _announce_result(
+    #     self,
+    #     task_id: str,
+    #     label: str,
+    #     task: str,
+    #     result: str,
+    #     origin: dict[str, str],
+    #     status: str,
+    # ) -> None:
+    #     """Announce the subagent result to the main agent via the message bus."""
+    #     status_text = "completed successfully" if status == "ok" else "failed"
+    #
+    #     announce_content = render_template(
+    #         "agent/subagent_announce.md",
+    #         label=label,
+    #         status_text=status_text,
+    #         task=task,
+    #         result=result,
+    #     )
+    #
+    #     # Inject as system message to trigger main agent.
+    #     # Use session_key_override to align with the main agent's effective
+    #     # session key (which accounts for unified sessions) so the result is
+    #     # routed to the correct pending queue (mid-turn injection) instead of
+    #     # being dispatched as a competing independent task.
+    #     override = origin.get("session_key") or f"{origin['channel']}:{origin['chat_id']}"
+    #     msg = InboundMessage(
+    #         channel="system",
+    #         sender_id="subagent",
+    #         chat_id=f"{origin['channel']}:{origin['chat_id']}",
+    #         content=announce_content,
+    #         session_key_override=override,
+    #         metadata={
+    #             "injected_event": "subagent_result",
+    #             "subagent_task_id": task_id,
+    #         },
+    #     )
+    #
+    #     await self.bus.publish_inbound(msg)
+    #     logger.debug("Subagent [{}] announced result to {}:{}", task_id, origin['channel'], origin['chat_id'])
+
+    # @staticmethod
+    # def _format_partial_progress(result) -> str:
+    #     completed = [e for e in result.tool_events if e["status"] == "ok"]
+    #     failure = next((e for e in reversed(result.tool_events) if e["status"] == "error"), None)
+    #     lines: list[str] = []
+    #     if completed:
+    #         lines.append("Completed steps:")
+    #         for event in completed[-3:]:
+    #             lines.append(f"- {event['name']}: {event['detail']}")
+    #     if failure:
+    #         if lines:
+    #             lines.append("")
+    #         lines.append("Failure:")
+    #         lines.append(f"- {failure['name']}: {failure['detail']}")
+    #     if result.error and not failure:
+    #         if lines:
+    #             lines.append("")
+    #         lines.append("Failure:")
+    #         lines.append(f"- {result.error}")
+    #     return "\n".join(lines) or (result.error or "Error: subagent execution failed.")
+    #
+    # def _build_subagent_prompt(self) -> str:
+    #     """Build a focused system prompt for the subagent."""
+    #     from nanobot.agent.context import ContextBuilder
+    #     from nanobot.agent.skills import SkillsLoader
+    #
+    #     time_ctx = ContextBuilder._build_runtime_context(None, None)
+    #     skills_summary = SkillsLoader(
+    #         self.workspace,
+    #         disabled_skills=self.disabled_skills,
+    #     ).build_skills_summary()
+    #     return render_template(
+    #         "agent/subagent_system.md",
+    #         time_ctx=time_ctx,
+    #         workspace=str(self.workspace),
+    #         skills_summary=skills_summary or "",
+    #     )
+    #
+    # async def cancel_by_session(self, session_key: str) -> int:
+    #     """Cancel all subagents for the given session. Returns count cancelled."""
+    #     tasks = [self._running_tasks[tid] for tid in self._session_tasks.get(session_key, [])
+    #              if tid in self._running_tasks and not self._running_tasks[tid].done()]
+    #     for t in tasks:
+    #         t.cancel()
+    #     if tasks:
+    #         await asyncio.gather(*tasks, return_exceptions=True)
+    #     return len(tasks)
+    #
+    # def get_running_count(self) -> int:
+    #     """Return the number of currently running subagents."""
+    #     return len(self._running_tasks)
+    #
+    # def get_running_count_by_session(self, session_key: str) -> int:
+    #     """Return the number of currently running subagents for a session."""
+    #     tids = self._session_tasks.get(session_key, set())
+    #     return sum(
+    #         1 for tid in tids
+    #         if tid in self._running_tasks and not self._running_tasks[tid].done()
+    #     )
 
 agent = built_agent(temperature=0.5)
 print(agent.invoke(input={"messages": [HumanMessage(content="你好")]}, config=get_agent_configurable("1")))
