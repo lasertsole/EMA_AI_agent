@@ -1,5 +1,3 @@
-from pprint import pprint
-
 import asyncio
 import textwrap
 import requests
