@@ -6,4 +6,5 @@ from .estimate_msg_tokens import estimate_msg_tokens
 from .string_to_unique_int import string_to_unique_int
 from .get_agent_configurable import get_agent_configurable
 from .transcript_repair import sanitize_tool_use_result_pairing
-from pub_func.format import escape_prompt_braces, sanitize_content, escape_xml
+from .render_template import template_render, render_template_file
+from .format import escape_prompt_braces, sanitize_content, escape_xml
