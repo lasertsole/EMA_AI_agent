@@ -70,7 +70,7 @@ class BaseChannel(ABC):
         content: str,
         media: list[str] | None = None,
         metadata: dict[str, Any] | None = None,
-        session_key: str | None = None,
+        session_id: str | None = None,
     ) -> None:
         """
         Handle an incoming message from the chat platform.
@@ -83,7 +83,7 @@ class BaseChannel(ABC):
             content: Message text content.
             media: Optional list of media URLs.
             metadata: Optional channel-specific metadata.
-            session_key: Optional sessions key override (e.g. thread-scoped sessions).
+            session_id: Optional sessions key override (e.g. thread-scoped sessions).
         """
         if not self.is_allowed(sender_id):
             logger.warning(
@@ -100,7 +100,7 @@ class BaseChannel(ABC):
             content=content,
             media=media or [],
             metadata=metadata or {},
-            session_key_override=session_key,
+            session_id_override=session_id,
         )
 
         await self.bus.publish_inbound(msg)
