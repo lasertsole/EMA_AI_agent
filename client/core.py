@@ -1,5 +1,7 @@
+import json
 import base64
 import requests
+import threading
 import streamlit as st
 from pathlib import Path
 from urllib.parse import urlencode
@@ -12,6 +14,7 @@ from streamlit.elements.widgets.chat import ChatInputValue
 from models.sovits_model import TTS_Request, fetch_TTS_sound
 from config import USER_NAME, ASSISTANT_NAME, API_HOST, API_PORT
 from streamlit.runtime.uploaded_file_manager import UploadedFile
+from streamlit.runtime.scriptrunner import add_script_run_ctx, get_script_run_ctx
 from client.utils import storage_add_chat, ChatStorage, clear_session as clear_streamlit_session
 
 
@@ -31,7 +34,36 @@ def get_ws() -> WebSocket:
         "session_id": session_id,
     }
     ws_query_string = urlencode(ws_query_params, doseq=True)
-    return create_connection(f"ws://{API_HOST}:{API_PORT}/sessions/ws?{ws_query_string}")
+    web_socket: WebSocket = create_connection(f"ws://{API_HOST}:{API_PORT}/sessions/ws?{ws_query_string}")
+
+    def ws_listener(_ws: WebSocket):
+        """后台线程：持续监听 WebSocket 消息"""
+        try:
+            while True:
+                message = _ws.recv()
+                if message:
+                    data = json.loads(message)
+
+                    # 根据消息类型处理
+                    event_type = data.get("event", "")
+                    content = data.get("content", "")
+
+                    if event_type == "notification":
+                        st.toast(f"通知: {content}")
+                    elif event_type == "heartbeat":
+                        pass  # 心跳消息，忽略
+
+        except Exception as e:
+            print(f"WebSocket 监听出错: {e}")
+
+    # 创建后台监听线程
+    listener_thread = threading.Thread(target=ws_listener, args=(web_socket,), daemon=True)
+    # 将 Streamlit 上下文绑定到线程
+    add_script_run_ctx(listener_thread, get_script_run_ctx())
+    # 启动线程
+    listener_thread.start()
+
+    return web_socket
 
 ws: WebSocket = get_ws()
 #"""以上是创建并保持websocket连接"""

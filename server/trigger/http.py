@@ -2,6 +2,7 @@ import json
 from agent import built_agent
 from type import MultiModalMessage
 from typing import Any, Dict, Callable
+from ..infrastructure import websocket_manager
 from ..service import async_generator, session_end, clear_session
 from robyn import Robyn, SSEMessage, SSEResponse, WebSocketDisconnect, WebSocketAdapter
 
@@ -9,8 +10,7 @@ from robyn import Robyn, SSEMessage, SSEResponse, WebSocketDisconnect, WebSocket
 # 创建agent
 agent = built_agent()
 
-# 创建websocket和sessionStatus的关系字典
-websocket_id_to_session_id: Dict[str, str] = {}
+# 创建app
 app = Robyn(__file__)
 
 @app.post("/sessions/agent/sse")
@@ -72,26 +72,32 @@ async def ws_handler(websocket: WebSocketAdapter):
         print(f"Client {websocket.id} disconnected: {e}")
 
 @ws_handler.on_connect
-def on_connect(websocket: WebSocketAdapter):
+async def on_connect(websocket: WebSocketAdapter):
     print(f"Client {websocket.id} connected")
 
     query_params = websocket.query_params
     session_id: str = query_params.get("session_id", None)
     if session_id is None:
-        websocket.close()
-        websocket_id_to_session_id.pop(websocket.id, None)
+        await websocket.close()
+        websocket_manager.unregister_websocket_by_websocket_id(websocket_id=websocket.id)
 
-    websocket_id_to_session_id[websocket.id] = session_id
+    res = {"content": "websocket连接成功"}
+    await websocket.send_text(json.dumps(res))
+
+    websocket_manager.register_websocket(session_id=session_id, websocket=websocket)
 
 @ws_handler.on_close
 async def handle_disconnect(websocket: WebSocketAdapter):
     print(f"Client {websocket.id} disconnected")
 
     # 用户关闭session时弹出并清除session_id
-    session_id: str = websocket_id_to_session_id.pop(websocket.id, None)
+    session_id: str | None = websocket_manager.get_session_id_by_websocket_id(websocket_id=websocket.id)
 
-    # 执行 关闭session 钩子
-    await session_end(session_id = session_id)
+    if session_id:
+        websocket_manager.unregister_websocket_by_websocket_id(websocket_id=websocket.id)
+
+        # 执行 关闭session 钩子
+        await session_end(session_id = session_id)
 
 
 @app.delete("/sessions")
