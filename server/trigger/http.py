@@ -2,7 +2,7 @@ import json
 from agent import built_agent
 from type import MultiModalMessage
 from typing import Any, Dict, Callable
-from ..infrastructure import websocket_manager
+from ..runtime import registry_manager
 from ..service import async_generator, session_end, clear_session
 from robyn import Robyn, SSEMessage, SSEResponse, WebSocketDisconnect, WebSocketAdapter
 
@@ -79,22 +79,22 @@ async def on_connect(websocket: WebSocketAdapter):
     session_id: str = query_params.get("session_id", None)
     if session_id is None:
         await websocket.close()
-        websocket_manager.unregister_websocket_by_websocket_id(websocket_id=websocket.id)
+        registry_manager.unregister_websocket_by_websocket_id(websocket_id=websocket.id)
 
     res = {"content": "websocket连接成功"}
     await websocket.send_text(json.dumps(res))
 
-    websocket_manager.register_websocket(session_id=session_id, websocket=websocket)
+    registry_manager.register_websocket(session_id=session_id, websocket=websocket)
 
 @ws_handler.on_close
 async def handle_disconnect(websocket: WebSocketAdapter):
     print(f"Client {websocket.id} disconnected")
 
     # 用户关闭session时弹出并清除session_id
-    session_id: str | None = websocket_manager.get_session_id_by_websocket_id(websocket_id=websocket.id)
+    session_id: str | None = registry_manager.get_session_id_by_websocket_id(websocket_id=websocket.id)
 
     if session_id:
-        websocket_manager.unregister_websocket_by_websocket_id(websocket_id=websocket.id)
+        registry_manager.unregister_websocket_by_websocket_id(websocket_id=websocket.id)
 
         # 执行 关闭session 钩子
         await session_end(session_id = session_id)
