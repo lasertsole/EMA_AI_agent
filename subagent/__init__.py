@@ -1,1 +1,1 @@
-from .core import SubagentManager
+from .core import SubagentManager, subagent_manager

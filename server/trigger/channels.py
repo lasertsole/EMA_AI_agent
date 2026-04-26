@@ -4,13 +4,12 @@ from pathlib import Path
 from config import ROOT_DIR
 from threading import Thread
 from cron import cron_service
-from channels import BaseChannel
 from type import MultiModalMessage
-from channels import channel_manager
 from typing import AsyncGenerator, Any
 from heartbeat import heartbeat_service
 from server.service import async_generator
 from bus import InboundMessage, OutboundMessage
+from channels import BaseChannel, channel_manager
 from langgraph.graph.state import CompiledStateGraph
 from pub_func import string_to_unique_int, process_sse_data
 from langchain_core.messages import SystemMessage, BaseMessage, HumanMessage

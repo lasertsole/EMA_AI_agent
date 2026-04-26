@@ -1,7 +1,6 @@
 import time
 import uuid
 import asyncio
-from pathlib import Path
 from bus import MessageBus
 from agent import built_agent
 from bus import InboundMessage
@@ -43,24 +42,33 @@ class SubAgentOutput(BaseModel):
 class SubagentManager:
     """Manages background subagent execution."""
 
+    """单例模式"""
+    _instance = None
+    _initialized = False
+
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
     def __init__(
         self,
-        workspace: Path,
-        max_tool_result_chars: int,
         bus: MessageBus | None = None,
-        restrict_to_workspace: bool = False,
-        disabled_skills: list[str] | None = None,
     ):
-        self.workspace = workspace
         if bus is None:
             bus = MessageBus()
         self.bus = bus
-        self.max_tool_result_chars = max_tool_result_chars
-        self.restrict_to_workspace = restrict_to_workspace
-        self.disabled_skills = set(disabled_skills or [])
         self._running_tasks: dict[str, asyncio.Task[None]] = {}
         self._task_statuses: dict[str, SubagentStatus] = {}
         self._session_tasks: dict[str, set[str]] = {}  # session_id -> {task_id, ...}
+
+        # 如果有运行中的事件循环，则使用它， 否则创建一个新的
+        try:
+            self._event_loop = asyncio.get_running_loop()
+        except RuntimeError:
+            self._event_loop = asyncio.new_event_loop()
+
+        SubagentManager._initialized = True
 
     async def spawn(
         self,
@@ -83,7 +91,7 @@ class SubagentManager:
         )
         self._task_statuses[task_id] = status
 
-        bg_task = asyncio.create_task(
+        bg_task = self._event_loop.create_task(
             self._run_subagent(task_id, task, display_label, origin, status)
         )
         self._running_tasks[task_id] = bg_task
@@ -101,6 +109,10 @@ class SubagentManager:
 
         logger.info("Spawned subagent [{}]: {}", task_id, display_label)
         return f"Subagent [{display_label}] started (id: {task_id}). I'll notify you when it completes."
+
+    def get_event_loop(self) -> asyncio.AbstractEventLoop:
+        """Get the event loop."""
+        return self._event_loop
 
     @staticmethod
     def _build_subagent_prompt(selected_skill_names: list[str] | None = None) -> str:
@@ -214,6 +226,8 @@ class SubagentManager:
             1 for tid in tids
             if tid in self._running_tasks and not self._running_tasks[tid].done()
         )
+
+subagent_manager = SubagentManager()
 
 # agent = built_agent(temperature=0.5, response_format=SubAgentOutput)
 # res: dict[str, Any] = agent.invoke(input={"messages": [HumanMessage(content="你好雪莉， 请不要调用任何工具，我要看看你会输出什么")]}, config = get_agent_configurable("1"))
