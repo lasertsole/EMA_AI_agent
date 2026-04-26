@@ -129,7 +129,7 @@ class ChannelManager:
         except Exception as e:
             logger.error(f"Failed to start channel {name}: {e}")
 
-    def start_all(self) -> None:
+    def start_service(self) -> None:
         """Start all channels and the outbound dispatcher."""
         if not self._event_loop.is_running():
             if not self._channels:
@@ -154,7 +154,7 @@ class ChannelManager:
             except Exception:
                 pass
 
-    async def stop_all(self) -> None:
+    async def stop_service(self) -> None:
         """Stop all channels and the dispatcher."""
         logger.info("Stopping all channels...")
 
@@ -186,12 +186,6 @@ class ChannelManager:
                     self._bus.consume_outbound(),
                     timeout=1.0
                 )
-
-                if msg.metadata.get("_progress"):
-                    if msg.metadata.get("_tool_hint") and not self._config.send_tool_hints:
-                        continue
-                    if not msg.metadata.get("_tool_hint") and not self._config.send_progress:
-                        continue
 
                 channel = self._channels.get(msg.channel)
                 if channel:

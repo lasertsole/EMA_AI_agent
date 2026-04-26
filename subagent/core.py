@@ -57,7 +57,7 @@ class SubagentManager:
     ):
         if bus is None:
             bus = MessageBus()
-        self.bus = bus
+        self._bus = bus
         self._running_tasks: dict[str, asyncio.Task[None]] = {}
         self._task_statuses: dict[str, SubagentStatus] = {}
         self._session_tasks: dict[str, set[str]] = {}  # session_id -> {task_id, ...}
@@ -113,6 +113,9 @@ class SubagentManager:
     def get_event_loop(self) -> asyncio.AbstractEventLoop:
         """Get the event loop."""
         return self._event_loop
+    
+    def get_buts(self)-> MessageBus:
+        return self._bus
 
     @staticmethod
     def _build_subagent_prompt(selected_skill_names: list[str] | None = None) -> str:
@@ -129,7 +132,7 @@ class SubagentManager:
         skill_guide_text: str = f"""
         补充说明：
         1.将<skill_folder>替换成技能文件SKILL.md所在的目录 比如技能文件在 "./skills/text_to_image/SKILL.md", 那么文件目录就在 "./skills/text_to_image"
-        2.技能生成的临时资源（如图片、语音等）存放在{(SRC_DIR / "image").as_posix()}目录下
+        2.技能生成的临时资源（如图片、语音等）存放在{(SRC_DIR / "temp").as_posix()}目录下
         """
         skill_paths:str = get_skills_text(selected_skill_names = selected_skill_names, exclude_auth_skills=True) # 排除高权限技能
         skill_paths = f"{skill_paths}\n\n{skill_guide_text}"
@@ -166,23 +169,40 @@ class SubagentManager:
                 HumanMessage(content=task),
             ]
 
-            agent: CompiledStateGraph = built_agent(temperature = 0.5, response_format = SubAgentOutput)
-            agent_res: dict[str, Any] = await agent.ainvoke(input = {"messages": messages}, config = get_agent_configurable("1"))
-            structured_response: SubAgentOutput = agent_res.get("structured_response", {})
-            result: BaseMessage = agent_res.get("messages", [])[-1]
+            try:
+                agent: CompiledStateGraph = built_agent(temperature = 0.5, response_format = SubAgentOutput)
+                agent_res: dict[str, Any] = await agent.ainvoke(
+                    input = {"messages": messages},
+                    config = {"configurable": {"thread_id": 1}, "recursion_limit": 30}
+                )
+                structured_response: SubAgentOutput = agent_res.get("structured_response", {})
+                result: BaseMessage = agent_res.get("messages", [])[-1]
 
-            status.phase = "done"
-            status.finish_reason = structured_response.finish_reason
+                status.phase = "done"
+                status.finish_reason = structured_response.finish_reason
 
-            announce_content: str = render_template_file(
-                file_path = (SUBAGENT_TEMPLATE_DIR / "subagent_announce.md").resolve().as_posix(),
-                variables = {
-                    "label": label,
-                    "status_text": "completed successfully" if structured_response.status == "ok" else "failed",
-                    "task": task,
-                    "result": result,
-                }
-            )
+                announce_content: str = render_template_file(
+                    file_path=(SUBAGENT_TEMPLATE_DIR / "subagent_announce.md").resolve().as_posix(),
+                    variables={
+                        "label": label,
+                        "status_text": "completed successfully" if structured_response.status == "ok" else "failed",
+                        "task": task,
+                        "result": status.finish_reason,
+                    }
+                )
+            except Exception as e:
+                status.phase = "error"
+                status.finish_reason = str(e)
+
+                announce_content: str = render_template_file(
+                    file_path=(SUBAGENT_TEMPLATE_DIR / "subagent_announce.md").resolve().as_posix(),
+                    variables={
+                        "label": label,
+                        "status_text": "crash error",
+                        "task": task,
+                        "result": status.finish_reason,
+                    }
+                )
 
             override: str = origin.get("session_id") or f"{origin['channel']}:{origin['chat_id']}"
             msg = InboundMessage(
@@ -197,7 +217,7 @@ class SubagentManager:
                 },
             )
 
-            await self.bus.publish_inbound(msg)
+            await self._bus.publish_inbound(msg)
 
         except Exception as e:
             status.phase = "error"
@@ -214,6 +234,24 @@ class SubagentManager:
         if tasks:
             await asyncio.gather(*tasks, return_exceptions=True)
         return len(tasks)
+
+    async def _inbound_consume_loop(self):
+        while True:
+            msg: InboundMessage = await self._bus.consume_inbound()
+
+            print(msg)
+
+    def start_service(self) -> None:
+        if not self._event_loop.is_running():
+            self._event_loop.create_task(self._inbound_consume_loop())
+
+            # 防止重复运行报错
+            try:
+                self._event_loop.run_forever()
+            except Exception:
+                pass
+
+
 
     def get_running_count(self) -> int:
         """Return the number of currently running subagents."""

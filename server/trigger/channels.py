@@ -79,7 +79,7 @@ def run() -> None:
     # 启动 cron 服务
     asyncio.run_coroutine_threadsafe(cron_service.start(), event_loop)
     # 启动频道管理器（内部会调用 run_forever）
-    channel_manager.start_all()
+    channel_manager.start_service()
 
     try:
         event_loop.run_forever()

@@ -1,4 +1,3 @@
-import asyncio
 from threading import Thread
 from subagent import subagent_manager
 
@@ -8,13 +7,14 @@ async def process_subagent_notify(task_res: str):
 """以上是处理subagent"""
 
 def run() -> None:
-    # 从频道管理器获取事件循环，让 心跳服务 和 cron服务 运行在相同的事件循环中
     event_loop = subagent_manager.get_event_loop()
+
+    subagent_manager.start_service()
 
     try:
         event_loop.run_forever()
     except Exception:
         pass
 
-channel_thread: Thread = Thread(target=run, daemon=True)
-channel_thread.start()
+subagent_thread: Thread = Thread(target=run, daemon=True)
+subagent_thread.start()
