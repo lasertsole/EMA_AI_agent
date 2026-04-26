@@ -10,10 +10,11 @@ from workspace import CORE_FILE_NAMES
 from logging import Logger, getLogger
 from dataclasses import dataclass, field
 from skills.loader import get_skills_text
+from pub_func import render_template_file
 from langgraph.graph.state import CompiledStateGraph
 from config import SRC_DIR, WORKSPACE_DIR, SUBAGENT_TEMPLATE_DIR
-from pub_func import get_agent_configurable, render_template_file
 from langchain_core.messages import SystemMessage, HumanMessage, BaseMessage
+
 
 logger: Logger = getLogger(__name__)
 
@@ -162,8 +163,17 @@ class SubagentManager:
         logger.info("Subagent [{}] starting task: {}", task_id, label)
 
         try:
-            # Build subagent tools (no message tool, no spawn tool)
-            system_prompt = self._build_subagent_prompt()
+            from context_engine import assemble
+
+            # 复用主agent的 graph-memory，复用主模型经验以减少subagent试错成本
+            assemble_result: dict[str, str] = await assemble(user_text=task, messages=[])
+            graph_system_prompt_addition: str = assemble_result.get("system_prompt_addition", "")
+
+            # 构建subagent系统提示词
+            system_prompt = (
+                self._build_subagent_prompt()
+                + graph_system_prompt_addition
+                + "\n\n Complete the task as simply as possible, and terminate immediately upon completion to submit the results.")
             messages: list[BaseMessage] = [
                 SystemMessage(content=system_prompt),
                 HumanMessage(content=task),
@@ -176,7 +186,6 @@ class SubagentManager:
                     config = {"configurable": {"thread_id": 1}, "recursion_limit": 30}
                 )
                 structured_response: SubAgentOutput = agent_res.get("structured_response", {})
-                result: BaseMessage = agent_res.get("messages", [])[-1]
 
                 status.phase = "done"
                 status.finish_reason = structured_response.finish_reason
@@ -252,7 +261,6 @@ class SubagentManager:
                 pass
 
 
-
     def get_running_count(self) -> int:
         """Return the number of currently running subagents."""
         return len(self._running_tasks)
@@ -266,7 +274,3 @@ class SubagentManager:
         )
 
 subagent_manager = SubagentManager()
-
-# agent = built_agent(temperature=0.5, response_format=SubAgentOutput)
-# res: dict[str, Any] = agent.invoke(input={"messages": [HumanMessage(content="你好雪莉， 请不要调用任何工具，我要看看你会输出什么")]}, config = get_agent_configurable("1"))
-# print(res.get("structured_response", {}))
