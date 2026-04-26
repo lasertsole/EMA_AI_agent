@@ -1,18 +1,14 @@
-import json
 import asyncio
-from pathlib import Path
-from config import ROOT_DIR
 from threading import Thread
 from cron import cron_service
+from typing import AsyncGenerator
 from type import MultiModalMessage
-from typing import AsyncGenerator, Any
 from heartbeat import heartbeat_service
 from server.service import async_generator
 from bus import InboundMessage, OutboundMessage
 from channels import BaseChannel, channel_manager
-from langgraph.graph.state import CompiledStateGraph
 from pub_func import string_to_unique_int, process_sse_data
-from langchain_core.messages import SystemMessage, BaseMessage, HumanMessage
+from ..service import process_heartbeat_task, process_heartbeat_notify
 
 
 """以下是常规处理频道信息"""
@@ -37,37 +33,15 @@ channel_manager.set_inbound_consumer(
 """以上是常规处理频道信息"""
 
 """以下是处理心跳事件"""
-async def process_heartbeat_task(task: str) -> str:
-    try:
-        from agent import built_agent
-        from workspace.prompt_builder import build_system_prompt
+async def _process_heartbeat_task(task: str) -> str:
+    return await process_heartbeat_task(task=task)
 
-        agent: CompiledStateGraph = built_agent(checkpointer = None)
-        messages: list[BaseMessage] = [SystemMessage(content=build_system_prompt(selected_file_names=[])), HumanMessage(content=task)]
-        result: dict[str, Any] = agent.invoke(input={"messages": messages})
+heartbeat_service.on_execute = _process_heartbeat_task
 
-        return result["messages"][-1].content
-    except Exception as e:
-        return f"发生错误{e}"
+async def _process_heartbeat_notify(agent_res: str) -> None:
+    return await process_heartbeat_notify(agent_res)
 
-heartbeat_service.on_execute = process_heartbeat_task
-
-async def process_heartbeat_notify(agent_res: str) -> None:
-    channels_json: Path = Path(ROOT_DIR) / "channels.json"
-    res: dict[str, str] = {}
-
-    if channels_json.exists():
-        channels_configs: dict[str, Any] = json.loads(channels_json.read_text())
-        for name, config in channels_configs.items():
-            if config.get("heartbeat", False) and config.get("heartbeat_receiver", False):
-                res[name] = config["heartbeat_receiver"]
-
-    for name, receiver in res.items():
-        channel: BaseChannel = channel_manager.get_channel(name)
-        if channel:
-            await channel.send(OutboundMessage(channel=name, chat_id = receiver, content = agent_res))
-
-heartbeat_service.on_notify = process_heartbeat_notify
+heartbeat_service.on_notify = _process_heartbeat_notify
 """以上是处理心跳事件"""
 
 def run() -> None:

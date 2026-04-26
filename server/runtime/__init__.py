@@ -1,1 +1,1 @@
-from .registry_manager import registry_manager
+from .runtime_manager import runtime_manager

@@ -1,6 +1,6 @@
 from robyn import WebSocketAdapter
 
-class RegistryManager:
+class RuntimeManager:
     _instance = None
 
     def __new__(cls):
@@ -92,4 +92,4 @@ class RegistryManager:
     def get_channel_chat_id_by_session_id(self, session_id: str)->tuple[str, str] | None:
         return self.session_id_to_channel_chat_id.get(session_id, None)
 
-registry_manager = RegistryManager()
+runtime_manager = RuntimeManager()

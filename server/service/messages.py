@@ -115,7 +115,7 @@ async def _assemble_agent(session_id: str, multi_modal_message: MultiModalMessag
                 + recent_messages_addition
         )
     ]
-
+    print(6)
     content_list:List[dict[str, str]] = [{"type": "text", "text": user_text}]
     if multi_modal_message.image_base64_list:
         for image_base64 in multi_modal_message.image_base64_list:
@@ -124,7 +124,7 @@ async def _assemble_agent(session_id: str, multi_modal_message: MultiModalMessag
             agent = built_agent(model_type = ModelType.VL_MODEL, enable_tool = False)
 
     messages.append(HumanMessage(content = content_list))
-
+    print(7)
     # 直接将上下文写入checkpointer内
     agent.update_state(config = get_agent_configurable(session_id), values = {"messages": messages})
 
@@ -231,5 +231,7 @@ async def session_end(session_id: str):
     await rectification_and_standardization(session_id = session_id)
 """以上是会话结束逻辑"""
 
+"""以下是清除会话历史记录"""
 async def clear_session(session_id: str):
     clear_session_DAO(session_id = session_id)
+"""以上是清除会话历史记录"""

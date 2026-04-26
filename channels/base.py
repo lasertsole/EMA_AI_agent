@@ -100,7 +100,7 @@ class BaseChannel(ABC):
             content=content,
             media=media or [],
             metadata=metadata or {},
-            session_id_override=session_id,
+            session_id=session_id,
         )
 
         await self.bus.publish_inbound(msg)

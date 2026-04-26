@@ -16,12 +16,12 @@ class InboundMessage:
     timestamp: datetime = field(default_factory=datetime.now)
     media: list[str] = field(default_factory=list)  # Media URLs
     metadata: dict[str, Any] = field(default_factory=dict)  # Channel-specific data
-    session_id_override: str | None = None  # Optional override for thread-scoped sessions
+    session_id: str | None = None  # Optional override for thread-scoped sessions
 
     @property
-    def session_id(self) -> str:
+    def unique_id(self) -> str:
         """Unique key for sessions identification."""
-        return self.session_id_override or f"{self.channel}:{self.chat_id}"
+        return self.session_id or f"{self.channel}:{self.chat_id}"
 
 
 @dataclass

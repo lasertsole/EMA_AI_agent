@@ -10,13 +10,14 @@ from workspace import CORE_FILE_NAMES
 from logging import Logger, getLogger
 from dataclasses import dataclass, field
 from skills.loader import get_skills_text
-from pub_func import render_template_file
+from context_engine import assemble, after_turn
 from langgraph.graph.state import CompiledStateGraph
 from config import SRC_DIR, WORKSPACE_DIR, SUBAGENT_TEMPLATE_DIR
 from langchain_core.messages import SystemMessage, HumanMessage, BaseMessage
-
+from pub_func import render_template_file, slice_last_turn, sanitize_tool_use_result_pairing
 
 logger: Logger = getLogger(__name__)
+
 
 @dataclass(slots=True)
 class SubagentStatus:
@@ -93,7 +94,14 @@ class SubagentManager:
         self._task_statuses[task_id] = status
 
         bg_task = self._event_loop.create_task(
-            self._run_subagent(task_id, task, display_label, origin, status)
+            self._run_subagent(
+                session_id= session_id,
+                task_id= task_id,
+                task= task,
+                label= display_label,
+                origin= origin,
+                status= status
+            )
         )
         self._running_tasks[task_id] = bg_task
         self._session_tasks.setdefault(session_id, set()).add(task_id)
@@ -153,6 +161,7 @@ class SubagentManager:
 
     async def _run_subagent(
         self,
+        session_id: str,
         task_id: str,
         task: str,
         label: str,
@@ -162,9 +171,8 @@ class SubagentManager:
         """Execute the subagent task and announce the result."""
         logger.info("Subagent [{}] starting task: {}", task_id, label)
 
+        messages: list[BaseMessage] = []
         try:
-            from context_engine import assemble
-
             # 复用主agent的 graph-memory，复用主模型经验以减少subagent试错成本
             assemble_result: dict[str, str] = await assemble(user_text=task, messages=[])
             graph_system_prompt_addition: str = assemble_result.get("system_prompt_addition", "")
@@ -183,9 +191,12 @@ class SubagentManager:
                 agent: CompiledStateGraph = built_agent(temperature = 0.5, response_format = SubAgentOutput)
                 agent_res: dict[str, Any] = await agent.ainvoke(
                     input = {"messages": messages},
-                    config = {"configurable": {"thread_id": 1}, "recursion_limit": 30}
+                    config = {"configurable": {"thread_id": int(session_id)}, "recursion_limit": 30}
                 )
                 structured_response: SubAgentOutput = agent_res.get("structured_response", {})
+
+                # 获取历史对话信息，以用于后面使用graph-memory抽取经验
+                messages = agent_res.get("messages", [])
 
                 status.phase = "done"
                 status.finish_reason = structured_response.finish_reason
@@ -213,13 +224,12 @@ class SubagentManager:
                     }
                 )
 
-            override: str = origin.get("session_id") or f"{origin['channel']}:{origin['chat_id']}"
             msg = InboundMessage(
                 channel = "system",
                 sender_id = "subagent",
                 chat_id = f"{origin['channel']}:{origin['chat_id']}",
                 content = announce_content,
-                session_id_override = override,
+                session_id = session_id,
                 metadata = {
                     "injected_event": "subagent_result",
                     "subagent_task_id": task_id,
@@ -232,6 +242,15 @@ class SubagentManager:
             status.phase = "error"
             status.error = str(e)
             logger.error("Subagent [{}] failed: {}", task_id, e)
+
+        finally:
+            """在任务结束时抽取经验"""
+            # 获取 格式化后的最后一轮对话的 消息列表
+            last_turn_messages: list[BaseMessage] = slice_last_turn(messages)["messages"]
+            format_last_turn_messages: list[BaseMessage] = sanitize_tool_use_result_pairing(last_turn_messages)
+
+            # 启动上下文引擎的 后处理
+            asyncio.create_task(after_turn(session_id=session_id, last_turn_messages=format_last_turn_messages))
 
 
     async def cancel_by_session(self, session_id: str) -> int:
