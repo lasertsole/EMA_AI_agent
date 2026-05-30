@@ -1,6 +1,8 @@
 import numpy as np
 from dataclasses import dataclass, field
 
+from pydantic import BaseModel
+
 
 @dataclass
 class GraphNode:
@@ -25,3 +27,14 @@ class GraphEdge:
     source_id: int
     target_id: int
     bridge_relation: str  # e.g. "developed", "lives_in", "won"
+
+@dataclass
+class ExtractRelationResult:
+    subject: str
+    subject_type: str
+    object: str
+    object_type: str
+    relation: str
+    temporal_context: str
+    spatial_context: str
+    sentiment: str
