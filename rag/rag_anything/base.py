@@ -8,7 +8,7 @@ _project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 if _project_root not in sys.path:
     sys.path.insert(0, _project_root)
 
-from config.path import ROOT_DIR
+from config.path import SRC_DIR
 from lightrag.utils import EmbeddingFunc
 from lightrag import LightRAG, QueryParam
 from models import embed_model, simple_chat_model
@@ -71,7 +71,7 @@ _lightRAG: LightRAG | None = None
 
 async def get_lightrag() -> LightRAG:
     """获取 LightRAG 单例实例"""
-    working_dir: str = (ROOT_DIR / "src" / "rag" / "lightrag_db").resolve().as_posix()
+    working_dir: str = (SRC_DIR / "rag" / "lightrag_db").resolve().as_posix()
 
     global _lightRAG
 
@@ -91,24 +91,24 @@ async def get_lightrag() -> LightRAG:
     return _lightRAG
 
 
-async def add_rag(session_id: str, histories: list[str]) -> None:
+async def add_rag(histories: list[str]) -> None:
     """增加 lightrag 数据"""
     lightrag = await get_lightrag()
-    logger.info(f"Session {session_id}: 调用 lightrag.ainsert...")
+    logger.info(f"调用 lightrag.ainsert...")
     try:
         res = await asyncio.wait_for(
             lightrag.ainsert(histories),
             timeout=60.0 * 15,  # 15分钟超时
         )
-        logger.info(f"Session {session_id}: ✅ 插入成功")
+        logger.info(f"✅ 插入成功")
     except asyncio.TimeoutError:
         logger.error(
-            f"Session {session_id}: ❌ 插入超时(15min)! LightRAG 可能卡死了!"
+            f"❌ 插入超时(15min)! LightRAG 可能卡死了!"
         )
-        raise RuntimeError(f"LightRAG ainsert timeout for session {session_id}")
+        raise RuntimeError(f"LightRAG ainsert timeout")
 
 
-async def retrieve_rag(session_id: str, query_text: str) -> str:
+async def retrieve_rag(query_text: str) -> str:
     """召回 lightrag 数据"""
     lightrag = await get_lightrag()
 
@@ -128,7 +128,7 @@ async def retrieve_rag(session_id: str, query_text: str) -> str:
     return res
 
 
-async def delete_rag(session_id: str, entity_names: list[str]) -> None:
+async def delete_rag(entity_names: list[str]) -> None:
     """物理删除节点和相关边，而不是逻辑删除"""
     lightrag = await get_lightrag()
 
