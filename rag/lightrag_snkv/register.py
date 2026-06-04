@@ -15,7 +15,9 @@ Usage (before creating any LightRAG instance):
     )
 """
 from __future__ import annotations
+
 _REGISTERED = False
+
 
 
 def register() -> None:
@@ -24,13 +26,14 @@ def register() -> None:
     if _REGISTERED:
         return
 
+    from rag.lightrag_snkv import lightrag_snkv_name
     from lightrag.kg import STORAGE_ENV_REQUIREMENTS, STORAGE_IMPLEMENTATIONS, STORAGES
 
     # Module paths for lazy import (absolute, not relative to lightrag)
-    STORAGES["SNKVKVStorage"] = "rag.lightrag_snkv.snkv_kv_impl"
-    STORAGES["SNKVVectorStorage"] = "rag.lightrag_snkv.snkv_vector_impl"
-    STORAGES["SNKVGraphStorage"] = "rag.lightrag_snkv.snkv_graph_impl"
-    STORAGES["SNKVDocStatusStorage"] = "rag.lightrag_snkv.snkv_doc_status_impl"
+    STORAGES["SNKVKVStorage"] = f"{lightrag_snkv_name}.snkv_kv_impl"
+    STORAGES["SNKVVectorStorage"] = f"{lightrag_snkv_name}.snkv_vector_impl"
+    STORAGES["SNKVGraphStorage"] = f"{lightrag_snkv_name}.snkv_graph_impl"
+    STORAGES["SNKVDocStatusStorage"] = f"{lightrag_snkv_name}.snkv_doc_status_impl"
 
     # Add to validation lists
     STORAGE_IMPLEMENTATIONS["KV_STORAGE"]["implementations"].append("SNKVKVStorage")

@@ -5,7 +5,10 @@ from .snkv_graph_impl import SNKVGraphStorage
 from .snkv_kv_impl import SNKVKVStorage
 from .snkv_vector_impl import SNKVVectorStorage
 
+lightrag_snkv_name = __name__
+
 __all__ = [
+    "lightrag_snkv_name",
     "SNKVKVStorage",
     "SNKVVectorStorage",
     "SNKVGraphStorage",
