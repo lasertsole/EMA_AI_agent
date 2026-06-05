@@ -1,5 +1,6 @@
 <template>
     <div class="root">
+        {{ $t('welcome') }}
     </div>
 </template>
 
