@@ -137,5 +137,5 @@ async def session_end(session_id: str):
 
 """以下是清除会话历史记录"""
 async def clear_session(session_id: str):
-    clear_session_DAO(session_id = session_id)
+    await clear_session_DAO(session_id = session_id)
 """以上是清除会话历史记录"""
