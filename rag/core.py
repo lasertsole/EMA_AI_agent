@@ -22,30 +22,47 @@ os.environ["TRANSFORMERS_OFFLINE"] = "0"
 os.environ["HF_HUB_DISABLE_TELEMETRY"] = "0"
 os.environ["MINERU_TOOLS_CONFIG_JSON"] = (MODELS_DIR / "extract_model/mineru_config.json").resolve().as_posix()
 
+
 async def _vision_model_func(
     prompt: str,
     system_prompt: str | None = None,
+    history_messages: list = [],
     image_data: bytes | str | None = None,
+    messages: list[dict[str, Any]] = [],
     **kwargs,
 ) -> str:
-    user_content: list[dict] = [{"type": "text", "text": prompt}]
-    if image_data is not None:
-        b64 = image_data
-        if isinstance(b64, bytes):
-            b64 = b64.decode("utf-8")
-        user_content.append({
-            "type": "image_url",
-            "image_url": {"url": f"data:image/png;base64,{b64}"},
-        })
-    messages: list[BaseMessage] = []
-    if system_prompt:
-        messages.append(SystemMessage(content=system_prompt))
+    # 如果提供了messages格式（用于多模态VLM增强查询），直接使用
+    if messages:
+        result = vl_model.invoke(messages)
+        return result.content
+    # 传统单图片格式
+    elif image_data:
+        messages = [
+            {"role": "system", "content": system_prompt}
+            if system_prompt
+            else None,
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": prompt},
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": f"data:image/jpeg;base64,{image_data}"
+                        },
+                    },
+                ],
+            }
+            if image_data
+            else {"role": "user", "content": prompt},
+        ]
+        result = vl_model.invoke(messages)
+        return result.content
+    else:
+        from rag import get_lightrag
 
-    human_message: HumanMessage = HumanMessage(content=user_content)
-    messages.append(human_message)
-    result = vl_model.invoke(messages)
-
-    return result.content
+        lightrag = await get_lightrag()
+        return lightrag.llm_model_func(prompt, system_prompt, history_messages, **kwargs)
 
 
 class FallbackTxtParser(Parser):
