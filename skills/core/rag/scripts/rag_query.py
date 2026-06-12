@@ -11,9 +11,13 @@ rag_query.py — 向 rag-anything 知识图谱提出查询问题
 import sys
 from pathlib import Path
 
-# 设置标准输出编码为utf-8，避免Windows GBK编码问题
-if sys.stdout.encoding != 'utf-8':
-    sys.stdout.reconfigure(encoding='utf-8')
+# 注意：在Python REPL环境中，sys.stdout是StringIO对象，没有reconfigure方法
+# 所以需要用try/except包裹，兼容两种环境
+try:
+    if sys.stdout.encoding != 'utf-8':
+        sys.stdout.reconfigure(encoding='utf-8')
+except AttributeError:
+    pass  # REPL环境（如StringIO）跳过
 
 # 动态添加项目根目录到 sys.path
 current_file = Path(__file__).resolve()
