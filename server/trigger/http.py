@@ -259,7 +259,7 @@ async def get_history_turn_message_dicts_handler(request):
     request_json = request.json()
 
     session_id: str | None = request_json.get("session_id", None)
-    max_count: int | None = request_json.get("max_count", None)
+    last_turn_count: int | None = request_json.get("last_turn_count", None)
     logger.debug(f"Reading history messages: session_id={session_id}")
 
-    return get_history_turn_message_dicts(session_id = session_id, last_turn_count = max_count)
+    return get_history_turn_message_dicts(session_id = session_id, last_turn_count = last_turn_count)
