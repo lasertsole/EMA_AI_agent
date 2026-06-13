@@ -202,9 +202,7 @@ async def get_rag_anything(parser: str = "mineru", parse_method: str = "auto") -
 
         config = RAGAnythingConfig(
             parser = parser,
-            parse_method = parse_method,
-            # # 必须和 LightRAG 一致
-            # working_dir = str(SRC_DIR / "rag" / "lightrag_db"),
+            parse_method = parse_method
         )
         _rag_anything = RAGAnything(
             lightrag = lightrag,
