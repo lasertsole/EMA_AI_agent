@@ -1,7 +1,11 @@
 # TODO List
 
-## 1. 重写前端
-使用 `client_future/` 文件夹下的 Tauri 2 + Nuxt 4 前端项目替代 `client/` 文件夹下的 Streamlit 前端，对话交换逻辑和样式与client相近或相同
+## 1. Rewrite Frontend
+Replace the Streamlit frontend under `client/` with the Tauri 2 + Nuxt 4 frontend project under `client_future/`. The conversation exchange logic and styling should be similar or identical to the current client.
 
-## 2. 增加对接平台
-在 channel 中增加对接平台,如 微信bot、飞书
+## 2. Add Platform Integrations
+Add more platform adapters under `channel/`, such as WeChat Bot and Feishu (Lark).
+
+---
+
+**[中文版](TODOList.zh.md)**

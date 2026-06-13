@@ -5,6 +5,7 @@ from PIL import Image
 from typing import Any
 from loguru import logger
 from config import SRC_DIR
+from pub_func import is_url
 from langgraph.runtime import Runtime
 from langchain_core.messages import BaseMessage, HumanMessage
 from langchain.agents.middleware import AgentMiddleware, AgentState
@@ -37,24 +38,28 @@ class MultimodalProcessor(AgentMiddleware):
                     text_dict = item
 
                 elif item.get("type") == "image_url":
-                    data_url: str = item.get("image_url", {}).get("url", "")
-                    # 判断是否已经有data URI前缀
-                    if data_url.startswith('data:image/'):
-                        # 已有前缀，直接使用
-                        base64_data: str = data_url.split(",")[1]
-                    else:
-                        # 没有前缀，添加前缀
-                        base64_data: str = data_url
+                    url: str = item.get("image_url", {}).get("url", "")
 
-                    image_bytes = base64.b64decode(base64_data)
-                    image = Image.open(io.BytesIO(image_bytes))
+                    # 判断是否是url
+                    if is_url(url):
+                        temp_path = url
+                    else:    # 判断是否已经有data URI前缀
+                        if url.startswith('data:image/'):
+                            # 已有前缀，直接使用
+                            base64_data: str = url.split(",")[1]
+                        else:
+                            # 没有前缀，添加前缀
+                            base64_data: str = url
 
-                    temp_dir = SRC_DIR / "mutil_temp"
-                    temp_dir.mkdir(parents=True, exist_ok=True)
-                    temp_path = temp_dir / f"{str(int(time.time() * 1000))}.png"
-                    temp_path = temp_path.resolve()
-                    image.save(temp_path, "PNG")
-                    logger.info("图片缓存成功！")
+                        image_bytes = base64.b64decode(base64_data)
+                        image = Image.open(io.BytesIO(image_bytes))
+
+                        temp_dir = SRC_DIR / "mutil_temp"
+                        temp_dir.mkdir(parents=True, exist_ok=True)
+                        temp_path = temp_dir / f"{str(int(time.time() * 1000))}.png"
+                        temp_path = temp_path.resolve()
+                        image.save(temp_path, "PNG")
+                        logger.info("图片缓存成功！")
 
                     image_path_list.append(temp_path.as_posix())
 
