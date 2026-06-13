@@ -41,7 +41,7 @@ The Agent's character, **橘雪莉 (Sherry)**, is a detective girl with a dual p
 
 ### 4. 🔊 Multimodal Interaction
 - **TTS Voice Synthesis**: Foreign integrated with GPT-SoVITS for real-time voice replies that faithfully reproduce the character's voice
-- **Visual Understanding**: Supports Vision-Language (VL) models for recognizing and analyzing user-uploaded images
+- **Visual Understanding**: Supports Image-to-Text (VL) models for recognizing and analyzing user-uploaded images
 
 ### 5. ⏰ Scheduled & Proactive Behavior
 - **Cron Service** ([cron/](cron/README.md)): Schedule periodic, one-shot, or cron-expression-based agent tasks
@@ -145,7 +145,7 @@ EMA_AI_agent/
 ├── models/                 # Model wrappers
 │   ├── chat/               # Chat model (LangChain BaseChatModel)
 │   ├── reasoner/           # Reasoner model (chain-of-thought)
-│   ├── vl/                 # Vision-Language model
+│   ├── vl/                 # Image-to-Text model
 │   └── tts/                # TTS voice synthesis (GPT-SoVITS)
 │
 ├── pub_func/               # Common utility functions

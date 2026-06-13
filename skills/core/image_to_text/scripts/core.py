@@ -12,7 +12,7 @@ import tempfile
 import requests
 from PIL import Image
 from loguru import logger
-from models import vl_model
+from models import ITT_model
 from dotenv import load_dotenv
 from pub_func.validator import is_url
 from langchain_core.messages import HumanMessage
@@ -98,7 +98,7 @@ def itt(image_path: str, user_text: str = "Please describe the image content in 
             {"type": "image_url", "image_url": {"url": image_base64}},
         ]
 
-        res = vl_model.invoke([HumanMessage(content=content_list)])
+        res = ITT_model.invoke([HumanMessage(content=content_list)])
 
         logger.info(f"Image recognition completed, content:\n{res.content}")
         return res.content

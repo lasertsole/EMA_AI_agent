@@ -41,7 +41,7 @@ def generate_image(prompt: str) -> None:
             logger.info("Error: TTI_API_NAME environment variable not set")
 
         if not api_key:
-            logger.info("Error: VL_API_KEY environment variable not set")
+            logger.info("Error: ITT_API_KEY environment variable not set")
 
         # Send request.
         headers = {
