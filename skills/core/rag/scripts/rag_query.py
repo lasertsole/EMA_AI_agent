@@ -1,27 +1,27 @@
 """
-rag_query.py — 向 rag-anything 知识图谱提出查询问题
+rag_query.py — Query the rag-anything knowledge graph
 
-用法:
+Usage:
     python rag_query.py "<query_string>"
 
-示例:
-    python rag_query.py "橘雪莉和远野汉娜是什么关系？"
+Example:
+    python rag_query.py "What is the relationship between JuXueLi and YuanYe HanNa?"
 """
 
 import sys
 from pathlib import Path
 
-# 注意：在Python REPL环境中，sys.stdout是StringIO对象，没有reconfigure方法
-# 所以需要用try/except包裹，兼容两种环境
+# Note: In Python REPL environment, sys.stdout is a StringIO object without reconfigure()
+# Use try/except to handle both environments
 try:
     if sys.stdout.encoding != 'utf-8':
         sys.stdout.reconfigure(encoding='utf-8')
 except AttributeError:
-    pass  # REPL环境（如StringIO）跳过
+    pass  # REPL environment (e.g. StringIO) — skip
 
-# 动态添加项目根目录到 sys.path
+# Dynamically add project root to sys.path
 current_file = Path(__file__).resolve()
-# skills/core/rag/scripts/rag_query.py -> parents[4] = 项目根目录
+# skills/core/rag/scripts/rag_query.py -> parents[4] = project root
 project_root: Path = current_file.parents[4]
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
@@ -31,11 +31,11 @@ from raganything import RAGAnything
 
 
 async def query(question: str) -> None:
-    """向 rag-anything 知识图谱提问"""
+    """Query the rag-anything knowledge graph"""
     try:
         rag: RAGAnything = await get_rag_anything()
         res = await rag.aquery(question)
-        print(f"[查询] {question}")
-        print(f"[回答] {res}")
+        print(f"[Query] {question}")
+        print(f"[Answer] {res}")
     except Exception as e:
-        print(f"[错误] 查询出错: {e}")
+        print(f"[Error] Query failed: {e}")

@@ -1,6 +1,6 @@
 ---
 name: text_to_image
-description: 当用户需要根据文字描述生成图片时，使用 python_repl工具生成图片。
+description: When a user needs to generate an image from a text description, use the python_repl tool to call generate_image().
 ---
 
 ```python
@@ -9,7 +9,8 @@ from pathlib import Path
 from skills.core.text_to_image.scripts import generate_image
 
 if __name__ == '__main__':
-    # 测试用：直接传入prompt
-    result = generate_image("测试图片")
-    print(f"生成结果: {result}")
+    # Test: pass a prompt directly
+    prompt: str = "{placeholder}"  # <- the user's text description for the image
+    result = generate_image(prompt)
+    print(f"Generated: {result}")
 ```

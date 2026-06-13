@@ -1,19 +1,19 @@
 """
-rag_index.py — 将指定目录下的所有文件加入 rag-anything 知识图谱
+rag_index.py — Index all files under a directory into the rag-anything knowledge graph
 
-用法:
+Usage:
     python rag_index.py <input_folder_path> <classify_folder>
 
-示例:
+Example:
     python rag_index.py /path/to/documents my_docs
 """
 
 import sys
 from pathlib import Path
 
-# 动态添加项目根目录到 sys.path
+# Dynamically add project root to sys.path
 current_file = Path(__file__).resolve()
-# skills/core/rag/scripts/rag_index.py -> parents[4] = 项目根目录
+# skills/core/rag/scripts/rag_index.py -> parents[4] = project root
 project_root: Path = current_file.parents[4]
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
@@ -24,7 +24,7 @@ from raganything import RAGAnything
 
 
 async def folder_index(input_folder_path: str, classify_folder: str) -> None:
-    """将指定文件夹中的文件索引到 rag-anything 知识图谱中"""
+    """Index files in the specified folder into the rag-anything knowledge graph"""
     rag: RAGAnything = await get_rag_anything()
 
     await rag.process_folder_complete(
@@ -34,7 +34,7 @@ async def folder_index(input_folder_path: str, classify_folder: str) -> None:
         recursive=True,
         max_workers=4,
     )
-    print(f"✅ 索引完成！文件夹 '{input_folder_path}' 已加入知识图谱分类 '{classify_folder}'")
+    print(f"✅ Indexing complete! Folder '{input_folder_path}' added to knowledge graph category '{classify_folder}'")
 
 
 async def file_index(input_file_path: str, classify_folder: str) -> None:
@@ -47,4 +47,4 @@ async def file_index(input_file_path: str, classify_folder: str) -> None:
         recursive=True,
         max_workers=4,
     )
-    print(f"✅ 索引完成！文件 '{input_file_path}' 已加入知识图谱分类 '{classify_folder}'")
+    print(f"✅ Indexing complete! File '{input_file_path}' added to knowledge graph category '{classify_folder}'")

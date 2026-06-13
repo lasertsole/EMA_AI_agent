@@ -1,7 +1,7 @@
 import sys
 from pathlib import Path
 
-# 动态添加项目根目录到 sys.path
+# Dynamically add project root to sys.path
 current_file = Path(__file__).resolve()
 project_root: Path = current_file.parents[4]
 if str(project_root) not in sys.path:
@@ -15,34 +15,34 @@ from dotenv import load_dotenv
 from config.path import SRC_DIR
 from pub_func import generate_tsid
 
-# 加载环境变量
+# Load environment variables
 load_dotenv(project_root / ".env", override=True)
 
 def generate_image(prompt: str) -> str:
     """
-    根据文字描述生成图片
+    Generate an image from a text description.
 
     Args:
-        prompt: 用户要生成图像的文字描述
+        prompt: The user's text description for the image to generate.
 
     Returns:
-        保存的图片路径
+        The file path of the saved image.
     """
     try:
-        url = os.getenv("TTI_API_BASE")  # API地址
+        url = os.getenv("TTI_API_BASE")
         api_name = os.getenv("TTI_API_NAME")
         api_key = os.getenv("TTI_API_KEY")
 
         if not url:
-            print("错误: 未找到TTI_API_BASE环境变量")
+            print("Error: TTI_API_BASE environment variable not set")
             return ""
 
         if not api_name:
-            print("错误: 未找到TTI_API_NAME环境变量")
+            print("Error: TTI_API_NAME environment variable not set")
             return ""
 
         if not api_key:
-            print("错误: 未找到VL_API_KEY环境变量")
+            print("Error: VL_API_KEY environment variable not set")
             return ""
 
         # Send request.
@@ -51,64 +51,64 @@ def generate_image(prompt: str) -> str:
             'Authorization': f'Bearer {api_key}'
         }
         data = {
-            "model": api_name,  # model参数
-            "prompt": prompt,  # 支持中英文
+            "model": api_name,
+            "prompt": prompt,
             "size": "1024x1024",
-            "response_format": "b64_json",  # 返回格式，可取值为[url, b64_json], 暂仅支持 b64_json，
-            "seed": 1  # 取值范围在[0, 2147483648]， 随机种子，默认1
+            "response_format": "b64_json",
+            "seed": 1
         }
 
-        print(f"正在调用API生成图片...")
-        print(f"使用的prompt: {prompt}")
+        print(f"Calling API to generate image...")
+        print(f"Using prompt: {prompt}")
         response = requests.post(url, headers=headers, data=json.dumps(data), verify=False)
 
         save_path = Path(SRC_DIR) / "temp" / f"{generate_tsid()}.png"
 
-        # 确保目录存在
+        # Ensure the directory exists
         save_path.parent.mkdir(parents=True, exist_ok=True)
 
         status_code = response.status_code
         if status_code == 200:
-            # 解析响应数据
+            # Parse the response
             response_data = response.json()
             if 'data' in response_data and len(response_data['data']) > 0:
                 b64_data = response_data['data'][0]['b64_json']
 
-                # 修复：处理Data URL格式
+                # Handle Data URL format
                 if b64_data.startswith('data:'):
-                    # 提取真正的base64部分
+                    # Extract the actual base64 portion
                     # data:image/png;base64,iVBORw0KGgoAAA...
                     parts = b64_data.split(',', 1)
                     if len(parts) == 2:
                         b64_data = parts[1]
-                        print(f"已提取纯base64数据，长度: {len(b64_data)}")
+                        print(f"Extracted pure base64 data, length: {len(b64_data)}")
                     else:
-                        print(f"警告: 无法解析Data URL格式: {b64_data[:50]}...")
+                        print(f"Warning: Unable to parse Data URL format: {b64_data[:50]}...")
 
-                # 解码base64
+                # Decode base64
                 try:
                     image_data = base64.b64decode(b64_data)
 
-                    # 保存图片
+                    # Save the image
                     with open(save_path, "wb") as f:
                         f.write(image_data)
 
-                    print(f"图片保存成功，保存路径为：{save_path}")
-                    print(f"文件大小: {save_path.stat().st_size} 字节")
+                    print(f"Image saved successfully at: {save_path}")
+                    print(f"File size: {save_path.stat().st_size} bytes")
                     return str(save_path)
 
                 except Exception as decode_error:
-                    print(f"base64解码失败: {decode_error}")
-                    print(f"base64数据长度: {len(b64_data)}")
+                    print(f"Base64 decode failed: {decode_error}")
+                    print(f"Base64 data length: {len(b64_data)}")
 
             else:
-                print(f"API响应格式错误: {response_data}")
+                print(f"Unexpected API response format: {response_data}")
         else:
-            print(f"请求失败，状态码：{status_code}")
-            print(f"响应内容: {response.text}")
+            print(f"Request failed, status code: {status_code}")
+            print(f"Response body: {response.text}")
 
     except Exception as e:
-        print(f"发生错误：{e}")
+        print(f"Error occurred: {e}")
         import traceback
         traceback.print_exc()
 
