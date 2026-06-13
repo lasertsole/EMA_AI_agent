@@ -3,16 +3,17 @@ from funasr import AutoModel
 from config import MODELS_DIR
 from funasr.utils.postprocess_utils import rich_transcription_postprocess
 
-model_dir = MODELS_DIR / "SST_model/model_weight"
+model_dir = MODELS_DIR / "SST_model"
+model_weight_dir = model_dir / "model_weight"
 
 
 model = AutoModel(
-    model=model_dir,
-    trust_remote_code=True,
-    remote_code="./model.py",
-    vad_model="fsmn-vad",
-    vad_kwargs={"max_single_segment_time": 30000},
-    device="cuda:0",
+    model = model_weight_dir,
+    trust_remote_code = True,
+    remote_code = (model_dir /"model.py").as_posix(),
+    vad_model = "fsmn-vad",
+    vad_kwargs = {"max_single_segment_time": 30000},
+    device = "cuda:0",
 )
 
 def stt(audio_path: str)-> None:

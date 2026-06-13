@@ -1,6 +1,6 @@
 import time
-from enum import Enum
 from loguru import logger
+from models import chat_model
 from pydantic import BaseModel
 from skills import build_skills_snapshot
 from langgraph.types import Checkpointer
@@ -9,7 +9,6 @@ from tools import build_all_tools, memory_store
 from context_engine import add_session_if_not_exists
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.checkpoint.memory import InMemorySaver
-from models import chat_model, reasoner_model, vl_model
 from .middlewares import ContextEngineHook, Summarization, ToolLoopPrevention, ToolCallNormalize, MultimodalProcessor
 
 # 服务器启动时重构技能快照，用于保证本次服务器运行中skills提示词稳定，从而保证模型 前缀缓存 稳定

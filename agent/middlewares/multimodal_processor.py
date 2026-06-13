@@ -7,8 +7,8 @@ from loguru import logger
 from config import SRC_DIR
 from pub_func import is_url
 from langgraph.runtime import Runtime
-from langchain_core.messages import BaseMessage, HumanMessage
 from langchain.agents.middleware import AgentMiddleware, AgentState
+from langchain_core.messages import BaseMessage, HumanMessage, messages_to_dict
 
 class MultimodalProcessor(AgentMiddleware):
     def __init__(self, session_id: str):
