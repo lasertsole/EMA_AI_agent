@@ -7,7 +7,7 @@ from runtime import relation_register
 from bus import InboundMessage, OutboundMessage
 
 """Subagent notification handler"""
-async def process_subagent_notify(msg: InboundMessage):
+async def _process_subagent_notify(msg: InboundMessage):
     session_id: str = msg.session_id
     result_content: str = msg.content
 
@@ -24,9 +24,9 @@ async def process_subagent_notify(msg: InboundMessage):
         await websocket.send_text(json.dumps(res))
 
 """End subagent notification handler"""
-def run() -> None:
+def _run() -> None:
     event_loop = subagent_manager.get_event_loop()
-    subagent_manager.set_consumer(process_subagent_notify)
+    subagent_manager.set_consumer(_process_subagent_notify)
     subagent_manager.start_service()
 
     try:
@@ -34,5 +34,5 @@ def run() -> None:
     except Exception:
         pass
 
-subagent_thread: Thread = Thread(target=run, daemon=True)
-subagent_thread.start()
+_subagent_thread: Thread = Thread(target=_run, daemon=True)
+_subagent_thread.start()

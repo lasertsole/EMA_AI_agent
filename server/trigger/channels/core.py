@@ -12,7 +12,7 @@ from server.service import process_heartbeat_task, process_heartbeat_notify
 from pub_func import string_to_unique_int, process_sse_data, check_if_image_and_convert_to_base64
 
 """Channel inbound message handler"""
-async def process_inbound(message: InboundMessage, channel: BaseChannel) -> None:
+async def _process_inbound(message: InboundMessage, channel: BaseChannel) -> None:
     user_input_text: str = message.content
     user_input_media: list[str] = getattr(message, "media", [])
 
@@ -41,16 +41,16 @@ async def process_inbound(message: InboundMessage, channel: BaseChannel) -> None
     await channel.send(OutboundMessage(channel=channel.name, chat_id = message.chat_id, content = ai_reply))
 
 # Set channel inbound consumer
-channel_manager.set_inbound_consumer(process_inbound)
+channel_manager.set_inbound_consumer(_process_inbound)
 
-async def process_outbound(message: OutboundMessage, channel: BaseChannel) -> None:
+async def _process_outbound(message: OutboundMessage, channel: BaseChannel) -> None:
     session_id:str = str(string_to_unique_int(channel.name))
 
     # Register channel session (idempotent)
     relation_register.register_channel_chat(session_id=session_id, channel_id=channel.name, chat_id=message.chat_id)
 
 # Set channel outbound consumer
-channel_manager.set_outbound_consumer(process_outbound)
+channel_manager.set_outbound_consumer(_process_outbound)
 """End channel inbound/outbound handlers"""
 
 """Heartbeat event handler"""
@@ -65,7 +65,7 @@ async def _process_heartbeat_notify(agent_res: str) -> None:
 heartbeat_service.on_notify = _process_heartbeat_notify
 """End heartbeat event handler"""
 
-def run() -> None:
+def _run() -> None:
     # Get the event loop from the channel manager so heartbeat and cron services share the same loop
     event_loop = channel_manager.get_event_loop()
 
@@ -82,5 +82,5 @@ def run() -> None:
         pass
 
 
-channel_thread: Thread = Thread(target=run, daemon=True)
-channel_thread.start()
+_channel_thread: Thread = Thread(target=_run, daemon=True)
+_channel_thread.start()
