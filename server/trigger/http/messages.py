@@ -12,17 +12,46 @@ from robyn import SSEMessage, SSEResponse, WebSocketDisconnect, WebSocketAdapter
 @app.post("/sessions/agent/sse")
 async def stream_async_events_handler(request):
     start_time = time.time()
-    request_json = request.json()
 
-    session_id: str = request_json.get("session_id", None)
+    content_type = request.headers.get("content-type") or ""
+
+    if "application/json" in content_type:
+        request_json = request.json()
+        session_id = request_json.get("session_id", None)
+        multi_modal_message = request_json.get("multi_modal_message", None)
+    elif "multipart/form-data" in content_type:
+        try:
+            form_data = request.form_data
+            logger.debug(f"form_data={form_data}")
+            files = request.files
+            logger.debug(f"files={files}")
+
+            session_id = form_data.get("session_id", None)
+            query: str = str(form_data.get("query", ""))
+
+            audio_bytes: bytes | None = files.get("audio_bytes") or None
+            video_bytes: bytes | None = files.get("video_bytes") or None
+
+            multi_modal_message = {
+                "text": query,
+                "audio_bytes_list": [audio_bytes],
+                "video_bytes_list": [video_bytes],
+            }
+        except Exception as e:
+            logger.exception(f"multipart branch error: {e}")
+            raise
+    else:
+        session_id = None
+        multi_modal_message = None
+
     if not session_id:
         logger.warning("SSE request missing session_id")
         return SSEMessage("Please provide a session ID")
 
-    multi_modal_message: MultiModalMessage = request_json.get("multi_modal_message", None)
     if not multi_modal_message:
         logger.warning(f"SSE request missing multi_modal_message: session_id={session_id}")
         return SSEMessage("Please provide user input")
+
     multi_modal_message = MultiModalMessage(**multi_modal_message)
 
     # Log request summary

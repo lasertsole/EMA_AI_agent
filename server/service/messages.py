@@ -21,7 +21,7 @@ def _get_agent_history_list(agent: CompiledStateGraph, session_id: str)-> List[B
 
 def _get_content_list(multi_modal_message: MultiModalMessage)-> List[dict[str, str]]:
     user_text: str = multi_modal_message.text
-    content_list: List[dict[str, str]] = [{"type": "text", "text": user_text}]
+    content_list: List[dict[str, Any]] = [{"type": "text", "text": user_text}]
 
     ##** Image handling logic **##
     if multi_modal_message.image_path_list:
@@ -51,11 +51,29 @@ def _get_content_list(multi_modal_message: MultiModalMessage)-> List[dict[str, s
     ##** End image handling logic **##
 
     ##** Audio handling logic **##
-    # TODO: Implement audio content handling per your model's spec
+    if multi_modal_message.audio_path_list:
+        for audio_path in multi_modal_message.audio_path_list:
+            if is_url(audio_path):
+                content_list.append({"type": "audio_url", "audio_url": {"url": audio_path}})
+            else:
+                logger.warning(f"Image path is not a URL: {audio_path}")
+
+    if multi_modal_message.audio_bytes_list:
+        for audio_bytes in multi_modal_message.audio_bytes_list:
+            content_list.append({"type": "audio_bytes", "audio_bytes": {"bytes": audio_bytes}})
     ##** End audio handling logic **##
 
     ##** Video handling logic **##
-    # TODO: Implement video content handling per your model's spec
+    if multi_modal_message.video_path_list:
+        for video_path in multi_modal_message.video_path_list:
+            if is_url(video_path):
+                content_list.append({"type": "video_url", "video_url": {"url": video_path}})
+            else:
+                logger.warning(f"Image path is not a URL: {video_path}")
+
+    if multi_modal_message.video_bytes_list:
+        for video_bytes in multi_modal_message.video_bytes_list:
+            content_list.append({"type": "video_bytes", "video_bytes": {"bytes": video_bytes}})
     ##** End video handling logic **##
 
     return content_list
@@ -85,12 +103,14 @@ async def _get_generator(session_id: str, multi_modal_message: MultiModalMessage
 """End agent assembly logic"""
 
 """Response generation logic — yields SSE messages"""
-_current_tool_name: str = ""
-_current_tool_id: str = ""
+_current_session_id_to_tool_params: dict[str, dict[str, str] | None] = {}
 async def async_generate(session_id: str, multi_modal_message: MultiModalMessage, is_stream: bool = True)-> AsyncGenerator[str, None]:
-    global _current_tool_name
-    global _current_tool_id
-    
+    if _current_session_id_to_tool_params.get(session_id, None) is None:
+        _current_session_id_to_tool_params[session_id] = {
+            "current_tool_name": "",
+            "current_tool_id": "",
+        }
+
     start_time = time.time()
     logger.info(
         f"Agent execution started: session_id={session_id}, is_stream={is_stream}, "
@@ -118,30 +138,30 @@ async def async_generate(session_id: str, multi_modal_message: MultiModalMessage
                     # Tool call output logic
                     tool_calls: List[ToolCall] | List[ToolCallChunk] = msg_chunk.tool_calls if msg_chunk.tool_calls and len(
                         msg_chunk.tool_calls) > 0 else msg_chunk.tool_call_chunks
-                    if len(tool_calls) > 0 or _current_tool_id.strip():
+                    if len(tool_calls) > 0 or _current_session_id_to_tool_params[session_id]["current_tool_id"].strip():
                         repeat_flag: bool = True  # Prevent duplicate tool call output
                         if len(tool_calls) > 0:
                             tool_call = tool_calls[0]
 
                             if tool_call["name"]:
-                                if tool_call["name"].strip() or tool_call["name"].strip() != _current_tool_name:
-                                    _current_tool_name = tool_call['name']
+                                if tool_call["name"].strip() or tool_call["name"].strip() != _current_session_id_to_tool_params[session_id]["current_tool_name"]:
+                                    _current_session_id_to_tool_params[session_id]["current_tool_name"] = tool_call['name']
 
                             if tool_call["id"]:
-                                if tool_call["id"].strip() or tool_call["id"].strip() != _current_tool_id:
-                                    _current_tool_id = tool_call['id']
+                                if tool_call["id"].strip() or tool_call["id"].strip() != _current_session_id_to_tool_params[session_id]["current_tool_id"]:
+                                    _current_session_id_to_tool_params[session_id]["current_tool_id"] = tool_call['id']
                                     repeat_flag = False
 
                         if not repeat_flag:
-                            res: str = f"\n\n**Calling tool {_current_tool_name}...**"
+                            res: str = f"\n\n**Calling tool {_current_session_id_to_tool_params[session_id]["current_tool_name"]}...**"
                             ai_text += res
                             yield SSEMessage(res)
 
-                    if _current_tool_id and msg_chunk.content is not None and msg_chunk.content:
-                        res: str = f"\n\n**Tool {_current_tool_name} completed.**\n\n"
+                    if _current_session_id_to_tool_params[session_id]["current_tool_id"] and msg_chunk.content is not None and msg_chunk.content:
+                        res: str = f"\n\n**Tool {_current_session_id_to_tool_params[session_id]["current_tool_name"]} completed.**\n\n"
                         ai_text += res
                         yield SSEMessage(res)
-                        _current_tool_id = ""
+                        _current_session_id_to_tool_params[session_id]["current_tool_id"] = ""
                     # End tool call output logic
 
                     # Conversation output logic
@@ -190,8 +210,8 @@ async def async_generate(session_id: str, multi_modal_message: MultiModalMessage
         raise e
     finally:
         # Reset tool tracking state
-        _current_tool_name = ""
-        _current_tool_id = ""
+        _current_session_id_to_tool_params[session_id]["current_tool_name"] = ""
+        _current_session_id_to_tool_params[session_id]["current_tool_id"] = ""
 """End response generation logic"""
 
 """History retrieval logic"""
@@ -211,6 +231,7 @@ async def get_history_turn_message_dicts(session_id: str, last_turn_count: int =
 async def session_end(session_id: str):
     logger.info(f"Session ending: session_id={session_id}")
     await rectification_and_standardization(session_id = session_id)
+    _current_session_id_to_tool_params[session_id] = None
     logger.info(f"Session ended: session_id={session_id}")
 """End session end logic"""
 
@@ -218,5 +239,6 @@ async def session_end(session_id: str):
 async def clear_session(session_id: str):
     logger.info(f"Clearing session history: session_id={session_id}")
     await clear_session_DAO(session_id = session_id)
+    _current_session_id_to_tool_params[session_id] = None
     logger.info(f"Session history cleared: session_id={session_id}")
 """End clear session history logic"""

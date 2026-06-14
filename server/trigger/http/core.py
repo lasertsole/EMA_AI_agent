@@ -1,18 +1,19 @@
 import json
 from robyn import Robyn
 from loguru import logger
-from requests import Response
+from robyn.responses import Response
 from robyn.status_codes import HTTP_500_INTERNAL_SERVER_ERROR
 
 # Create the app
 app = Robyn(__file__)
 
+
 @app.exception
-def handle_session_end(error: Exception) -> Response:
+def handle_exception(error: Exception):
     """
-        Global exception interceptor
-        Called when any uncaught exception is raised inside route handlers
-        """
+    Global exception interceptor
+    Called when any uncaught exception is raised inside route handlers
+    """
     # Log the error for debugging
     logger.exception(error)
 
@@ -23,6 +24,6 @@ def handle_session_end(error: Exception) -> Response:
         description=json.dumps({
             "success": False,
             "message": "Internal Server Error",
-            "error": str(error)
-        }, ensure_ascii=False)
+            "error": str(error),
+        }, ensure_ascii=False),
     )

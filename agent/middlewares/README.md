@@ -1,5 +1,7 @@
 # Agent Middlewares — Agent Middleware System
 
+[**中文文档**](README.zh.md) | **English**
+
 > **Agent Middlewares** is the middleware layer of the EMA AI Agent, situated at key nodes of the Agent execution pipeline. They are responsible for **context enrichment**, **conversation summarization**, **memory management**, **tool call safety**, **message normalization**, and **multimodal transcoding** — executing before and after model inference via LangChain's AOP-style middleware framework.
 
 ---
