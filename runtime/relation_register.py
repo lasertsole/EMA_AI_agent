@@ -1,6 +1,7 @@
+from .core import Register
 from robyn import WebSocketAdapter
 
-class RuntimeManager:
+class RelationManager(Register):
     _instance = None
 
     def __new__(cls):
@@ -92,4 +93,8 @@ class RuntimeManager:
     def get_channel_chat_id_by_session_id(self, session_id: str)->tuple[str, str] | None:
         return self.session_id_to_channel_chat_id.get(session_id, None)
 
-relation_register = RuntimeManager()
+    def session_end(self, session_id: str):
+        self.unregister_websocket_by_session_id(session_id)
+        self.unregister_websocket_by_websocket_id(session_id)
+
+relation_register = RelationManager()
