@@ -4,9 +4,10 @@ description: Private knowledge base for indexing multimodal files or folders int
 ---
 
 **Index all files under a directory into the rag-anything graph:**
+
 ```python
 import asyncio
-from skills.core.rag.scripts import folder_index, file_index
+from skills.builtin.core import folder_index, file_index
 
 if __name__ == "__main__":
     _classify_folder: str = "{placeholder}"  # <- replace with the knowledge graph category
@@ -18,15 +19,16 @@ if __name__ == "__main__":
     # Use this when the input is a single file
     # _input_file_path: str = "{placeholder}"  # <- replace with the absolute path of the input file
     # coro = file_index(_input_file_path, _classify_folder)
-    
+
     # Run
     asyncio.run(coro)
 ```
 
 **Query the rag-anything knowledge graph:**
+
 ```python
 import asyncio
-from skills.core.rag.scripts import query
+from skills.builtin.core import query
 
 if __name__ == "__main__":
     _query: str = "{placeholder}"  # <- replace with the question

@@ -97,7 +97,7 @@ def vtt_fackback(video_path: str, query: str, interval_sec: float = 1.0)-> None:
 
     # Fallback: extract frames locally and send as base64 images
     try:
-        from skills.core.video_text_to_text.scripts import extract_frames
+        from skills.builtin.core.video_text_to_text.scripts import extract_frames
 
         frames = extract_frames(
             video_path,

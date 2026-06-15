@@ -5,6 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "mineru-vl-utils[transformers]>=1.0.5",
     "aiosqlite>=0.22.1",
     "croniter>=6.2.2",
     "dotenv>=0.9.9",

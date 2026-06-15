@@ -214,7 +214,18 @@ async def get_history_turn_message_dicts(session_id: str, last_turn_count: int =
     checkpointer = await build_async_sqlite_checkpointer()
     res = await checkpointer.aget_tuple(build_agent_config(session_id))
     history_messages: List[BaseMessage] = getattr(res, "checkpoint", {}).get("channel_values", {}).get("messages", [])
-    slice_last_n_turn_messages = slice_last_n_turn(history_messages, last_turn_count).get("messages")
+
+    filter_messages = []
+    for m in history_messages:
+        additional_kwargs: dict[str, str] = getattr(m, "additional_kwargs", {})
+
+        # Filter out HumanMessage containing summarized content
+        if additional_kwargs.get("lc_source", None) == "summarization":
+            continue
+
+        filter_messages.append(m)
+
+    slice_last_n_turn_messages = slice_last_n_turn(filter_messages, last_turn_count).get("messages")
 
     return messages_to_dict(slice_last_n_turn_messages)
 """End history retrieval logic"""

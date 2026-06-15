@@ -900,6 +900,7 @@ dependencies = [
     { name = "live2d-py" },
     { name = "loguru" },
     { name = "matplotlib" },
+    { name = "mineru-vl-utils", extra = ["transformers"] },
     { name = "moviepy" },
     { name = "nest-asyncio" },
     { name = "opencv-python-headless" },
@@ -943,6 +944,7 @@ requires-dist = [
     { name = "live2d-py", specifier = ">=0.7.0.4" },
     { name = "loguru", specifier = ">=0.7.3" },
     { name = "matplotlib", specifier = ">=3.10.9" },
+    { name = "mineru-vl-utils", extras = ["transformers"], specifier = ">=1.0.5" },
     { name = "moviepy", specifier = ">=2.1.2" },
     { name = "nest-asyncio", specifier = ">=1.6.0" },
     { name = "opencv-python-headless", specifier = ">=4.11.0" },
@@ -2641,6 +2643,14 @@ dependencies = [
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a0/e6/71556a212ab86c8845f5bec220952e08ba288342593161da41076c678627/mineru_vl_utils-1.0.5-py3-none-any.whl", hash = "sha256:cf910e68f0607634e61b613b7f5992daf604bf80b400d81e7b9f0f117b7c3c15", size = 94450, upload-time = "2026-06-11T13:49:32.395Z" },
+]
+
+[package.optional-dependencies]
+transformers = [
+    { name = "accelerate" },
+    { name = "torch" },
+    { name = "torchvision" },
+    { name = "transformers" },
 ]
 
 [[package]]

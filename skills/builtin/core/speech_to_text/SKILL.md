@@ -4,7 +4,7 @@ description: When the user needs to transcribe speech (such as .mp3, .wav, .ogg)
 ---
 
 ```python
-from skills.core.speech_to_text.scripts import stt
+from skills.builtin.core.speech_to_text.scripts import stt
 
 if __name__ == '__main__':
     audio_path: str = "{placeholder}"  # <- replace with the absolute path of the input audio file
