@@ -1,10 +1,10 @@
-import asyncio
 import time
 import base64
-import requests
+import asyncio
 from loguru import logger
 from robyn import SSEMessage
 from config import ASSISTANT_NAME
+from runtime import count_register
 from type import MultiModalMessage
 from runtime import state_register
 from typing import AsyncGenerator, Any, List
@@ -185,6 +185,8 @@ async def async_generate(session_id: str, multi_modal_message: MultiModalMessage
             f"output_length={len(ai_text)}"
         )
 
+        # increase count for skill memory maintenance
+        count_register.increase(session_id, "skill_memory_maintenance")
     except asyncio.CancelledError:
         elapsed = time.time() - start_time
         yield SSEMessage("Request cancelled")
@@ -204,6 +206,7 @@ async def async_generate(session_id: str, multi_modal_message: MultiModalMessage
         state_register.set_state(session_id, "current_tool_name", "")
         state_register.set_state(session_id, "current_tool_id", "")
         state_register.set_state(session_id, "answering", False)
+
 """End response generation logic"""
 
 """History retrieval logic"""

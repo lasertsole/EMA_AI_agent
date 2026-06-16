@@ -1,13 +1,15 @@
+import inspect
+import asyncio
 from loguru import logger
 from .core import Register
+
 from typing import Callable, Any
 from pydantic import BaseModel, Field
-
 
 class Trigger(BaseModel):
     threshold: int = 1
     callback: Callable
-    args: list[Any] = Field(default_factory=list)
+    args: dict[str, Any] = Field(default_factory=dict)
     reset_when_trigger: bool = True
 
 class CountRegister(Register):
@@ -23,16 +25,19 @@ class CountRegister(Register):
 
         self._initialized = True
 
-    def register(self, session_id: str, name: str, callback: Callable, threshold: int = 1)-> bool:
+    def register(self, session_id: str, name: str, callback: Callable, threshold: int = 1, args: dict[str, Any] = None)-> bool:
         """
         注册统计函数
         """
-        if name in self.session_id_to_counter:
-            logger.error(f"{name} is already registered")
+        if args is None:
+            args = {}
+
+        if name in self.session_id_to_counter.setdefault(session_id, {}):
+            logger.info(f"{name} is already registered for session {session_id}")
             return False
 
         self.session_id_to_counter.setdefault(session_id, {})[name] = 0
-        self.session_id_to_trigger.setdefault(session_id, {})[name] = Trigger(threshold = threshold, callback = callback)
+        self.session_id_to_trigger.setdefault(session_id, {})[name] = Trigger(threshold = threshold, callback = callback, args = args)
 
         return True
 
@@ -40,8 +45,8 @@ class CountRegister(Register):
         """
         取消注册
         """
-        if name not in self.session_id_to_counter:
-            logger.error(f"{name} is not registered")
+        if name not in self.session_id_to_counter.setdefault(session_id, {}):
+            logger.error(f"{name} is not registered for session {session_id}")
             return False
 
         del self.session_id_to_counter.setdefault(session_id, {})[name]
@@ -54,7 +59,7 @@ class CountRegister(Register):
         """
         增加统计值
         """
-        if name not in self.session_id_to_counter:
+        if name not in self.session_id_to_counter.setdefault(session_id, {}):
             logger.error(f"{name} is not registered")
             return False
 
@@ -65,9 +70,19 @@ class CountRegister(Register):
 
         if now_counter >= threshold:
             callback: Callable = trigger.callback
-            args: list[Any] = trigger.args
+            args: dict[str, Any] = trigger.args
 
-            callback(*args)
+            try:
+                result = callback(**args)
+                if inspect.iscoroutine(result):
+                    try:
+                        loop = asyncio.get_running_loop()
+                        loop.create_task(result)
+                    except RuntimeError:
+                        import asyncio as _asyncio
+                        _asyncio.run(result)
+            except Exception:
+                logger.exception(f"Callback '{name}' failed for session {session_id}")
 
             if trigger.reset_when_trigger:
                 now_counter = 0
