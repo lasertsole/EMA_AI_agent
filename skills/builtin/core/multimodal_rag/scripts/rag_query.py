@@ -1,5 +1,5 @@
 """
-rag_query.py — Query the rag-anything knowledge graph
+rag_query.py — Query the rag_anything-anything knowledge graph
 
 Usage:
     python rag_query.py "<query_string>"
@@ -22,17 +22,17 @@ except AttributeError:
 
 # Dynamically add project root to sys.path
 current_file = Path(__file__).resolve()
-# skills/core/rag/scripts/rag_query.py -> parents[4] = project root
+# skills/core/rag_anything/scripts/rag_query.py -> parents[4] = project root
 project_root: Path = current_file.parents[4]
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
-from rag import get_rag_anything
 from raganything import RAGAnything
+from skills.builtin.core.multimodal_rag.scripts.rag_anything import get_rag_anything
 
 
 async def query(question: str) -> None:
-    """Query the rag-anything knowledge graph"""
+    """Query the rag_anything-anything knowledge graph"""
     try:
         rag: RAGAnything = await get_rag_anything()
         res = await rag.aquery(question)

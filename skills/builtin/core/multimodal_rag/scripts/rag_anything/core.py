@@ -9,7 +9,7 @@ from config import MODELS_DIR, SRC_DIR
 from typing import Any, Dict, List, Optional, Union
 from raganything import RAGAnything, RAGAnythingConfig
 from raganything.parser import Parser, register_parser
-from rag.ensure_mineru_models import ensure_mineru_models
+from skills.builtin.core.multimodal_rag.scripts.rag_anything.ensure_mineru_models import ensure_mineru_models
 
 _project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 if _project_root not in sys.path:
@@ -61,7 +61,7 @@ async def _vision_model_func(
         result = ITT_model.invoke(messages)
         return result.content
     else:
-        from rag import get_lightrag
+        from skills.builtin.core.multimodal_rag.scripts.rag_anything import get_lightrag
 
         lightrag = await get_lightrag()
         return lightrag.llm_model_func(prompt, system_prompt, history_messages, **kwargs)
@@ -195,17 +195,17 @@ async def get_rag_anything(parser: str = "mineru", parse_method: str = "auto") -
         if _venv_scripts not in os.environ.get("PATH", ""):
             os.environ["PATH"] = _venv_scripts + os.pathsep + os.environ.get("PATH", "")
 
-        from rag import get_lightrag
+        from skills.builtin.core.multimodal_rag.scripts.rag_anything import get_lightrag
 
         lightrag = await get_lightrag()
         logger.debug("LightRAG initialized")
 
-        working_dir: str = (SRC_DIR / "rag" / "store").resolve().as_posix()
+        working_dir: str = (SRC_DIR / "rag_anything" / "store").resolve().as_posix()
         config = RAGAnythingConfig(
             parser = parser,
             parse_method = parse_method,
             working_dir = working_dir,
-            parser_output_dir = str(SRC_DIR / "rag/output"),
+            parser_output_dir = str(SRC_DIR / "rag_anything/output"),
         )
         _rag_anything = RAGAnything(
             lightrag = lightrag,

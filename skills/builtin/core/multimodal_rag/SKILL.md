@@ -1,5 +1,5 @@
 ---
-name: rag_anything
+name: multimodal_rag
 description: Private knowledge base for indexing multimodal files or folders into a knowledge graph, supporting multi-hop graph retrieval
 ---
 
@@ -7,7 +7,7 @@ description: Private knowledge base for indexing multimodal files or folders int
 
 ```python
 import asyncio
-from skills.builtin.core import folder_index, file_index
+from skills.builtin.core.multimodal_rag.scripts import folder_index, file_index
 
 if __name__ == "__main__":
     _classify_folder: str = "{placeholder}"  # <- replace with the knowledge graph category
@@ -28,7 +28,7 @@ if __name__ == "__main__":
 
 ```python
 import asyncio
-from skills.builtin.core import query
+from skills.builtin.core.multimodal_rag.scripts import query
 
 if __name__ == "__main__":
     _query: str = "{placeholder}"  # <- replace with the question
