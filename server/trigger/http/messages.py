@@ -93,7 +93,13 @@ async def clear_session_handler(request):
 @app.get("/get_history_by_page")
 async def get_history_by_page(request):
     """
-    Read history messages
+    Read history messages with pagination.
+
+    Query parameters:
+        session_id (str, required):     Session ID.
+        min_turn_num (int, required):   Minimum turn number (>= 1). Turns below this are excluded.
+        turn_page_size (int, required): Turns per page (>= 1).
+        turn_page_num (int, required):  Page number (>= 1). 1 = most recent page.
     """
     query_params = request.query_params
 

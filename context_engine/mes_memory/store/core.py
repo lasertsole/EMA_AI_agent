@@ -2,8 +2,11 @@ import json
 import sqlite3
 from .db import get_db
 from typing import Any
+from typing import Annotated
 from datetime import datetime
+from pydantic import Field, validate_call
 from langchain_core.messages import BaseMessage
+
 
 _db:sqlite3.Connection = get_db()
 
@@ -172,22 +175,13 @@ def get_turns_by_turn_num_scope(session_id: str, target_turn_num: int, half_scop
 
         return result
 
-def get_history_by_page(session_id: str, min_turn_num: int, turn_page_size: int = 10, turn_page_num: int = 1) -> list[dict]:
-    if min_turn_num < 1:
-        raise ValueError("min_turn_num must be >= 1")
-    elif not isinstance(turn_page_size, int):
-        raise ValueError("turn_page_size must be an integer")
-
-    if turn_page_size < 1:
-        raise ValueError("turn_page_size must be >= 1")
-    elif not isinstance(turn_page_size, int):
-        raise ValueError("turn_page_size must be an integer")
-
-    if turn_page_num < 1:
-        raise ValueError("turn_page_num must be >= 1")
-    elif not isinstance(turn_page_num, int):
-        raise ValueError("turn_page_num must be an integer")
-
+@validate_call
+def get_history_by_page(
+    session_id: str,
+    min_turn_num: Annotated[int, Field(ge=1)] = 1,
+    turn_page_size: Annotated[int, Field(ge=1)] = 10,
+    turn_page_num: Annotated[int, Field(ge=1)] = 1,
+) -> list[dict]:
     with _db:
         max_turn_num: int = get_max_turn_num(session_id)
 
