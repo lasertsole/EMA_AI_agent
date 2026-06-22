@@ -18,7 +18,7 @@ class TodoWriter(BaseTool):
         self._task_id: str = task_id
 
         todo_dir: Path = SESSIONS_DIR / session_id / "todo"
-        # 确保文件夹一定存在
+        # Ensure the directory exists
         todo_dir.mkdir(parents=True, exist_ok=True)
 
         self._file_path: Path = todo_dir / f"{self._task_id}.md"

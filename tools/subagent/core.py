@@ -73,8 +73,8 @@ class SubagentTool(BaseTool):
     def _run(self, task: str, label: str | None = None, **kwargs: Any) -> str:
         """Spawn a subagent to execute the given task."""
         raise RuntimeError(
-            "SubagentTool 必须使用异步接口 (_arun)。"
-            "同步调用会导致死锁风险。"
+            "SubagentTool must use the async interface (_arun)."
+            "Synchronous calls may cause deadlocks."
         )
 
 def build_subagent_tool(session_id: str | None = None) -> SubagentTool:

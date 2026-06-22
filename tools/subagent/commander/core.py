@@ -161,7 +161,7 @@ Remember: Your goal is to systematically break down, track, and execute complex 
 
 def build_commander(session_id: str, task_id: str)-> CompiledStateGraph:
     todo_dir: Path = SESSIONS_DIR / session_id / "todo"
-    # 确保文件夹一定存在
+    # Ensure the directory exists
     todo_dir.mkdir(parents=True, exist_ok=True)
 
     todo_writer_tool: BaseTool = build_todo_writer_tool(session_id, task_id)
