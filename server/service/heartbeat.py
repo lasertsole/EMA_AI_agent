@@ -4,9 +4,9 @@ from pathlib import Path
 from loguru import logger
 from models import main_llm
 from config import PLUGINS_PATH
-from bus import OutboundMessage
 from tools import build_core_tools
 from context_engine import assemble
+from type.bus import OutboundMessage
 from langchain.agents import create_agent
 from channels import BaseChannel, channel_manager
 from langgraph.graph.state import CompiledStateGraph

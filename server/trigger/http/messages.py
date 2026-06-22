@@ -1,9 +1,9 @@
 import time
 from loguru import logger
-from type import MultiModalMessage
 from runtime import state_register
 from server.trigger.core import app
 from robyn import SSEMessage, SSEResponse
+from type.message import MultiModalMessage
 from server.service import async_generate, clear_session, get_history_by_page as _get_history_by_page
 
 

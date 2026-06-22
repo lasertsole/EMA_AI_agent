@@ -2,12 +2,12 @@
 import json
 import asyncio
 from loguru import logger
+from bus import MessageBus
 from .base import BaseChannel
 from config import PLUGINS_PATH
-from bus.queue import MessageBus
 from asyncio import AbstractEventLoop
 from typing import Any, Callable, Awaitable
-from bus import InboundMessage, OutboundMessage
+from type.bus import InboundMessage, OutboundMessage
 
 class ChannelManager:
     """

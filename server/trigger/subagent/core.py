@@ -4,7 +4,7 @@ from threading import Thread
 from channels import channel_manager
 from runtime import relation_register
 from tools.subagent.base import subagent_manager
-from bus import InboundMessage, OutboundMessage
+from type.bus import InboundMessage, OutboundMessage
 
 """Subagent notification handler"""
 async def _process_subagent_notify(msg: InboundMessage):

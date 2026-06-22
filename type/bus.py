@@ -1,9 +1,17 @@
-"""Event types for the message bus."""
-
-from dataclasses import dataclass, field
-from datetime import datetime
 from typing import Any
+from datetime import datetime
+from dataclasses import dataclass, field
 
+@dataclass
+class OutboundMessage:
+    """Message to send to a chat channel."""
+
+    channel: str
+    chat_id: str
+    content: str
+    reply_to: str | None = None
+    media: list[str] = field(default_factory=list)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 @dataclass
 class InboundMessage:
@@ -22,15 +30,3 @@ class InboundMessage:
     def unique_id(self) -> str:
         """Unique key for sessions identification."""
         return self.session_id or f"{self.channel}:{self.chat_id}"
-
-
-@dataclass
-class OutboundMessage:
-    """Message to send to a chat channel."""
-
-    channel: str
-    chat_id: str
-    content: str
-    reply_to: str | None = None
-    media: list[str] = field(default_factory=list)
-    metadata: dict[str, Any] = field(default_factory=dict)

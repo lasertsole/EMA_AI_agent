@@ -37,7 +37,7 @@ The Agent's character, **Sherry**, is a detective girl with a dual personality c
 - **Web UI**: Modern chat interface built with Streamlit, supporting multimodal input (images, voice)
 - **Next-Generation Client** ([client_future](client_future/)): A Tauri 2 + Nuxt 4 desktop/mobile SPA client, currently in development
 - **QQ Bot**: Integrated with `qq-botpy` for direct interaction in QQ groups or private chats
-- **Message Bus**: Internal async message queue ([MessageBus](bus/queue.py)) decouples input/output channels
+- **Message Bus**: Internal async message queue ([MessageBus](bus/core.py)) decouples input/output channels
 
 ### 4. 🔊 Multimodal Interaction
 - **TTS Voice Synthesis**: Foreign integrated with GPT-SoVITS for real-time voice replies that faithfully reproduce the character's voice

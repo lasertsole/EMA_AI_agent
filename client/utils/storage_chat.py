@@ -2,8 +2,10 @@ import base64
 from typing import Any
 from pub_func import generate_tsid
 from .chats_storage import ChatStorage
+from type.client import File, FileType
+from type.message import MultiModalMessage
 from config import USER_NAME, ASSISTANT_NAME
-from type import MultiModalMessage, File, FileType
+
 
 def storage_add_chat(session_id: str, role: str, multi_modal_message: MultiModalMessage):
     name: str = USER_NAME if role == "user" else ASSISTANT_NAME

@@ -7,12 +7,13 @@ import asyncio
 import threading
 from pathlib import Path
 from loguru import logger
+from bus import MessageBus
 from config import ROOT_DIR
 from datetime import datetime
 from models import main_llm
+from type.bus import InboundMessage
 from channels import channel_manager
 from langchain.agents import create_agent
-from bus import MessageBus, InboundMessage
 from langchain_core.messages import HumanMessage
 from langgraph.graph.state import CompiledStateGraph
 from typing import Any, Callable, Coroutine, Literal

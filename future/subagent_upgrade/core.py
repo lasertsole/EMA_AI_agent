@@ -8,7 +8,8 @@ from logging import Logger, getLogger
 from .commander import build_commander
 from skills.loader import get_skills_text
 from config import SRC_DIR, WORKSPACE_DIR
-from bus import InboundMessage, MessageBus
+from bus import MessageBus
+from type.bus import InboundMessage
 from typing import Any, Callable, Awaitable
 from langgraph.graph.state import CompiledStateGraph
 from workspace.prompt_builder import build_system_prompt

@@ -2,12 +2,13 @@ import uuid
 import asyncio
 from pathlib import Path
 from loguru import logger
+from bus import MessageBus
 from models import main_llm
 from .type import SubAgentOutput
+from type.bus import InboundMessage
 from .commander import build_commander
 from skills.loader import get_skills_text
 from config import SRC_DIR, WORKSPACE_DIR
-from bus import InboundMessage, MessageBus
 from typing import Any, Callable, Awaitable
 from workspace import CORE_SYSTEM_FILE_NAMES
 from langgraph.graph.state import CompiledStateGraph

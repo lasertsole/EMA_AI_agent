@@ -2,8 +2,7 @@
 
 import asyncio
 from loguru import logger
-
-from .events import InboundMessage, OutboundMessage
+from type.bus import InboundMessage, OutboundMessage
 
 
 class MessageBus:

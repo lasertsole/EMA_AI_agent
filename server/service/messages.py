@@ -5,9 +5,9 @@ from loguru import logger
 from robyn import SSEMessage
 from config import ASSISTANT_NAME
 from runtime import count_register
-from type import MultiModalMessage
 from runtime import state_register
 from typing import AsyncGenerator, Any
+from type.message import MultiModalMessage
 from langchain.messages import AIMessageChunk
 from pub_func import build_agent_config, is_url
 from langgraph.graph.state import CompiledStateGraph

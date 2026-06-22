@@ -1,10 +1,10 @@
 import asyncio
 from threading import Thread
 from typing import AsyncGenerator
-from type import MultiModalMessage
 from runtime import relation_register
 from server.service import async_generate
-from bus import InboundMessage, OutboundMessage
+from type.message import MultiModalMessage
+from type.bus import InboundMessage, OutboundMessage
 from channels import BaseChannel, channel_manager
 from skills.builtin.core.heartbeat import heartbeat_service
 from server.service import process_heartbeat_task, process_heartbeat_notify

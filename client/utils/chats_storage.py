@@ -3,7 +3,7 @@ import time
 from typing import Any
 from pathlib import Path
 from collections import deque
-from type import Chat, File, FileType
+from type.client import Chat, File, FileType
 
 
 current_dir = Path(__file__).parent.resolve()

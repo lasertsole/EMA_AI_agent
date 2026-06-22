@@ -5,8 +5,8 @@ import streamlit as st
 from typing import Any
 from pathlib import Path
 from urllib.parse import urlencode
-from type import MultiModalMessage
 from pub_func import sanitize_content
+from type.message import MultiModalMessage
 from websocket import WebSocket, create_connection
 from streamlit.delta_generator import DeltaGenerator
 from client.api import post_agent_astream, clear_session

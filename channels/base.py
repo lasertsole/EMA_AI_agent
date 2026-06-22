@@ -2,9 +2,9 @@
 
 from typing import Any
 from loguru import logger
-from bus.queue import MessageBus
+from bus import MessageBus
 from abc import ABC, abstractmethod
-from bus.events import InboundMessage, OutboundMessage
+from type.bus import InboundMessage, OutboundMessage
 
 class BaseChannel(ABC):
     name: str = "base"

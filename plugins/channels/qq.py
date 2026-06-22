@@ -4,11 +4,11 @@ import time
 import asyncio
 from loguru import logger
 from pydantic import Field
+from bus import MessageBus
 from collections import deque
 from config.schema import Base
-from bus.queue import MessageBus
+from type.bus import OutboundMessage
 from channels.base import BaseChannel
-from bus.events import OutboundMessage
 from typing import TYPE_CHECKING, Any, Literal
 
 
