@@ -11,6 +11,7 @@ CONTEXT_ENGINE_PATH = ROOT_DIR / "context_engine"
 PLUGINS_PATH = ROOT_DIR / "plugins"
 
 SRC_DIR = ROOT_DIR / "src"
+TEMP_DIR = ROOT_DIR / "temp"
 
 MODELS_DIR = ROOT_DIR / "models"
 SESSIONS_DIR = ROOT_DIR / "sessions"
