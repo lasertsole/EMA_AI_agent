@@ -741,14 +741,16 @@ class CommunitySummary(TypedDict):
 
 
 def upsert_community_summary(
-        db: sqlite3.Connection,
-        summary_id: str,
-        summary_text: str,
-        node_count: int,
-        embedding: list[float]
+    db: sqlite3.Connection,
+    summary_id: str,
+    summary_text: str,
+    node_count: int,
+    embedding: list[float],
+    node_ids: list[str] | None = None
 ) -> None:
     """插入或更新社区摘要"""
     now = get_timestamp()
+    node_ids_json = json.dumps(sorted(node_ids)) if node_ids else '[]'
 
     existing = db.execute(
         "SELECT id FROM gm_communities WHERE id=?",
@@ -759,9 +761,9 @@ def upsert_community_summary(
         if embedding:
             db.execute("""
                 UPDATE gm_communities 
-                SET summary=?, node_count=?, embedding=?, updated_at=? 
+                SET summary=?, node_count=?, node_ids=?, embedding=?, updated_at=? 
                 WHERE id=?
-            """, (summary_text, node_count, json.dumps(embedding), now, summary_id))
+            """, (summary_text, node_count, node_ids_json, json.dumps(embedding), now, summary_id))
         else:
             db.execute("""
                 UPDATE gm_communities 

@@ -9,6 +9,7 @@ skill_memory - Community Detection
 """
 
 import re
+import json
 import sqlite3
 import leidenalg
 import igraph as ig
@@ -174,6 +175,21 @@ async def summarize_communities(
         if not member_ids:
             continue
 
+        sorted_member_ids = sorted(member_ids)
+        cursor.execute(
+            "SELECT node_ids FROM gm_communities WHERE id = ?",
+            (community_id,)
+        )
+        row = cursor.fetchone()
+        if row and row[0]:
+            try:
+                old_node_ids = json.loads(row[0])
+                if sorted(old_node_ids) == sorted_member_ids:
+                    logger.info(f"[skill_memory] Skip unchanged community: {community_id}")
+                    continue
+            except (json.JSONDecodeError, TypeError):
+                pass
+
         placeholders: str = ",".join("?" * len(member_ids))
 
         cursor.execute(f"""
@@ -219,7 +235,7 @@ async def summarize_communities(
             except Exception:
                 logger.error(f"[DEBUG] community embedding failed for {community_id}")
 
-            upsert_community_summary(db, community_id, cleaned, len(member_ids), embedding)
+            upsert_community_summary(db, community_id, cleaned, len(member_ids), embedding, member_ids)
             generated += 1
 
         except Exception as e:

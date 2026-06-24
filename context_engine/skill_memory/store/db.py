@@ -176,6 +176,7 @@ def m6_communities(db: sqlite3.Connection) -> None:
             id          TEXT PRIMARY KEY,
             summary     TEXT NOT NULL,
             node_count  INTEGER NOT NULL DEFAULT 0,
+            node_ids    TEXT NOT NULL DEFAULT '[]',
             embedding   BLOB,
             created_at  INTEGER NOT NULL,
             updated_at  INTEGER NOT NULL
