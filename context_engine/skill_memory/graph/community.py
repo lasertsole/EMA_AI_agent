@@ -47,12 +47,12 @@ def detect_communities(db: Connection) -> CommunityResult:
     g = ig.Graph(len(node_ids), edges, directed=False)
     g.simplify(multiple=True, loops=True)
     graph_density = g.density()
-    if graph_density < 0.5:
-        safe_resolution = graph_density * 3.0
-    elif 0.5 <= graph_density < 0.8:
+    if graph_density < 0.3:
         safe_resolution = graph_density * 1.5
+    elif 0.3 <= graph_density < 0.6:
+        safe_resolution = graph_density * 1.2
     else:
-        safe_resolution = 0.95
+        safe_resolution = 0.85
     safe_resolution = max(min(safe_resolution, 0.99), 0.001)
 
     partition = leidenalg.find_partition(
