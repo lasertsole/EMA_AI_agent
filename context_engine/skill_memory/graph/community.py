@@ -45,11 +45,21 @@ def detect_communities(db: Connection) -> CommunityResult:
             edges.append((id_to_idx[f], id_to_idx[t]))
 
     g = ig.Graph(len(node_ids), edges, directed=False)
+    g.simplify(multiple=True, loops=True)
+    graph_density = g.density()
+    if graph_density < 0.5:
+        safe_resolution = graph_density * 3.0
+    elif 0.5 <= graph_density < 0.8:
+        safe_resolution = graph_density * 1.5
+    else:
+        safe_resolution = 0.95
+    safe_resolution = max(min(safe_resolution, 0.99), 0.001)
 
     partition = leidenalg.find_partition(
         g,
-        leidenalg.ModularityVertexPartition,
-        n_iterations=2
+        leidenalg.CPMVertexPartition,
+        resolution_parameter = safe_resolution,
+        n_iterations = -1
     )
 
     temp_communities = {}
