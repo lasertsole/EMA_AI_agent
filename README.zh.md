@@ -134,7 +134,7 @@ EMA_AI_agent/
 │   │   ├── main_llm.py         # 主聊天模型
 │   │   └── reasoner_llm.py     # 思维链推理模型
 │   ├── VTTT_model.py       # 视频转文本模型
-│   ├── ITT_model.py        # 图片转文本模型
+│   ├── ITTT_model.py        # 图片转文本模型
 │   ├── STT_model/          # 语音转文本模型
 │   ├── TTS_model/          # CosyVoice TTS 语音合成
 │   ├── embed_model/        # 文本嵌入模型

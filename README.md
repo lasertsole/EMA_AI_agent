@@ -134,7 +134,7 @@ EMA_AI_agent/
 │   │   ├── main_llm.py         # Primary chat model
 │   │   └── reasoner_llm.py     # Chain-of-thought reasoning model
 │   ├── VTTT_model.py       # Video-Text-to-Text model
-│   ├── ITT_model.py        # Image-to-Text model
+│   ├── ITTT_model.py        # Image-to-Text model
 │   ├── STT_model/          # Speech-to-Text model
 │   ├── TTS_model/          # CosyVoice TTS voice synthesis
 │   ├── embed_model/        # Text embedding model

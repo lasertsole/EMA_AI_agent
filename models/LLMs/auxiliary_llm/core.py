@@ -7,13 +7,14 @@ Otherwise falls back to the local GGUF model (``Qwen3-8B-Q4_K_M.gguf``).
 Usage:
     from models.LLMs import auxiliary_llm
     result = auxiliary_llm.invoke("Hello")
+    structured = auxiliary_llm.with_structured_output(SomeModel).invoke("...")
 """
 
 import os
+import instructor
 from pathlib import Path
-from typing import Any, Dict, List, Mapping, Optional
-
 from dotenv import load_dotenv
+from typing import Any, Dict, List, Mapping, Optional, Union
 from langchain_core.callbacks import CallbackManagerForLLMRun
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import (
@@ -22,9 +23,9 @@ from langchain_core.messages import (
     HumanMessage,
     SystemMessage,
 )
+from langchain_core.output_parsers import PydanticOutputParser
+from langchain_core.runnables import ConfigurableField, Runnable, RunnableLambda
 from langchain_core.outputs import ChatGeneration, ChatResult
-from langchain_core.runnables import ConfigurableField
-from langchain_core.language_models import LanguageModelInput
 
 # ---------------------------------------------------------------------------
 # 1.  Read & prepare environment
@@ -91,6 +92,9 @@ else:
                 "Model file not found locally and 'huggingface_hub' is not installed. "
                 "Run: pip install huggingface_hub"
             ) from None
+        # ── hf_hub_download(local_files_only=True) does NOT work with
+        #    local_dir — it only looks in HF's own cache (~/.cache/huggingface/hub).
+        #    So we skip it entirely and go straight to remote download. ──
         print(f"Downloading {_HF_REPO_ID}/{_HF_FILENAME} -> {model_weight_dir} ...")
         hf_hub_download(
             repo_id=_HF_REPO_ID,
@@ -178,8 +182,55 @@ else:
                 self._release_client()
             return ChatResult(generations=[ChatGeneration(message=AIMessage(content=content))])
 
+        def with_structured_output(
+            self,
+            schema: Union[type, Dict[str, Any]],
+            *,
+            include_raw: bool = False,
+            **kwargs: Any,
+        ) -> Runnable:
+            """Implement structured output via prompt-based JSON generation.
+
+            For local GGUF models that don't support native tool calling,
+            this injects a JSON format instruction into the system prompt
+            and parses the response with ``PydanticOutputParser``.
+            """
+            _ = kwargs.pop("method", None)
+            _ = kwargs.pop("strict", None)
+            if kwargs:
+                msg = f"Received unsupported arguments {kwargs}"
+                raise ValueError(msg)
+
+            def _invoke_with_structured(
+                input_data: Any,
+            ) -> Any:
+                if isinstance(input_data, str):
+                    msgs: List[BaseMessage] = [
+                        HumanMessage(content=input_data),
+                    ]
+                elif isinstance(input_data, list):
+                    msgs = list(input_data)
+                else:
+                    msgs = [HumanMessage(content=str(input_data))]
+
+                try:
+                    client = self._ensure_client()
+                    create = instructor.patch(
+                        create=client.create_chat_completion_openai_v1,
+                        mode=instructor.Mode.JSON,
+                    )
+
+                    return create(
+                        messages=[_convert_message_to_dict(m) for m in msgs],
+                        response_model=schema,
+                    )
+                finally:
+                    self._release_client()
+
+            return RunnableLambda(_invoke_with_structured)
+
         @property
-        def lc_attributes(self) -> Dict[str, Any]:
+        def lc_attributes(self) -> Mapping[str, Any]:
             return self._identifying_params
 
     auxiliary_llm = LocalLlamaChatModel().configurable_fields(
