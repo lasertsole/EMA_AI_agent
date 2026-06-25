@@ -117,18 +117,30 @@ else:
         temperature: float = 0.0
         max_tokens: int = 32768
         verbose: bool = False
+        n_gpu_layers: int = -1  # -1 表示加载所有层到 GPU
 
-        _client: Llama = None  # type: ignore[assignment]
+        _client: Optional[Llama] = None
+        _resolved_path: str = ""
 
         def __init__(self, **kwargs: Any) -> None:
             super().__init__(**kwargs)
-            resolved = self.model_path or _resolve_model_path()
-            self._client = Llama(
-                model_path=resolved,
-                n_ctx=self.n_ctx,
-                verbose=self.verbose,
-            )
-            atexit.register(self._client.close)
+            self._resolved_path = self.model_path or _resolve_model_path()
+
+        def _ensure_client(self) -> Llama:
+            if self._client is None:
+                self._client = Llama(
+                    model_path=self._resolved_path,
+                    n_ctx=self.n_ctx,
+                    n_gpu_layers=self.n_gpu_layers,
+                    verbose=self.verbose,
+                )
+                atexit.register(self._release_client)
+            return self._client
+
+        def _release_client(self) -> None:
+            if self._client is not None:
+                self._client.close()
+                self._client = None
 
         @property
         def _llm_type(self) -> str:
@@ -150,16 +162,20 @@ else:
             run_manager: Optional[CallbackManagerForLLMRun] = None,
             **kwargs: Any,
         ) -> ChatResult:
-            llama_messages = [_convert_message_to_dict(m) for m in messages]
-            response = self._client.create_chat_completion(
-                messages=llama_messages,
-                stop=stop or [],
-                temperature=kwargs.get("temperature", self.temperature),
-                max_tokens=kwargs.get("max_tokens", self.max_tokens),
-            )
-            choice = response["choices"][0]
-            message = choice["message"]
-            content = message.get("content", "")
+            client = self._ensure_client()
+            try:
+                llama_messages = [_convert_message_to_dict(m) for m in messages]
+                response = client.create_chat_completion(
+                    messages=llama_messages,
+                    stop=stop or [],
+                    temperature=kwargs.get("temperature", self.temperature),
+                    max_tokens=kwargs.get("max_tokens", self.max_tokens),
+                )
+                choice = response["choices"][0]
+                message = choice["message"]
+                content = message.get("content", "")
+            finally:
+                self._release_client()
             return ChatResult(generations=[ChatGeneration(message=AIMessage(content=content))])
 
         @property
