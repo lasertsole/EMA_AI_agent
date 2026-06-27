@@ -1,7 +1,7 @@
 """ITTT_model — auto-selects between remote API and local GGUF (multimodal).
 
 If ``ITTT_MODEL_LOCAL=true`` is set in ``.env``, uses the local GGUF model
-(``Qwen3.5-9B-q4_k_m.gguf`` + ``mmproj-f16.gguf`` for multimodal vision support).
+(``Qwen3.5-9B-Q4_K_M.gguf`` + ``mmproj-Qwen3.5-9B-BF16.gguf`` for multimodal vision support).
 
 Otherwise uses the remote API via ``init_chat_model()`` (legacy behaviour).
 
@@ -31,7 +31,6 @@ from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import (
     AIMessage,
     BaseMessage,
-    HumanMessage,
     SystemMessage,
 )
 from langchain_core.outputs import ChatGeneration, ChatResult

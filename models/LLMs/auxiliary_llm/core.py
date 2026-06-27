@@ -1,7 +1,7 @@
 """Auxiliary LLM — auto-selects between remote API and local GGUF.
 
 If ``AUXILIARY_LLM_MODEL_LOCAL=true`` is set in ``.env``, uses the local
-GGUF model (``Qwen3.5-9B-q4_k_m.gguf``).
+GGUF model (``Qwen3.5-9B-Q4_K_M.gguf``).
 
 Otherwise, when ``AUXILIARY_LLM_PROVIDER`` or ``AUXILIARY_LLM_API_BASE``
 is configured, uses the remote API via ``init_chat_model()``.

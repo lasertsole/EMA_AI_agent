@@ -26,13 +26,6 @@ def storage_add_chat(session_id: str, role: str, multi_modal_message: MultiModal
             file: File = {"content": image_bytes, "type": FileType.IMAGE, "extension": '.jpg'}
             files.append(file)
 
-    audio_bytes_list: list[bytes] = multi_modal_message.audio_bytes_list
-    if audio_bytes_list is not None:
-        for audio_bytes in audio_bytes_list:
-            file: File = {"content": audio_bytes, "type": FileType.AUDIO, "extension": '.wav'}
-            files.append(file)
-
-
     chat: dict[str, Any] = {"role": role, "content": f"{name}:{content}", "timestamp": timestamp}
 
     chat_storage.add_chat(new_chat = chat, files = files)

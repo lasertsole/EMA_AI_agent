@@ -5,13 +5,11 @@ import streamlit as st
 from typing import Any
 from pathlib import Path
 from urllib.parse import urlencode
-# from pub_func import sanitize_content
 from type.message import MultiModalMessage
 from websocket import WebSocket, create_connection
 from streamlit.delta_generator import DeltaGenerator
 from client.api import post_agent_astream, clear_session
 from streamlit.elements.widgets.chat import ChatInputValue
-# from models.TTS_model import TTS_Request, fetch_TTS_sound
 from config import USER_NAME, ASSISTANT_NAME, API_HOST, API_PORT
 from streamlit.runtime.uploaded_file_manager import UploadedFile
 from streamlit.runtime.scriptrunner import add_script_run_ctx, get_script_run_ctx
@@ -129,12 +127,6 @@ def main()-> None:
         for _chat in chat_list:
             with st.chat_message(_chat["role"], avatar=f"http://{API_HOST}:{API_PORT}/static/avatar/{_chat['role']}.jpg"):
                 st.markdown(_chat["content"])
-                if "audio_path_list" in _chat and _chat["audio_path_list"] is not None:
-                    for file_path in _chat["audio_path_list"]:
-                        if Path(file_path).exists():
-                            with open(file_path, "rb") as f:
-                                st.audio(data=f.read(), format="audio/ogg")
-
                 if "image_path_list" in _chat and _chat["image_path_list"] is not None:
                     for file_path in _chat["image_path_list"]:
                         if Path(file_path).exists():
@@ -190,26 +182,8 @@ def main()-> None:
                 # 去除开头的ASSISTANT_NAME
                 _content = _content[len(f"{ASSISTANT_NAME}:"):]
 
-                # 创建文件列表
-                file_list: list[bytes] = []
-
-                # with st.spinner("正在生成语音..."):
-                #     # 生成语音,当生成失败时跳过生成
-                #     try:
-                #         # 去除多余字符
-                #         clear_content = sanitize_content(_content)
-                #
-                #         audio_requires = TTS_Request(text=clear_content, text_lang="zh")
-                #         response = fetch_TTS_sound(audio_requires)
-                #         if response is not None:
-                #             file: bytes = response.content
-                #             st.audio(data = file, format="audio/ogg")
-                #             file_list.append(file)
-                #     except Exception as e:
-                #         pass
-
                 # 将AI消息持久化
-                storage_add_chat(session_id=session_id, role="assistant", multi_modal_message=MultiModalMessage(text=_content, audio_bytes_list=file_list))
+                storage_add_chat(session_id=session_id, role="assistant", multi_modal_message=MultiModalMessage(text=_content))
 
 
 # 执行主程序

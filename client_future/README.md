@@ -40,7 +40,7 @@ The current `client/` is a conversational Web UI built with Python 3.10 + Stream
 |                    Python Backend (server/)             |            |
 |                                                        v           |
 |  Robyn HTTP + SSE + WebSocket                                      |
-|  Agent Core (LangGraph) | RAG | TTS (SoVITS) | Multi-channel     |
+|  Agent Core (LangGraph) | RAG | Multi-channel     |
 +--------------------------------------------------------------------+
 ```
 

@@ -92,7 +92,6 @@ class ChatStorage:
 
         # 将文件写入文件夹
         file_path_list = []
-        audio_path_list = []
         image_path_list = []
         if files:
             for file in files:
@@ -102,9 +101,6 @@ class ChatStorage:
 
                 extension = file["extension"]
                 match file["type"]:
-                    case FileType.AUDIO:
-                        file_path = file_path + (extension or '.wav')
-                        audio_path_list.append(file_path)
                     case FileType.IMAGE:
                         file_path = file_path + (extension or '.jpg')
                         image_path_list.append(file_path)
@@ -119,7 +115,6 @@ class ChatStorage:
                     file_path_list.append(file_path)
 
         # 将文件路径写入新聊天记录
-        _new_chat.audio_path_list = audio_path_list
         _new_chat.image_path_list = image_path_list
 
         # 将聊天记录追加到文件末尾

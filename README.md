@@ -39,8 +39,7 @@ The Agent's character, **Sherry**, is a detective girl with a dual personality c
 - **QQ Bot**: QQ channel adapter via plugin system (`plugins/channels/`)
 - **Message Bus**: Internal async message queue ([MessageBus](bus/core.py)) decouples input/output channels
 
-### 4. 🔊 Multimodal Interaction
-- **TTS Voice Synthesis**: CosyVoice-based voice synthesis for real-time voice replies that faithfully reproduce the character's voice ([models/TTS_model/](models/TTS_model/))
+### 4. 👁️ Multimodal Interaction
 - **Visual Understanding**: Supports Image-to-Text (VL) models for recognizing and analyzing user-uploaded images
 
 ### 5. ⏰ Scheduled & Proactive Behavior
@@ -136,7 +135,6 @@ EMA_AI_agent/
 │   ├── VTTT_model.py       # Video-Text-to-Text model
 │   ├── ITTT_model.py        # Image-to-Text model
 │   ├── STT_model/          # Speech-to-Text model
-│   ├── TTS_model/          # CosyVoice TTS voice synthesis
 │   ├── embed_model/        # Text embedding model
 │   ├── reranker_model/     # Cross-encoder reranker
 │   └── extract_model/      # Entity extraction model
@@ -287,11 +285,11 @@ Copy the `.env` example and fill in your API Keys (DeepSeek, OpenAI, etc.) and m
 
 ```bash
 cp .env.example .env
-# Edit .env to configure MAIN_LLM_API_KEY, TTS model path, etc.
+# Edit .env to configure MAIN_LLM_API_KEY, model paths, etc.
 ```
 
 ### 4. Start Services
-Use the provided `start.sh` script to launch TTS, local Ollama models, the backend, and the frontend UI all at once.
+Use the provided `start.sh` script to launch local Ollama models, the backend, and the frontend UI all at once.
 
 ```bash
 chmod +x start.sh

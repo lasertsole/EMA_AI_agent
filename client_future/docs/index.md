@@ -20,7 +20,7 @@ features:
   - title: TypeScript Types
     details: Auto-generated .d.ts files from Rust types via ts-rs for compile-time safety.
   - title: Hybrid Architecture
-    details: Tauri/Rust HTTP bridge proxies all requests to the Python backend (LangGraph, RAG, TTS). Zero business logic in Rust.
+    details: Tauri/Rust HTTP bridge proxies all requests to the Python backend (LangGraph, RAG). Zero business logic in Rust.
   - title: Desktop Features
     details: System tray, Alt+Space global shortcut, single-instance lock, window state persistence.
   - title: Error Handling

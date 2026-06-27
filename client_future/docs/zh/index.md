@@ -20,7 +20,7 @@ features:
   - title: TypeScript 类型
     details: 通过 ts-rs 从 Rust 自动生成 .d.ts 类型定义，编译时类型安全。
   - title: 混合架构
-    details: Tauri/Rust HTTP 桥接代理所有请求到 Python 后端 (LangGraph, RAG, TTS)。Rust 层零业务逻辑。
+    details: Tauri/Rust HTTP 桥接代理所有请求到 Python 后端 (LangGraph, RAG)。Rust 层零业务逻辑。
   - title: 桌面功能
     details: 系统托盘、Alt+Space 全局快捷键、单实例锁、窗口状态持久化。
   - title: 错误处理

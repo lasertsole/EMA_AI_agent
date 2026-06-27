@@ -21,7 +21,7 @@ This is a heavyweight AI Agent project that combines **cutting-edge research (Gr
 - **Long-term Evolving Memory**: Automatically distills conversation content into knowledge points, weaves them into a graph, and periodically runs community detection to self-summarize and resolve ambiguous pronouns.
 - **Proactive & Scheduled Tasks**: A heartbeat mechanism lets the agent read `HEARTBEAT.md` todos during idle time and execute them autonomously, with Cron scheduling support.
 - **Self-Learning Skills**: Feed it a `SKILL.md` spec sheet, and it learns to invoke new tools (search, code execution, terminal commands, etc.).
-- **Multi-Channel Interaction**: Chat via web UI, send images, speak (GPT-SoVITS integration), or run as a QQ bot.
+- **Multi-Channel Interaction**: Chat via web UI, send images, or run as a QQ bot.
 
 ### 📈 Current Status
 

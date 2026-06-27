@@ -41,7 +41,7 @@
 |                    Python 后端 (server/)                |            |
 |                                                        v           |
 |  Robyn HTTP + SSE + WebSocket                                      |
-|  Agent 核心 (LangGraph) | RAG | TTS (SoVITS) | 多通道 Bot         |
+|  Agent 核心 (LangGraph) | RAG | 多通道 Bot         |
 +--------------------------------------------------------------------+
 ```
 
