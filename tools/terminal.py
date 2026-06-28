@@ -55,7 +55,7 @@ class SafeShellTool(ShellTool):
             return f"Error: {e}"
 
 
-def build_terminal_tool(session_id: str | None = None) -> SafeShellTool:
+def build_terminal_tool() -> SafeShellTool:
     tool = SafeShellTool(root_dir = str(ROOT_DIR))
     tool.handle_tool_error = True
     return tool

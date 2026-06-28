@@ -3,6 +3,7 @@ from models import main_llm
 from skills import build_skills_snapshot
 from langchain_core.tools import BaseTool
 from langchain.agents import create_agent
+from langchain.agents.middleware import AgentState
 from context_engine import add_session_if_not_exists
 from langgraph.graph.state import CompiledStateGraph
 from langchain.agents.middleware import dynamic_prompt
@@ -10,8 +11,18 @@ from workspace.prompt_builder import build_system_prompt
 from langgraph.checkpoint.base import BaseCheckpointSaver
 from agent.checkpointer import build_async_sqlite_checkpointer
 from tools import memory_store, build_main_tools, build_subagent_tool
-from .middlewares import (ContextEngineHook, Summarization, ToolLoopPrevention, ToolCallNormalize, MultimodalProcessor,
-                          ToolTimeout)
+from .middlewares import (ContextEngineHook, Summarization, ToolLoopPrevention,
+                          ToolCallNormalize, MultimodalProcessor, ToolTimeout)
+
+
+# ── Extended state schema ────────────────────────────────────────────────
+# Carries ``session_id`` through the graph so that middlewares reading
+    # ``request.state["session_id"]`` is used by middlewares that need it
+    # (e.g. ContextEngineHook).
+
+class StateSchema(AgentState):
+    """Agent state that preserves an ``session_id``."""
+    session_id: str
 
 # Rebuild skill snapshot at server start to keep skills prompt stable
 # throughout this server run, ensuring reliable model prefix caching.
@@ -42,8 +53,8 @@ async def built_agent(
     checkpointer: BaseCheckpointSaver = await build_async_sqlite_checkpointer()
 
     # Build tool list
-    tools: list[BaseTool] = build_main_tools(session_id)
-    subagent_tool = build_subagent_tool(session_id)
+    tools: list[BaseTool] = build_main_tools()
+    subagent_tool = build_subagent_tool()
     tools.append(subagent_tool)
     tool_count = len(tools)
     logger.debug(f"Tools built: session_id={session_id}, tool_count={tool_count}")
@@ -51,6 +62,7 @@ async def built_agent(
     # Build the agent
     agent = create_agent(
         model = model,
+        state_schema = StateSchema,
         checkpointer = checkpointer,
         tools = tools,
         middleware = [

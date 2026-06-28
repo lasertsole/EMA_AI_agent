@@ -44,7 +44,7 @@ class FormattedWriteFileTool(WriteFileTool):
         return super()._run(file_path=file_path, text=text, append=append, **kwargs)
 
 
-def build_write_file_tool(session_id: str | None = None) -> WriteFileTool:
+def build_write_file_tool() -> WriteFileTool:
     tool = FormattedWriteFileTool(root_dir=str(ROOT_DIR))
     tool.handle_tool_error = True
     tool.name = "write_file"

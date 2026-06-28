@@ -83,10 +83,9 @@ def _get_content_list(multi_modal_message: MultiModalMessage)-> list[dict[str, s
 """Agent assembly logic — builds agent with context"""
 async def _get_generator(session_id: str, multi_modal_message: MultiModalMessage, is_stream: bool = True):
     start_time = time.time()
-    checkpointer: BaseCheckpointSaver = await build_async_sqlite_checkpointer()
 
     # Create the agent
-    agent: CompiledStateGraph = built_agent(session_id = session_id, system_prompt=build_system_prompt(), checkpointer=checkpointer)
+    agent: CompiledStateGraph = await built_agent(session_id = session_id)
 
     # Prepare the content_list
     content_list:list[dict[str, str]] = _get_content_list(multi_modal_message)
@@ -97,10 +96,11 @@ async def _get_generator(session_id: str, multi_modal_message: MultiModalMessage
         f"is_stream={is_stream}, has_images={len(multi_modal_message.image_base64_list) if multi_modal_message.image_base64_list else 0}"
     )
 
+    input_dict = {"session_id": session_id, "messages": [HumanMessage(content=content_list)]}
     if is_stream:
-        return agent.astream(input={"messages": [HumanMessage(content = content_list)]}, config=build_agent_config(session_id), stream_mode="messages")
+        return agent.astream(input=input_dict, config=build_agent_config(session_id), stream_mode="messages")
     else:
-        return agent.ainvoke(input={"messages": [HumanMessage(content = content_list)]}, config=build_agent_config(session_id))
+        return agent.ainvoke(input=input_dict, config=build_agent_config(session_id))
 
 """End agent assembly logic"""
 

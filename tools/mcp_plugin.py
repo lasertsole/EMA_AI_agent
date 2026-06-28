@@ -45,7 +45,7 @@ def _load_config() -> dict:
     return config
 
 
-def build_mcp_tools(session_id: str | None = None) -> list[BaseTool]:
+def build_mcp_tools() -> list[BaseTool]:
     from langchain_mcp_adapters.client import MultiServerMCPClient
     servers = _load_config()
     client = MultiServerMCPClient(servers)

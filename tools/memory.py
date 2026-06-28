@@ -36,7 +36,6 @@ from langchain.tools import BaseTool
 from contextlib import contextmanager
 from typing import Any, Literal, Type
 from pydantic import BaseModel, Field, validate_call
-
 # fcntl is Unix-only; on Windows use msvcrt for file locking
 msvcrt = None
 try:
@@ -584,9 +583,8 @@ class MemoryTool(BaseTool):
     )
     args_schema: Type[BaseModel] = MemoryActionSchema
 
-    def __init__(self, session_id: str | None = None, **kwargs: Any):
+    def __init__(self, **kwargs: Any):
         super().__init__(**kwargs)
-        self._session_id: str | None = session_id
 
     @validate_call
     def _run(self, action: str, target: str, content: str, old_text: str, **kwargs: Any) -> str:
@@ -596,7 +594,7 @@ class MemoryTool(BaseTool):
     async def _arun(self, action: str, target: str, content: str, old_text: str, **kwargs: Any) -> str:
         return memory_tool(action, target, content, old_text)
 
-def build_memory_tool(session_id: str | None = None) -> MemoryTool:
-    tool: MemoryTool = MemoryTool(session_id)
+def build_memory_tool() -> MemoryTool:
+    tool: MemoryTool = MemoryTool()
     tool.handle_tool_error = True
     return tool

@@ -4,6 +4,7 @@ from models import main_llm
 from config import SESSIONS_DIR
 from ..type import SubAgentOutput
 from langchain.agents import create_agent
+from langchain.agents.middleware import AgentState
 from langchain_core.tools import BaseTool
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.checkpoint.memory import InMemorySaver
@@ -159,13 +160,17 @@ worker(task_list=[
 Remember: Your goal is to systematically break down, track, and execute complex tasks while **maximizing parallel execution** to optimize speed, maintaining clear progress visibility through the todo list.
 """)
 
+class SubagentStateSchema(AgentState):
+    """Agent state that preserves session_id for tool injection."""
+    session_id: str
+
 def build_commander(session_id: str, task_id: str)-> CompiledStateGraph:
     todo_dir: Path = SESSIONS_DIR / session_id / "todo"
     # Ensure the directory exists
     todo_dir.mkdir(parents=True, exist_ok=True)
 
-    todo_writer_tool: BaseTool = build_todo_writer_tool(session_id, task_id)
-    worker_tool: BaseTool = build_worker_tool(session_id, task_id)
+    todo_writer_tool: BaseTool = build_todo_writer_tool(task_id)
+    worker_tool: BaseTool = build_worker_tool(task_id)
 
     # lazy import to avoid circular dependency: subagent -> agent -> tools -> subagent
     from agent.middlewares.tool_call_normalize import ToolCallNormalize
@@ -175,11 +180,11 @@ def build_commander(session_id: str, task_id: str)-> CompiledStateGraph:
     # (the subagent's dedicated loop), avoiding "bound to a different
     # event loop" errors during agent.ainvoke().
     _checkpointer = InMemorySaver()
-
     agent: CompiledStateGraph = create_agent(
         system_prompt=_system_prompt,
         model = main_llm,
         checkpointer = _checkpointer,
+        state_schema = SubagentStateSchema,
         tools = [todo_writer_tool, worker_tool],
         middleware=[
             SummarizationMiddleware(

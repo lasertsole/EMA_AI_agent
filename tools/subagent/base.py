@@ -1,4 +1,4 @@
-import uuid
+import time
 import asyncio
 from pathlib import Path
 from loguru import logger
@@ -71,7 +71,7 @@ class SubagentManager:
         label: str | None = None,
     ) -> str:
         """Spawn a subagent to execute a task in the background."""
-        task_id = str(uuid.uuid4())[:8]
+        task_id = str(int(time.time() * 1000))
         display_label = label or task[:30] + ("..." if len(task) > 30 else "")
 
         bg_task = self._event_loop.create_task(
@@ -146,13 +146,14 @@ class SubagentManager:
         logger.info("Subagent [{}] starting task: {}", task_id, label)
 
         try:
-            agent: CompiledStateGraph = build_commander(session_id=session_id, task_id=task_id)
+            commander_session_id: str = f"commander-{session_id}"
+            agent: CompiledStateGraph = build_commander(session_id=commander_session_id, task_id=task_id)
             # Force checkpointer to None to prevent AsyncSqliteSaver default creation
             # which would bind its asyncio.Lock to the wrong event loop.
             agent.checkpointer = False
             agent_res: dict[str, Any] = await agent.ainvoke(
-                input={"messages": [HumanMessage(content=task)]},
-                config=build_agent_config(session_id=session_id, args=[{"recursion_limit": 30}])
+                input={"session_id": commander_session_id, "messages": [HumanMessage(content=task)]},
+                config=build_agent_config(session_id=commander_session_id, args=[{"recursion_limit": 30}])
             )
             structured_response: SubAgentOutput = agent_res.get("structured_response", {})
 

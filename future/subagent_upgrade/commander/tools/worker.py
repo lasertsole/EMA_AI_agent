@@ -95,7 +95,7 @@ class Worker(BaseTool):
                 agent: CompiledStateGraph = create_agent(
                     system_prompt=system_prompt,
                     model=main_llm,
-                    tools=build_main_tools(self._session_id),
+                    tools=build_main_tools(),
                     middleware=[
                         SummarizationMiddleware(
                             model=main_llm,

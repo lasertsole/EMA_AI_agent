@@ -1,36 +1,28 @@
-from typing import Any
+from typing import Annotated
 from pathlib import Path
 from config import SESSIONS_DIR
 from pydantic import BaseModel, Field
+from langchain.tools import tool
 from langchain_core.tools import BaseTool
+from langgraph.prebuilt.tool_node import InjectedState
 
 class TodoArgs(BaseModel):
     file_content: str = Field(..., description="File content")
 
-class TodoWriter(BaseTool):
-    name: str = "write_todo"
-    description: str = "Write todo list to file"
-    args_schema: type[BaseModel] = TodoArgs
 
-    def __init__(self, session_id: str, task_id: str, **kwargs: Any):
-        super().__init__(**kwargs)
-        self._session_id: str = session_id
-        self._task_id: str = task_id
+def build_todo_writer_tool(task_id: str) -> BaseTool:
+    """Build the todo_writer @tool with task_id closed over and error handling enabled."""
 
+    @tool(args_schema=TodoArgs, infer_schema=False)
+    async def write_todo(
+        file_content: str,
+        session_id: Annotated[str, InjectedState("session_id")] = "",
+    ) -> None:
+        """Write todo list to file."""
         todo_dir: Path = SESSIONS_DIR / session_id / "todo"
-        # Ensure the directory exists
         todo_dir.mkdir(parents=True, exist_ok=True)
+        file_path: Path = todo_dir / f"{task_id}.md"
+        file_path.write_text(file_content, encoding="utf-8")
 
-        self._file_path: Path = todo_dir / f"{self._task_id}.md"
-
-    def _run(self, file_content: str, **kwargs: Any) -> None:
-        with open(self._file_path, 'w', encoding='utf-8') as f:
-            f.write(file_content)
-
-    async def _arun(self, file_content: str, **kwargs: Any) -> None:
-        self._run(file_content, **kwargs)
-
-def build_todo_writer_tool(session_id: str, task_id: str) -> TodoWriter:
-    tool: TodoWriter = TodoWriter(session_id, task_id)
-    tool.handle_tool_error = True
-    return tool
+    write_todo.handle_tool_error = True
+    return write_todo

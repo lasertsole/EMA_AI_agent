@@ -6,10 +6,11 @@ import sqlite3
 from loguru import logger
 import concurrent.futures
 from models import main_llm
-from typing import Any, Type
+from typing import Any, Type, Annotated
 from pub_func import run_async
-from langchain.tools import BaseTool
-from pydantic import BaseModel, Field, validate_call
+from langchain.tools import BaseTool, tool
+from langgraph.prebuilt.tool_node import InjectedState
+from pydantic import BaseModel, Field
 from context_engine.mes_memory import get_db, search_messages, get_turns_by_turn_num_scope
 
 MAX_SESSION_CHARS = 100_000
@@ -215,7 +216,7 @@ async def _summarize(
                 return None
 
 def session_search(
-    query: str,
+    query: str | None,
     session_id: str,
     role_filter: str = None,
     limit: int = 3
@@ -361,50 +362,43 @@ def session_search(
         return _tool_error(f"Search failed: {str(e)}", success=False)
 
 
-class MessageSearchTool(BaseTool):
-    name: str = "message_search"
-    description: str = (
-        "Search your long-term memory of past conversations, or browse recent sessions. This is your recall -- "
-        "every past session is searchable, and this tool summarizes what happened.\n\n"
-        "TWO MODES:\n"
-        "1. Recent sessions (no query): Call with no arguments to see what was worked on recently. "
-        "Returns titles, previews, and timestamps. Zero LLM cost, instant. "
-        "Start here when the user asks what were we working on or what did we do recently.\n"
-        "2. Keyword search (with query): Search for specific topics across all past sessions. "
-        "Returns LLM-generated summaries of matching sessions.\n\n"
-        "USE THIS PROACTIVELY when:\n"
-        "- The user says 'we did this before', 'remember when', 'last time', 'as I mentioned'\n"
-        "- The user asks about a topic you worked on before but don't have in current context\n"
-        "- The user references a project, person, or concept that seems familiar but isn't in memory\n"
-        "- You want to check if you've solved a similar problem before\n"
-        "- The user asks 'what did we do about X?' or 'how did we fix Y?'\n\n"
-        "Don't hesitate to search when it is actually cross-session -- it's fast and cheap. "
-        "Better to search and confirm than to guess or ask the user to repeat themselves.\n\n"
-        "Search syntax: keywords joined with OR for broad recall (elevenlabs OR baseten OR funding), "
-        "phrases for exact match (\"docker networking\"), boolean (python NOT java), prefix (deploy*). "
-        "IMPORTANT: Use OR between keywords for best results — FTS5 defaults to AND which misses "
-        "sessions that only mention some terms. If a broad OR query returns nothing, try individual "
-        "keyword searches in parallel. Returns summaries of the top matching sessions."
-    )
-    args_schema: Type[BaseModel] = MessageSearchSchema
+@tool(args_schema=MessageSearchSchema, infer_schema=False)
+def _message_search_tool(
+    query: str | None = None,
+    role_filter: str | None = None,
+    limit: int = 3,
+    session_id: Annotated[str, InjectedState("session_id")] = "",
+) -> str:
+    """Search your long-term memory of past conversations, or browse recent sessions. This is your recall --
+    every past session is searchable, and this tool summarizes what happened.
 
-    def __init__(self, session_id: str | None = None, **kwargs: Any):
-        super().__init__(**kwargs)
-        self._session_id: str | None = session_id
+    TWO MODES:
+    1. Recent sessions (no query): Call with no arguments to see what was worked on recently.
+    Returns titles, previews, and timestamps. Zero LLM cost, instant.
+    Start here when the user asks what were we working on or what did we do recently.
+    2. Keyword search (with query): Search for specific topics across all past sessions.
+    Returns LLM-generated summaries of matching sessions.
 
-    @validate_call
-    def _run(self, query: str | None = None, role_filter: str | None = None, limit: int = 3,
-             **kwargs: Any) -> str:
-        return session_search(query, self._session_id, role_filter, limit)
+    USE THIS PROACTIVELY when:
+    - The user says 'we did this before', 'remember when', 'last time', 'as I mentioned'
+    - The user asks about a topic you worked on before but don't have in current context
+    - The user references a project, person, or concept that seems familiar but isn't in memory
+    - You want to check if you've solved a similar problem before
+    - The user asks 'what did we do about X?' or 'how did we fix Y?'
 
-    @validate_call
-    async def _arun(self, query: str | None = None, role_filter: str | None = None, limit: int = 3,
-                    **kwargs: Any) -> str:
-        """Async execution."""
-        return session_search(query, self._session_id, role_filter, limit)
+    Don't hesitate to search when it is actually cross-session -- it's fast and cheap.
+    Better to search and confirm than to guess or ask the user to repeat themselves.
+
+    Search syntax: keywords joined with OR for broad recall (elevenlabs OR baseten OR funding),
+    phrases for exact match ("docker networking"), boolean (python NOT java), prefix (deploy*).
+    IMPORTANT: Use OR between keywords for best results — FTS5 defaults to AND which misses
+    sessions that only mention some terms. If a broad OR query returns nothing, try individual
+    keyword searches in parallel. Returns summaries of the top matching sessions.
+    """
+    return session_search(query, session_id, role_filter, limit)
 
 
-def build_message_search_tool(session_id: str | None = None) -> MessageSearchTool:
-    tool: MessageSearchTool = MessageSearchTool(session_id)
-    tool.handle_tool_error = True
-    return tool
+def build_message_search_tool() -> BaseTool:
+    """Return the message search tool with error handling enabled."""
+    _message_search_tool.handle_tool_error = True
+    return _message_search_tool
