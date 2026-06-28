@@ -18,10 +18,9 @@ class ToolLoopPrevention(AgentMiddleware):
     ``ToolMessage`` is returned instead.
     """
 
-    def __init__(self, session_id: str, threshold: int = 20, **kwargs):
+    def __init__(self, threshold: int = 20, **kwargs):
         super().__init__(**kwargs)
 
-        self._session_id: str = session_id
         self._threshold: int = threshold
         # tool_name -> call_count for the current turn
         self._turn_tool_counts: dict[str, int] = {}

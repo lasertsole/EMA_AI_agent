@@ -7,10 +7,6 @@ from langchain.agents.middleware import AgentMiddleware, AgentState
 
 
 class ToolCallNormalize(AgentMiddleware):
-    def __init__(self, session_id: str):
-        super().__init__()
-        self._session_id: str = session_id
-
     async def abefore_model(self, state: AgentState, runtime: Runtime) -> dict[str, Any] | None:
         return {
             "messages": [

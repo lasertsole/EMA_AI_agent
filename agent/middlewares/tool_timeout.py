@@ -44,9 +44,8 @@ class ToolTimeout(AgentMiddleware):
     that hangs for longer than ``TOOL_CALL_TIMEOUT_MINUTES`` is cancelled and
     an error ``ToolMessage`` is returned to the model."""
 
-    def __init__(self, session_id: str, timeout_seconds: float | None = None):
+    def __init__(self, timeout_seconds: float | None = None):
         super().__init__()
-        self._session_id: str = session_id
         self._timeout_seconds: float = (
             timeout_seconds if timeout_seconds is not None else TOOL_CALL_TIMEOUT_SECONDS
         )

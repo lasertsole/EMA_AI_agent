@@ -108,14 +108,14 @@ async def _arun_task(
                 tools=build_main_tools(),
                 checkpointer= InMemorySaver(),
                 middleware=[
-                    ContextEngineHook(session_id=worker_session_id),
+                    ContextEngineHook(),
                     SummarizationMiddleware(
                         model=main_llm,
                         trigger=("messages", 20),
                         keep=("messages", 10),
                     ),
                     # Must be last: abefore_model runs after Summarization to catch orphan tool_calls
-                    ToolCallNormalize(worker_session_id),
+                    ToolCallNormalize(),
                 ],
                 response_format=SubAgentOutput
             )

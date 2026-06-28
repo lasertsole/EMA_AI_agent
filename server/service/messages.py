@@ -3,6 +3,7 @@ import base64
 import asyncio
 from loguru import logger
 from robyn import SSEMessage
+from agent import built_agent
 from config import ASSISTANT_NAME
 from typing import AsyncGenerator, Any
 from runtime import state_register_mem
@@ -11,11 +12,10 @@ from langchain.messages import AIMessageChunk
 from pub_func import build_agent_config, is_url
 from langgraph.graph.state import CompiledStateGraph
 from ..DAO import clear_session as clear_session_DAO
-from workspace.prompt_builder import build_system_prompt
-from langgraph.checkpoint.base import BaseCheckpointSaver
-from agent import built_agent, build_async_sqlite_checkpointer
+from context_engine import add_session_if_not_exists
 from context_engine import get_history_by_page as _get_history_by_page
 from langchain_core.messages import HumanMessage, BaseMessage, ToolCall, ToolCallChunk
+from agent.checkpointer import build_async_sqlite_checkpointer
 
 
 def _get_agent_history_list(agent: CompiledStateGraph, session_id: str)-> list[BaseMessage]:
@@ -84,8 +84,22 @@ def _get_content_list(multi_modal_message: MultiModalMessage)-> list[dict[str, s
 async def _get_generator(session_id: str, multi_modal_message: MultiModalMessage, is_stream: bool = True):
     start_time = time.time()
 
+    # Create a session record if one does not already exist
+    add_session_if_not_exists(session_id)
+
+    logger.info(
+        f"Building agent: session_id={session_id}"
+    )
+
     # Create the agent
-    agent: CompiledStateGraph = await built_agent(session_id = session_id)
+    agent = await built_agent()
+
+    # Create a fresh checkpointer per request to avoid asyncio.Lock
+    # cross-event-loop binding issues under Robyn + nest_asyncio.
+    # AsyncSqliteSaver binds its lock to the running event loop at
+    # __init__ time; caching the checkpointer globally would crash on
+    # subsequent requests running in a different event loop.
+    agent.checkpointer = await build_async_sqlite_checkpointer()
 
     # Prepare the content_list
     content_list:list[dict[str, str]] = _get_content_list(multi_modal_message)

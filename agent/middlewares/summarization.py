@@ -9,15 +9,17 @@ from langchain_core.messages import BaseMessage, SystemMessage, RemoveMessage, H
 
 
 class Summarization(SummarizationMiddleware):
-    def __init__(self, session_id: str, **kwargs):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        self._session_id: str = session_id
+        self._session_id: str = ""
 
     @override
     async def abefore_model(
         self, state: AgentState[Any], runtime: Runtime[ContextT]
     ) -> dict[str, Any] | None:
+        self._session_id = state.get("session_id", self._session_id)
+
         # Clone the message list to avoid mutating the original
         copy_state: AgentState[Any] = state.copy()
         state_mes_list_copy: list[BaseMessage] = state["messages"].copy()

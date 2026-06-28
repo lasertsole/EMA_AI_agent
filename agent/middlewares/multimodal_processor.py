@@ -69,10 +69,6 @@ from langchain_core.messages import BaseMessage, HumanMessage
 
 
 class MultimodalProcessor(AgentMiddleware):
-    def __init__(self, session_id: str):
-        super().__init__()
-        self._session_id: str = session_id
-
     @staticmethod
     def _strip_image_url_from_content(content: Any) -> str:
         """Extract text from a multimodal content list, stripping image_url items.

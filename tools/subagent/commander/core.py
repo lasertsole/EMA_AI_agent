@@ -195,7 +195,7 @@ def build_commander(session_id: str, task_id: str)-> CompiledStateGraph:
             todo_injector_builder(session_id, task_id),
             todo_cleaner_builder(session_id, task_id),
             # Must be last: abefore_model runs after Summarization to catch orphan tool_calls
-            ToolCallNormalize(session_id),
+            ToolCallNormalize(),
         ],
         response_format=SubAgentOutput
     )

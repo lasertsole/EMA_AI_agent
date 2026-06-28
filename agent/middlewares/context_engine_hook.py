@@ -5,14 +5,14 @@ from asyncio import Task
 from langgraph.runtime import Runtime
 from langchain.agents.middleware import AgentMiddleware, AgentState
 from pub_func import slice_last_turn, sanitize_tool_use_result_pairing
-from langchain_core.messages import BaseMessage, SystemMessage, HumanMessage, AIMessage
+from langchain_core.messages import BaseMessage, SystemMessage, HumanMessage
 from context_engine import assemble, retrieve_history_by_last_n_prompt, build_mixed_query, after_turn, add_messages
 
 
 class ContextEngineHook(AgentMiddleware):
-    def __init__(self, session_id: str):
+    def __init__(self):
         super().__init__()
-        self._session_id: str = session_id
+        self._session_id: str = ""
         self._turn_prompt: str = ""
 
     async def _build_turn_prompt(self, query_text: str) -> None:
@@ -48,6 +48,8 @@ class ContextEngineHook(AgentMiddleware):
         return None
 
     async def abefore_agent(self, state: AgentState, runtime: Runtime) -> dict[str, Any] | None:
+        self._session_id = state.get("session_id", self._session_id)
+
         state_mes_list: list[BaseMessage] = state["messages"]
 
         # Filter out system prompt messages
