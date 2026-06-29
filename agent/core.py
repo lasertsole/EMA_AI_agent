@@ -7,9 +7,9 @@ from langchain.agents.middleware import AgentState
 from langgraph.graph.state import CompiledStateGraph
 from langchain.agents.middleware import dynamic_prompt
 from workspace.prompt_builder import build_system_prompt
-from langgraph.checkpoint.base import BaseCheckpointSaver
 from agent.checkpointer import build_async_sqlite_checkpointer
 from tools import memory_store, build_main_tools, build_subagent_tool
+from .checkpointer.thread_safe_checkpointer import ThreadSafeAsyncSqliteSaver
 from .middlewares import (ContextEngineHook, Summarization, ToolLoopPrevention,
                           ToolCallNormalize, MultimodalProcessor, ToolTimeout)
 
@@ -43,7 +43,10 @@ async def built_agent(
     global _agent
     if _agent is None:
         model = main_llm.bind(temperature=temperature)
-        checkpointer: BaseCheckpointSaver = await build_async_sqlite_checkpointer()
+        checkpointer: ThreadSafeAsyncSqliteSaver = await build_async_sqlite_checkpointer()
+
+        # Delete all checkpoints but keeps the latest checkpoint
+        await checkpointer.aclean_old_checkpoints()
 
         # Build tool list
         tools: list[BaseTool] = build_main_tools()
