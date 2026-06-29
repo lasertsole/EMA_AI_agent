@@ -1,11 +1,12 @@
-from typing import Any, Callable, Awaitable
-
-from langchain_core.messages import ToolMessage
-from langgraph.prebuilt.tool_node import ToolCallRequest
+from loguru import logger
 from langgraph.types import Command
-from typing_extensions import override
-from langchain.agents.middleware import AgentMiddleware, AgentState
 from langgraph.runtime import Runtime
+from runtime import state_register_mem
+from typing_extensions import override
+from typing import Any, Callable, Awaitable
+from langgraph.prebuilt.tool_node import ToolCallRequest
+from langchain_core.messages import ToolMessage
+from langchain.agents.middleware import AgentMiddleware, AgentState
 
 
 class ToolLoopPrevention(AgentMiddleware):
@@ -22,15 +23,19 @@ class ToolLoopPrevention(AgentMiddleware):
         super().__init__(**kwargs)
 
         self._threshold: int = threshold
-        # tool_name -> call_count for the current turn
-        self._turn_tool_counts: dict[str, int] = {}
 
     @override
     async def abefore_agent(
         self, state: AgentState, runtime: Runtime
     ) -> dict[str, Any] | None:
         """Reset per-turn counters at the start of each new conversation turn."""
-        self._turn_tool_counts.clear()
+        session_id: str = state.get("session_id", "")
+        if session_id.strip() == "":
+            err_text: str = "Not pass session_id"
+            logger.error(err_text)
+            raise RuntimeError(err_text)
+
+        state_register_mem.set_state(session_id, "turn_tool_counts", {})
         return None
 
     @override
@@ -39,9 +44,17 @@ class ToolLoopPrevention(AgentMiddleware):
         request: ToolCallRequest,
         handler: Callable[[ToolCallRequest], Awaitable[ToolMessage | Command[Any]]],
     ) -> ToolMessage | Command[Any]:
+        session_id: str = request.state.get("session_id", "")
+        if session_id.strip() == "":
+            err_text: str = "Not pass session_id"
+            logger.error(err_text)
+            raise RuntimeError(err_text)
+
+        turn_tool_counts: dict[str, int] = state_register_mem.get_state(session_id, "turn_tool_counts", {})
         tool_name: str = request.tool_call.get("name", "unknown")
-        count: int = self._turn_tool_counts.get(tool_name, 0) + 1
-        self._turn_tool_counts[tool_name] = count
+        count: int = turn_tool_counts.get(tool_name, 0) + 1
+        turn_tool_counts[tool_name] = count
+        state_register_mem.set_state(session_id, "turn_tool_counts", turn_tool_counts)
 
         if count > self._threshold:
             return ToolMessage(

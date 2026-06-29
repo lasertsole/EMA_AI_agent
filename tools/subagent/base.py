@@ -4,6 +4,7 @@ from pathlib import Path
 from loguru import logger
 from bus import MessageBus
 from models import main_llm
+from runtime import Register
 from .type import SubAgentOutput
 from type.bus import InboundMessage
 from .commander import build_commander
@@ -145,16 +146,14 @@ class SubagentManager:
         """Execute the subagent task and announce the result."""
         logger.info("Subagent [{}] starting task: {}", task_id, label)
 
+        commander_session_id: str = f"commander-{session_id}"
         try:
-            commander_session_id: str = f"commander-{session_id}"
             agent: CompiledStateGraph = build_commander(session_id=commander_session_id, task_id=task_id)
-            # Force checkpointer to None to prevent AsyncSqliteSaver default creation
-            # which would bind its asyncio.Lock to the wrong event loop.
-            agent.checkpointer = False
             agent_res: dict[str, Any] = await agent.ainvoke(
                 input={"session_id": commander_session_id, "messages": [HumanMessage(content=task)]},
                 config=build_agent_config(session_id=commander_session_id, args=[{"recursion_limit": 30}])
             )
+
             structured_response: SubAgentOutput = agent_res.get("structured_response", {})
 
             announce_content: str = render_template_file(
@@ -180,6 +179,10 @@ class SubagentManager:
                     "result": "",
                 }
             )
+
+        finally:
+            # clear all runtime register
+            Register.clear_all_register_sessions(commander_session_id)
 
         msg = InboundMessage(
             channel="system",

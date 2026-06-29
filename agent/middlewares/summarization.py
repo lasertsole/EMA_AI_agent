@@ -1,4 +1,5 @@
 from typing import Any
+from loguru import logger
 from langgraph.runtime import Runtime
 from langgraph.typing import ContextT
 from typing_extensions import override
@@ -12,13 +13,16 @@ class Summarization(SummarizationMiddleware):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        self._session_id: str = ""
 
     @override
     async def abefore_model(
         self, state: AgentState[Any], runtime: Runtime[ContextT]
     ) -> dict[str, Any] | None:
-        self._session_id = state.get("session_id", self._session_id)
+        session_id: str = state.get("session_id", "")
+        if session_id.strip() == "":
+            err_text: str = "Not pass session_id"
+            logger.error(err_text)
+            raise RuntimeError(err_text)
 
         # Clone the message list to avoid mutating the original
         copy_state: AgentState[Any] = state.copy()
@@ -82,7 +86,7 @@ class Summarization(SummarizationMiddleware):
         memory_store.load_from_disk()
 
         # 总结用户偏好存入memory.md和user.md
-        await nudge_messages(session_id= self._session_id, nudge_turn = 0)
+        await nudge_messages(session_id= session_id, nudge_turn = 0)
 
         # 压缩时后重置 memory
         memory_store.load_from_disk()

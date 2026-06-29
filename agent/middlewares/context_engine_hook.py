@@ -2,6 +2,7 @@ import asyncio
 import textwrap
 from typing import Any
 from asyncio import Task
+from loguru import logger
 from langgraph.runtime import Runtime
 from langchain.agents.middleware import AgentMiddleware, AgentState
 from pub_func import slice_last_turn, sanitize_tool_use_result_pairing
@@ -12,10 +13,9 @@ from context_engine import assemble, retrieve_history_by_last_n_prompt, build_mi
 class ContextEngineHook(AgentMiddleware):
     def __init__(self):
         super().__init__()
-        self._session_id: str = ""
         self._turn_prompt: str = ""
 
-    async def _build_turn_prompt(self, query_text: str) -> None:
+    async def _build_turn_prompt(self, session_id: str, query_text: str) -> None:
         query_text = query_text.strip()
 
         if query_text == "":
@@ -23,7 +23,7 @@ class ContextEngineHook(AgentMiddleware):
             return None
 
         # Retrieve recent conversation turns
-        recent_messages_addition: str = retrieve_history_by_last_n_prompt(session_id=self._session_id)
+        recent_messages_addition: str = retrieve_history_by_last_n_prompt(session_id=session_id)
 
         # Build an enriched query with more informative features using recent history and the original query
         transformer_query_text: str = build_mixed_query(turns_of_history=recent_messages_addition, query=query_text)
@@ -48,7 +48,11 @@ class ContextEngineHook(AgentMiddleware):
         return None
 
     async def abefore_agent(self, state: AgentState, runtime: Runtime) -> dict[str, Any] | None:
-        self._session_id = state.get("session_id", self._session_id)
+        session_id: str = state.get("session_id", "")
+        if session_id.strip() == "":
+            err_text: str = "Not pass session_id"
+            logger.error(err_text)
+            raise RuntimeError(err_text)
 
         state_mes_list: list[BaseMessage] = state["messages"]
 
@@ -77,7 +81,7 @@ class ContextEngineHook(AgentMiddleware):
             if query_text is None or query_text.strip() == "":
                 return None
 
-            await self._build_turn_prompt(query_text=query_text)
+            await self._build_turn_prompt(session_id=session_id, query_text=query_text)
 
             target_item["text"] = self._turn_prompt + query_text
         elif isinstance(query, dict):
@@ -85,7 +89,7 @@ class ContextEngineHook(AgentMiddleware):
             if query_text is None or query_text.strip() == "":
                 return None
 
-            await self._build_turn_prompt(query_text=query_text)
+            await self._build_turn_prompt(session_id=session_id, query_text=query_text)
 
             query["text"] = self._turn_prompt + query_text
         else:
@@ -93,7 +97,7 @@ class ContextEngineHook(AgentMiddleware):
                 return None
 
             query_text = query
-            await self._build_turn_prompt(query_text=query_text)
+            await self._build_turn_prompt(session_id=session_id, query_text=query_text)
 
             # Prepend the turn prompt to the user input
             last_mes.content = self._turn_prompt + query_text
@@ -101,6 +105,12 @@ class ContextEngineHook(AgentMiddleware):
         return None
 
     async def aafter_agent(self, state: AgentState, runtime: Runtime) -> dict[str, Any] | None:
+        session_id: str = state.get("session_id", "")
+        if session_id.strip() == "":
+            err_text: str = "Not pass session_id"
+            logger.error(err_text)
+            raise RuntimeError(err_text)
+
         # Get the formatted message list of the last conversation turn
         all_messages: list[BaseMessage] = state["messages"]
         last_turn_messages: list[BaseMessage] = slice_last_turn(all_messages)["messages"]
@@ -127,9 +137,9 @@ class ContextEngineHook(AgentMiddleware):
         last_human_message.content = user_text
 
         # Launch context engine post-processing asynchronously
-        after_turn_task: Task = asyncio.create_task(after_turn(session_id = self._session_id, last_turn_messages = format_last_turn_messages))
+        after_turn_task: Task = asyncio.create_task(after_turn(session_id = session_id, last_turn_messages = format_last_turn_messages))
 
         # Persist user messages to MesMemory
-        add_history_task: Task = asyncio.create_task(add_messages(session_id = self._session_id, messages=format_last_turn_messages))
+        add_history_task: Task = asyncio.create_task(add_messages(session_id = session_id, messages=format_last_turn_messages))
 
         await asyncio.gather(after_turn_task, add_history_task)

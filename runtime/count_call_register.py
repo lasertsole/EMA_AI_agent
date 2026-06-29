@@ -11,7 +11,7 @@ class Trigger(BaseModel):
     callback: Callable
     args: dict[str, Any] = Field(default_factory=dict)
 
-class CountRegister(Register):
+class CountCallRegister(Register):
     """
     Count register for tracking and triggering callbacks
     """
@@ -56,9 +56,9 @@ class CountRegister(Register):
                 result = callback(**args)
                 if inspect.iscoroutine(result):
                     self._callback_executor.run_coroutine(result)
-                logger.info(f"[count_register] execute_now: callback '{name}' triggered immediately for session {session_id}")
+                logger.info(f"[count_call_register] execute_now: callback '{name}' triggered immediately for session {session_id}")
             except Exception:
-                logger.exception(f"[count_register] execute_now: callback '{name}' failed for session {session_id}")
+                logger.exception(f"[count_call_register] execute_now: callback '{name}' failed for session {session_id}")
 
         return True
 
@@ -121,4 +121,4 @@ class CountRegister(Register):
         del self.session_id_to_counter[session_id]
         del self.session_id_to_trigger[session_id]
 
-count_register = CountRegister()
+count_call_register = CountCallRegister()

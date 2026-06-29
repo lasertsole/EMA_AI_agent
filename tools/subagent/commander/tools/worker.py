@@ -1,20 +1,21 @@
 import asyncio
-from typing import Annotated, Any
 from pathlib import Path
 from loguru import logger
 from models import main_llm
+from runtime import Register
+from langchain.tools import tool
+from typing import Annotated, Any
 from skills import get_skills_text
 from ...type import SubAgentOutput
 from pydantic import BaseModel, Field
 from langchain.agents import create_agent
-from langchain.agents.middleware import AgentState
-from langchain.tools import tool
 from langchain_core.tools import BaseTool
-from langgraph.prebuilt.tool_node import InjectedState
 from config import TEMP_DIR, WORKSPACE_DIR
 from workspace import CORE_SYSTEM_FILE_NAMES
+from langchain.agents.middleware import AgentState
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.checkpoint.memory import InMemorySaver
+from langgraph.prebuilt.tool_node import InjectedState
 from langchain_core.messages import HumanMessage, BaseMessage
 from langchain.agents.middleware import SummarizationMiddleware
 from pub_func import render_template_file, slice_last_turn, sanitize_tool_use_result_pairing, build_agent_config
@@ -89,10 +90,10 @@ async def _arun_task(
     task_id: str
 ) -> str:
     messages: list[BaseMessage] = []
+    worker_session_id: str = f"{session_id}-{task_id}"
+
     try:
         timeout_seconds: int = timeout_mins * 60
-
-        worker_session_id: str = f"{session_id}-{task_id}"
         async def execute_task() -> str:
             system_prompt = (
                 _build_worker_prompt()
@@ -119,9 +120,7 @@ async def _arun_task(
                 ],
                 response_format=SubAgentOutput
             )
-            # Force checkpointer to False to prevent AsyncSqliteSaver default creation
-            # which would bind its asyncio.Lock to the wrong event loop.
-            agent.checkpointer = False
+
             agent_res: dict[str, Any] = await agent.ainvoke(
                 input={"session_id": worker_session_id, "messages": [HumanMessage(content=description)]},
                 config=build_agent_config(session_id=worker_session_id, args=[{"recursion_limit": 50}])
@@ -172,6 +171,9 @@ async def _arun_task(
         )
 
     finally:
+        # clear all runtime register
+        Register.clear_all_register_sessions(worker_session_id)
+
         if messages and len(messages) > 0:
             last_turn_messages: list[BaseMessage] = slice_last_turn(messages)["messages"]
             sanitize_tool_use_result_pairing(last_turn_messages)

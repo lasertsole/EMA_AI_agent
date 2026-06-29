@@ -88,6 +88,12 @@ class MultimodalProcessor(AgentMiddleware):
         return ""
 
     async def abefore_agent(self, state: AgentState, runtime: Runtime) -> dict[str, Any] | None:
+        session_id: str = state.get("session_id", "")
+        if session_id.strip() == "":
+            err_text: str = "Not pass session_id"
+            logger.error(err_text)
+            raise RuntimeError(err_text)
+
         state_mes_list: list[BaseMessage] = state["messages"]
         last_mes: BaseMessage = state_mes_list[-1]
 
@@ -138,7 +144,7 @@ class MultimodalProcessor(AgentMiddleware):
                             logger.error(f"Image decode failed: {e}")
                             continue
 
-                        temp_dir = SRC_DIR / "mutil_temp"
+                        temp_dir = SRC_DIR / session_id / "mutil_temp"
                         temp_dir.mkdir(parents=True, exist_ok=True)
                         ext = _infer_extension(image_bytes, "image")
                         temp_path = temp_dir / f"{str(int(time.time() * 1000))}{ext}"
@@ -159,7 +165,7 @@ class MultimodalProcessor(AgentMiddleware):
                         logger.error("Audio bytes is None!")
                         continue
 
-                    temp_dir = SRC_DIR / "mutil_temp"
+                    temp_dir = SRC_DIR / session_id / "mutil_temp"
                     temp_dir.mkdir(parents=True, exist_ok=True)
                     ext = _infer_extension(audio_bytes, "audio")
                     temp_path = temp_dir / f"{str(int(time.time() * 1000))}{ext}"
@@ -179,7 +185,7 @@ class MultimodalProcessor(AgentMiddleware):
                         logger.error("Video bytes is None!")
                         continue
 
-                    temp_dir = SRC_DIR / "mutil_temp"
+                    temp_dir = SRC_DIR / session_id / "mutil_temp"
                     temp_dir.mkdir(parents=True, exist_ok=True)
                     ext = _infer_extension(video_bytes, "video")
                     temp_path = temp_dir / f"{str(int(time.time() * 1000))}{ext}"
@@ -213,7 +219,13 @@ class MultimodalProcessor(AgentMiddleware):
 
     async def aafter_agent(self, state: AgentState, runtime: Runtime) -> dict[str, Any] | None:
         # Clean up cached image files: delete if filename is not a pure numeric timestamp; delete if older than 7 days
-        temp_dir = SRC_DIR / "mutil_temp"
+        session_id: str = state.get("session_id", "")
+        if session_id.strip() == "":
+            err_text: str = "Not pass session_id"
+            logger.error(err_text)
+            raise RuntimeError(err_text)
+
+        temp_dir = SRC_DIR / session_id / "mutil_temp"
         if not temp_dir.exists():
             return None
 
