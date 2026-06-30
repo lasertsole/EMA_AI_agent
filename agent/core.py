@@ -5,7 +5,6 @@ from langchain_core.tools import BaseTool
 from langchain.agents import create_agent
 from langchain.agents.middleware import AgentState
 from langgraph.graph.state import CompiledStateGraph
-from langchain.agents.middleware import dynamic_prompt
 from workspace.prompt_builder import build_system_prompt
 from agent.checkpointer import build_async_sqlite_checkpointer
 from tools import memory_store, build_main_tools, build_subagent_tool
@@ -30,10 +29,6 @@ build_skills_snapshot()
 # Load memory markdown files from disk; keep them unchanged until
 # compression is triggered during this server run.
 memory_store.load_from_disk()
-
-@dynamic_prompt
-def state_aware_system_prompt(_request) -> str:
-    return build_system_prompt()
 
 
 _agent: CompiledStateGraph | None = None
@@ -61,8 +56,8 @@ async def built_agent(
             state_schema = StateSchema,
             checkpointer = checkpointer,
             tools = tools,
+            system_prompt = build_system_prompt(),
             middleware = [
-                state_aware_system_prompt,
                 MultimodalProcessor(),
                 ContextEngineHook(),
                 Summarization(
